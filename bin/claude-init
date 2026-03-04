@@ -4,7 +4,7 @@ set -u
 set -o pipefail
 
 # Configuration
-DOTFILES_CLAUDE="${HOME}/.claude"
+DOTFILES_CLAUDE="${DOTFILES_CLAUDE:-${HOME}/.claude}"
 SCRIPT_SOURCE="${BASH_SOURCE[0]}"
 while [[ -L "$SCRIPT_SOURCE" ]]; do
     SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_SOURCE")" && pwd)"
@@ -21,6 +21,7 @@ UPDATE=false
 NO_CLAUDE_MD=false
 AGENTS_ONLY=false
 COMMANDS_ONLY=false
+SKILLS_ONLY=false
 TRACK_THOUGHTS=false
 TARGET_DIR="."
 
@@ -41,11 +42,12 @@ USAGE:
 OPTIONS:
     -h, --help          Show this help message
     -f, --force         Overwrite existing .claude directory
-    -a, --all           Also copy agents, commands, and hooks from dotfiles
+    -a, --all           Also copy agents, commands, skills, and hooks from dotfiles
     -u, --update        Update/refresh configs from dotfiles
     --no-claude-md      Skip CLAUDE.md creation
     --agents-only       Only copy agents (use with --all)
     --commands-only     Only copy commands (use with --all)
+    --skills-only       Only copy skills (use with --all)
     --track-thoughts    Don't add .thoughts/ to .gitignore (track in git)
 
 ARGUMENTS:
@@ -69,7 +71,7 @@ EXAMPLES:
 
 NOTES:
     - Source configs are read from: ~/{DOTFILES_CLAUDE}/ (default: ~/.claude/)
-    - Creates .claude/{agents,commands,hooks}/ and .thoughts/ directories
+    - Creates .claude/{agents,commands,skills,hooks}/ and .thoughts/ directories
     - Adds .claude/settings.local.json and .thoughts/ to .gitignore
 EOF
     exit 0
@@ -348,6 +350,10 @@ main() {
                 COMMANDS_ONLY=true
                 shift
                 ;;
+            --skills-only)
+                SKILLS_ONLY=true
+                shift
+                ;;
             --track-thoughts)
                 TRACK_THOUGHTS=true
                 shift
@@ -385,16 +391,19 @@ main() {
 
         log_info "Updating from dotfiles..."
 
-        if [[ "$COMMANDS_ONLY" != true ]]; then
+        if [[ "$COMMANDS_ONLY" != true ]] && [[ "$SKILLS_ONLY" != true ]]; then
             copy_with_update "${DOTFILES_CLAUDE}/agents" "${claude_dir}/agents" "agents"
         fi
-        if [[ "$AGENTS_ONLY" != true ]]; then
+        if [[ "$AGENTS_ONLY" != true ]] && [[ "$SKILLS_ONLY" != true ]]; then
             copy_with_update "${DOTFILES_CLAUDE}/commands" "${claude_dir}/commands" "commands"
         fi
-        if [[ "$NO_CLAUDE_MD" != true ]] && [[ "$AGENTS_ONLY" != true ]] && [[ "$COMMANDS_ONLY" != true ]]; then
+        if [[ "$AGENTS_ONLY" != true ]] && [[ "$COMMANDS_ONLY" != true ]]; then
+            copy_with_update "${DOTFILES_CLAUDE}/skills" "${claude_dir}/skills" "skills"
+        fi
+        if [[ "$NO_CLAUDE_MD" != true ]] && [[ "$AGENTS_ONLY" != true ]] && [[ "$COMMANDS_ONLY" != true ]] && [[ "$SKILLS_ONLY" != true ]]; then
             update_claude_md "$TARGET_DIR"
         fi
-        if [[ "$AGENTS_ONLY" != true ]] && [[ "$COMMANDS_ONLY" != true ]]; then
+        if [[ "$AGENTS_ONLY" != true ]] && [[ "$COMMANDS_ONLY" != true ]] && [[ "$SKILLS_ONLY" != true ]]; then
             generate_pipeline_md "$TARGET_DIR"
         fi
 
@@ -406,6 +415,7 @@ main() {
     log_info "Creating directory structure..."
     mkdir -p "${claude_dir}/agents"
     mkdir -p "${claude_dir}/commands"
+    mkdir -p "${claude_dir}/skills"
     mkdir -p "${claude_dir}/hooks"
     mkdir -p "${TARGET_DIR}/.thoughts/research"
     mkdir -p "${TARGET_DIR}/.thoughts/plans"
@@ -415,7 +425,7 @@ main() {
     mkdir -p "${TARGET_DIR}/.thoughts/prs"
     mkdir -p "${TARGET_DIR}/.thoughts/reviews"
     mkdir -p "${TARGET_DIR}/.thoughts/tickets"
-    log_success "   Created .claude/{agents,commands,hooks}/ and .thoughts/"
+    log_success "   Created .claude/{agents,commands,skills,hooks}/ and .thoughts/"
 
     # Generate CLAUDE.md
     if [[ "$NO_CLAUDE_MD" != true ]]; then
@@ -437,16 +447,20 @@ main() {
     if [[ "$ALL" == true ]]; then
         log_info "Copying configurations from dotfiles..."
 
-        if [[ "$COMMANDS_ONLY" != true ]]; then
+        if [[ "$COMMANDS_ONLY" != true ]] && [[ "$SKILLS_ONLY" != true ]]; then
             copy_directory "${DOTFILES_CLAUDE}/agents" "${claude_dir}/agents" "agents"
         fi
 
-        if [[ "$AGENTS_ONLY" != true ]]; then
+        if [[ "$AGENTS_ONLY" != true ]] && [[ "$SKILLS_ONLY" != true ]]; then
             copy_directory "${DOTFILES_CLAUDE}/commands" "${claude_dir}/commands" "commands"
         fi
 
+        if [[ "$AGENTS_ONLY" != true ]] && [[ "$COMMANDS_ONLY" != true ]]; then
+            copy_directory "${DOTFILES_CLAUDE}/skills" "${claude_dir}/skills" "skills"
+        fi
+
         # Copy hooks if they exist
-        if [[ -d "${DOTFILES_CLAUDE}/hooks" ]]; then
+        if [[ -d "${DOTFILES_CLAUDE}/hooks" ]] && [[ "$AGENTS_ONLY" != true ]] && [[ "$COMMANDS_ONLY" != true ]] && [[ "$SKILLS_ONLY" != true ]]; then
             copy_directory "${DOTFILES_CLAUDE}/hooks" "${claude_dir}/hooks" "hooks"
         fi
     fi
@@ -457,10 +471,10 @@ main() {
     echo "Next steps:"
     echo "  1. Edit CLAUDE.md to add project-specific info"
     if [[ "$ALL" != true ]]; then
-        echo "  2. Run with --all to also copy agents/commands/hooks from dotfiles"
+        echo "  2. Run with --all to also copy agents/commands/skills/hooks from dotfiles"
         echo "  3. Run Claude Code in your project"
     else
-        echo "  2. Customize agents/commands as needed"
+        echo "  2. Customize agents/commands/skills as needed"
         echo "  3. Run Claude Code in your project"
     fi
 }

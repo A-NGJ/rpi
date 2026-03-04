@@ -373,10 +373,11 @@ claude-init --force            # Overwrite existing .claude/
 claude-init --no-claude-md     # Skip CLAUDE.md creation
 claude-init --agents-only      # Only copy agents
 claude-init --commands-only    # Only copy commands
+claude-init --skills-only     # Only copy skills
 claude-init --track-thoughts   # Don't gitignore .thoughts/ (track in git)
 ```
 
-The script copies agents, commands, and hooks from your global `~/.claude/` directory. Adjust the `DOTFILES_CLAUDE` variable in the script if your source configs live elsewhere.
+The script copies agents, commands, skills, and hooks from your global `~/.claude/` directory. Set the `DOTFILES_CLAUDE` environment variable to use a different source directory (e.g., `DOTFILES_CLAUDE=~/dotfiles/.claude claude-init --all`).
 
 ## Tips
 
