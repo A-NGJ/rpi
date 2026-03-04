@@ -417,6 +417,10 @@ This workflow is built for Claude Code, but the methodology applies to any AI co
 │       └── locate-codebase/SKILL.md   # Skill: finds where code lives in the codebase
 ```
 
+## Acknowledgments
+
+Inspired by [HumanLayer](https://github.com/humanlayer/humanlayer) — their work on human-in-the-loop patterns for AI agents informed the design of this workflow.
+
 ## License
 
 MIT
