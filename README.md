@@ -73,7 +73,7 @@ AI coding assistants are powerful but unpredictable when given large tasks. They
 3. Alternatively, copy the `.claude/` directory manually into your project:
    ```bash
    cp -r .claude/ /path/to/your/project/.claude/
-   mkdir -p /path/to/your/project/.thoughts/{research,designs,plans,structures,tickets,prs,reviews}
+   mkdir -p /path/to/your/project/.thoughts/{research,designs,plans,structures,tickets,specs,prs,reviews}
    ```
 
 4. Start Claude Code in your project and use the slash commands.
@@ -266,7 +266,7 @@ The research command spawns parallel sub-agents that use specialized skills:
 
 For broad queries, Claude shows you what it found in an initial scan and asks if you want to redirect focus before deep-diving.
 
-Output is a structured markdown document with YAML frontmatter, file:line references throughout, and a clear separation between findings and open questions.
+Output is a structured markdown document with YAML frontmatter, file:line references throughout, and a clear separation between findings and open questions. If the research comprehensively documents a module's behavior, it can optionally create or update a spec in `.thoughts/specs/`.
 
 ### Design (`/rpi-design`)
 
@@ -277,7 +277,7 @@ Three modes, auto-detected:
 - **Comprehensive** — Multi-decision feature design with component diagrams and risk tables
 - **Incremental** — Update an existing design with new information
 
-The design stage is interactive. Claude presents options with concrete trade-offs (grounded in your actual codebase, not generic advice), makes a recommendation, and waits for your direction. After you choose, it validates that your combined choices work together before documenting.
+The design stage is interactive. Claude presents options with concrete trade-offs (grounded in your actual codebase, not generic advice), makes a recommendation, and waits for your direction. After you choose, it validates that your combined choices work together before documenting. If the design changes existing behavior documented in `.thoughts/specs/`, it can flag those specs with `pending_changes` for update after implementation.
 
 ### Structure (`/rpi-structure`) — Optional
 
@@ -366,12 +366,35 @@ All pipeline artifacts live in `.thoughts/`, which is **gitignored by default**:
 ├── structures/          # File layout and interface documents
 ├── tickets/             # Scoped work unit tickets + index
 ├── plans/               # Implementation plans with checkboxes
+├── specs/               # Living behavioral specs for modules/domains
 ├── prs/                 # PR descriptions
 ├── reviews/             # Code review and verification reports
 └── archive/             # Completed artifacts (mirrors above structure)
 ```
 
-Files follow the naming convention: `YYYY-MM-DD-descriptive-name.md`
+Files follow the naming convention: `YYYY-MM-DD-descriptive-name.md` (specs use `domain-name.md` instead).
+
+### Document Status Lifecycle
+
+All pipeline artifacts use a `status` field in their YAML frontmatter to track progress:
+
+```
+draft → active → complete
+```
+
+- **`draft`** — Initial state when a document is created (research, plans, tickets)
+- **`active`** — Work is in progress (e.g., `/rpi-implement` sets the plan to `active` when it starts executing)
+- **`complete`** — All work described in the document is finished
+
+`/rpi-implement` manages plan status automatically. `/rpi-archive` warns before archiving documents that aren't yet `complete`.
+
+### Specs (`/.thoughts/specs/`)
+
+Specs are living documents that describe the **current behavior** of a module or domain — not planned changes. They're created and updated as a byproduct of research and implementation:
+
+- `/rpi-research` can optionally create or update a spec when it documents a module's behavior comprehensively
+- `/rpi-design` can flag existing specs with `pending_changes` when a design will alter documented behavior
+- Specs are updated to reflect reality *after* implementation, not during design
 
 This directory serves as persistent context across sessions. You can read, edit, or delete any document. Claude will check for existing documents before creating new ones to avoid duplication.
 

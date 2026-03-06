@@ -233,12 +233,16 @@ Research → Design → Structure → Tickets → Plan → Implement
 
 | Stage | Command | Input | Output Location |
 |-------|---------|-------|-----------------|
+| Explore | `/rpi-explore` | Vague idea or question | Conversational (optional save) |
 | Research | `/rpi-research` | Question or topic | `.thoughts/research/` |
 | Design | `/rpi-design` | Research doc or problem description | `.thoughts/designs/` |
 | Structure | `/rpi-structure` | Design doc | `.thoughts/structures/` |
 | Tickets | `/rpi-tickets` | Design doc (+ structure doc) | `.thoughts/tickets/` |
 | Plan | `/rpi-plan` | Design doc, ticket, or task description | `.thoughts/plans/` |
 | Implement | `/rpi-implement` | Plan doc | Code + tests + commits |
+| Commit | `/rpi-commit` | Working tree changes | Git commits |
+| Verify | `/rpi-verify` | Design/plan doc or auto-detect | Verification report |
+| Archive | `/rpi-archive` | Completed artifact paths or scan | `.thoughts/archive/` |
 
 ## Choosing Your Path
 

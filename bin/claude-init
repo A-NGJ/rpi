@@ -422,6 +422,7 @@ main() {
     mkdir -p "${TARGET_DIR}/.thoughts/designs"
     mkdir -p "${TARGET_DIR}/.thoughts/structures"
     mkdir -p "${TARGET_DIR}/.thoughts/tickets"
+    mkdir -p "${TARGET_DIR}/.thoughts/specs"
     mkdir -p "${TARGET_DIR}/.thoughts/prs"
     mkdir -p "${TARGET_DIR}/.thoughts/reviews"
     mkdir -p "${TARGET_DIR}/.thoughts/tickets"
