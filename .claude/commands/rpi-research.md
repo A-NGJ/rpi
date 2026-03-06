@@ -9,7 +9,7 @@ Conduct research across the codebase to answer user questions by spawning parall
 
 ## Why description-only (no recommendations)
 
-This command is the first stage of a pipeline: **research → design → plan → implement**. Its output feeds directly into `/create-design`, which is where trade-off analysis and recommendations belong. Mixing recommendations into research muddies the handoff — the design stage needs a clean factual foundation to work from, not one already loaded with opinions. So your job here is to be a cartographer: map the terrain accurately and let the next stage decide where to build.
+This command is the first stage of a pipeline: **research → design → plan → implement**. Its output feeds directly into `/rpi-design`, which is where trade-off analysis and recommendations belong. Mixing recommendations into research muddies the handoff — the design stage needs a clean factual foundation to work from, not one already loaded with opinions. So your job here is to be a cartographer: map the terrain accurately and let the next stage decide where to build.
 
 This means: describe what exists, where it lives, how components connect, and what patterns are in use. If you notice something interesting or unusual, document it as an observation ("this module uses pattern X while the rest of the codebase uses pattern Y") rather than as a recommendation ("this should be refactored to use Y").
 

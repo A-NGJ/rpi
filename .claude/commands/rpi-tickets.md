@@ -1,16 +1,16 @@
 ---
-description: Create scoped tickets from design docs to break complex features into plannable units. Use whenever a design doc covers multiple concerns or the work is too large for a single /create-plan pass — even if the user doesn't say "tickets" explicitly, suggest this when a design would produce an unwieldy plan.
+description: Create scoped tickets from design docs to break complex features into plannable units. Use whenever a design doc covers multiple concerns or the work is too large for a single /rpi-plan pass — even if the user doesn't say "tickets" explicitly, suggest this when a design would produce an unwieldy plan.
 model: opus
 ---
 
 # Create Tickets
 
-Break down a design document (and optional structure document) into discrete, scoped tickets. Each ticket captures a bounded piece of work that can be independently planned with `/create-plan`.
+Break down a design document (and optional structure document) into discrete, scoped tickets. Each ticket captures a bounded piece of work that can be independently planned with `/rpi-plan`.
 
 This is part of the pipeline: **research → design → [structure] → tickets → plan → implement**. Use this when a design covers enough complexity that planning it as a single unit would produce an unwieldy plan. Tickets give you control over implementation order, scope, and parallelism.
 
 **When to use tickets vs. straight to plan:**
-- **Skip tickets** when the design is focused enough that `/create-plan` can handle it directly (1-3 phases, single concern)
+- **Skip tickets** when the design is focused enough that `/rpi-plan` can handle it directly (1-3 phases, single concern)
 - **Use tickets** when the design covers multiple independent concerns, the work spans many files across different subsystems, or you want to implement in stages over multiple sessions
 
 ## Initial Response
@@ -25,7 +25,7 @@ This is part of the pipeline: **research → design → [structure] → tickets 
    1. Path to the design document
    2. (Optional) Path to the structure document
 
-   Example: `/create-tickets .thoughts/designs/2025-01-08-feature-name.md`
+   Example: `/rpi-tickets .thoughts/designs/2025-01-08-feature-name.md`
    ```
 
 ---
@@ -70,7 +70,7 @@ Does this breakdown make sense? Want to split, merge, or reorder any tickets?
 ```
 
 **Decomposition principles:**
-- Each ticket should be implementable in a single `/create-plan` → `/implement-plan` cycle
+- Each ticket should be implementable in a single `/rpi-plan` → `/rpi-implement` cycle
 - Tickets should minimize cross-ticket dependencies (prefer a DAG with few edges)
 - The first ticket(s) should lay foundation that others build on (data models, core types, shared interfaces)
 - Each ticket should leave the codebase in a working state when complete
@@ -118,7 +118,7 @@ tags: [relevant-component-names]
 
 ## Design Context
 
-[Summarize the relevant design decisions from the design doc that apply to this ticket. Include the decision, the chosen approach, and the key rationale. Don't just link to the design doc — extract the parts that matter for this scope so `/create-plan` has everything it needs.]
+[Summarize the relevant design decisions from the design doc that apply to this ticket. Include the decision, the chosen approach, and the key rationale. Don't just link to the design doc — extract the parts that matter for this scope so `/rpi-plan` has everything it needs.]
 
 ### Key Interfaces (if applicable)
 [Interfaces this ticket must implement or respect — from the design or structure doc. Include signatures or shapes so the implementer doesn't need to reference another doc.]
@@ -148,7 +148,7 @@ tags: [relevant-component-names]
 
 ### What makes a good ticket
 
-The ticket template is a tool, not a form to fill out mechanically. The purpose is to give `/create-plan` everything it needs to produce a focused, accurate plan. That means:
+The ticket template is a tool, not a form to fill out mechanically. The purpose is to give `/rpi-plan` everything it needs to produce a focused, accurate plan. That means:
 
 - **The Summary should stand alone.** Someone reading just this ticket should understand what they're building and why, without opening the design doc. Copy the relevant context — don't just link.
 - **Design Context is the most important section.** This is where you extract the design decisions, chosen approaches, and interface contracts that are relevant to this ticket's scope. The implementer will rely on this to make the right calls. Be specific — include code shapes, data structures, and patterns from the design doc.
@@ -201,14 +201,14 @@ Recommended implementation order: #prefix-001 → #prefix-002 → #prefix-003
 (#prefix-002 and #prefix-003 can run in parallel after #prefix-001)
 
 To plan a specific ticket:
-  /create-plan .thoughts/tickets/prefix-001-description.md
+  /rpi-plan .thoughts/tickets/prefix-001-description.md
 ```
 
 ---
 
 ## Guidelines
 
-1. **Self-contained tickets** — Each ticket should include enough context from the design doc that `/create-plan` can produce a good plan without reading the full design. Extract, don't just link.
+1. **Self-contained tickets** — Each ticket should include enough context from the design doc that `/rpi-plan` can produce a good plan without reading the full design. Extract, don't just link.
 2. **Right-sized scope** — Too big and you lose the benefit of decomposition. Too small and you create overhead. A good ticket is roughly one PR / one focused work session.
 3. **Clear boundaries** — "In" and "Out" should eliminate ambiguity about where one ticket's work ends and another's begins.
 4. **Dependency honesty** — Don't over-constrain with unnecessary dependencies, but don't hide real ones. If ticket 3 can't start until ticket 2 is done, say so. If they can run in parallel, make that clear.

@@ -17,7 +17,7 @@ This project uses a `.thoughts/` directory for persistent context:
 ```
 .thoughts/
 ├── research/      # Codebase research notes
-├── plans/         # Implementation plans (created by /create-plan)
+├── plans/         # Implementation plans (created by /rpi-plan)
 ├── designs/       # Design documents
 ├── structures/    # Structure documents
 ├── tickets/       # Ticket documentation

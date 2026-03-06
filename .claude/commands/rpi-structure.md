@@ -7,11 +7,11 @@ model: opus
 
 Map a design to concrete codebase structure — files, modules, interfaces, and dependencies.
 
-**When to use this command**: For greenfield projects creating many new files, major module reorganizations, or when the file layout itself is complex enough to warrant a dedicated discussion. For most features, the design doc's optional "File Structure" section (via `/create-design`) and the plan's file listings (via `/create-plan`) provide sufficient coverage without a separate structure stage.
+**When to use this command**: For greenfield projects creating many new files, major module reorganizations, or when the file layout itself is complex enough to warrant a dedicated discussion. For most features, the design doc's optional "File Structure" section (via `/rpi-design`) and the plan's file listings (via `/rpi-plan`) provide sufficient coverage without a separate structure stage.
 
 **This command OWNS**: file layout, module boundaries, public interfaces/contracts, dependency graph, and naming conventions.
 
-**This command does NOT own**: codebase research (→ `/create-research`), architectural decisions (→ `/create-design`), or implementation code and phasing (→ `/create-plan`). Define *what* each file exports — the plan stage defines *how* to implement the internals.
+**This command does NOT own**: codebase research (→ `/rpi-research`), architectural decisions (→ `/rpi-design`), or implementation code and phasing (→ `/rpi-plan`). Define *what* each file exports — the plan stage defines *how* to implement the internals.
 
 ## Initial Response
 
@@ -23,7 +23,7 @@ Please provide:
 1. The design document from `.thoughts/designs/`
 2. Any additional context or preferences about code organization
 
-Tip: `/create-structure .thoughts/designs/2025-01-08-authentication-flow.md`
+Tip: `/rpi-structure .thoughts/designs/2025-01-08-authentication-flow.md`
 ```
 
 ## Process Steps

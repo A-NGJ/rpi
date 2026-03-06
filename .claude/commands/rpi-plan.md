@@ -9,8 +9,8 @@ Create implementation plans with phased tasks, success criteria, and verificatio
 
 **Two modes — auto-detected from input:**
 
-- **Standalone mode**: For simple/short tasks. You describe what needs to be done, the plan does its own lightweight research and produces a plan directly. No prior `/create-research` or `/create-design` needed.
-- **Pipeline mode**: For complex tasks with existing docs. You provide a design document, structure document, or a **ticket from `/create-tickets`** that links back to the pipeline (research → design → [structure] → tickets → plan → implement).
+- **Standalone mode**: For simple/short tasks. You describe what needs to be done, the plan does its own lightweight research and produces a plan directly. No prior `/rpi-research` or `/rpi-design` needed.
+- **Pipeline mode**: For complex tasks with existing docs. You provide a design document, structure document, or a **ticket from `/rpi-tickets`** that links back to the pipeline (research → design → [structure] → tickets → plan → implement).
 
 ## Initial Response
 
@@ -19,7 +19,7 @@ When this command is invoked:
 1. **Check what was provided:**
    - If a path to a design document (or structure document) was provided → **Pipeline mode**
    - If a path to a ticket file was provided → read its frontmatter:
-     - If the ticket has a `design:` field (it came from `/create-tickets`) → **Pipeline mode** (ticket-originated)
+     - If the ticket has a `design:` field (it came from `/rpi-tickets`) → **Pipeline mode** (ticket-originated)
      - If the ticket has no `design:` field (standalone ticket) → **Standalone mode**
    - If a plain task description was provided → **Standalone mode**
    - If nothing was provided, respond:
@@ -29,11 +29,11 @@ When this command is invoked:
    You can use this in two ways:
 
    **Simple task** (standalone):
-   `/create-plan Add a retry mechanism to the webhook handler`
+   `/rpi-plan Add a retry mechanism to the webhook handler`
 
    **From the pipeline** (with prior docs):
-   `/create-plan .thoughts/designs/2025-01-08-feature-name.md`
-   `/create-plan .thoughts/tickets/auth-001-user-signup.md`
+   `/rpi-plan .thoughts/designs/2025-01-08-feature-name.md`
+   `/rpi-plan .thoughts/tickets/auth-001-user-signup.md`
    ```
 
 ---
@@ -159,7 +159,7 @@ When revising based on feedback:
 
 ## Pipeline Mode
 
-For complex tasks that already went through the pipeline. Triggered by design docs, structure docs, or **ticket files from `/create-tickets`** that link back to design docs.
+For complex tasks that already went through the pipeline. Triggered by design docs, structure docs, or **ticket files from `/rpi-tickets`** that link back to design docs.
 
 ### Step 1: Read Inputs & Validate
 

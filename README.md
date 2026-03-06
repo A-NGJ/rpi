@@ -80,13 +80,13 @@ AI coding assistants are powerful but unpredictable when given large tasks. They
 
 | Command | What It Does | Output |
 |---------|-------------|--------|
-| `/create-research` | Investigates the codebase — pure fact-finding, no opinions | `.thoughts/research/YYYY-MM-DD-topic.md` |
-| `/create-design` | Makes architectural decisions with trade-off analysis | `.thoughts/designs/YYYY-MM-DD-topic.md` |
-| `/create-structure` | Defines file layout, module boundaries, interfaces | `.thoughts/structures/YYYY-MM-DD-topic.md` |
-| `/create-tickets` | Breaks a design into independently plannable work units | `.thoughts/tickets/prefix-NNN-name.md` |
-| `/create-plan` | Creates phased implementation plan with success criteria | `.thoughts/plans/YYYY-MM-DD-topic.md` |
-| `/implement-plan` | Executes a plan phase-by-phase with verification | Code, tests, and commits |
-| `/commit` | Creates focused git commits with smart grouping | Git commits |
+| `/rpi-research` | Investigates the codebase — pure fact-finding, no opinions | `.thoughts/research/YYYY-MM-DD-topic.md` |
+| `/rpi-design` | Makes architectural decisions with trade-off analysis | `.thoughts/designs/YYYY-MM-DD-topic.md` |
+| `/rpi-structure` | Defines file layout, module boundaries, interfaces | `.thoughts/structures/YYYY-MM-DD-topic.md` |
+| `/rpi-tickets` | Breaks a design into independently plannable work units | `.thoughts/tickets/prefix-NNN-name.md` |
+| `/rpi-plan` | Creates phased implementation plan with success criteria | `.thoughts/plans/YYYY-MM-DD-topic.md` |
+| `/rpi-implement` | Executes a plan phase-by-phase with verification | Code, tests, and commits |
+| `/rpi-commit` | Creates focused git commits with smart grouping | Git commits |
 
 ## Choosing Your Path
 
@@ -96,24 +96,24 @@ Not every task needs every stage. Pick the path that matches your task's complex
 
 **Path: Plan → Implement**
 
-Skip research and design entirely. `/create-plan` has a standalone mode that does lightweight research on the fly and produces a focused plan.
+Skip research and design entirely. `/rpi-plan` has a standalone mode that does lightweight research on the fly and produces a focused plan.
 
 **Example — Fix a broken date formatter:**
 ```
-You:  /create-plan Fix the date formatter in utils/dates.ts that returns "NaN" for ISO strings without timezone
+You:  /rpi-plan Fix the date formatter in utils/dates.ts that returns "NaN" for ISO strings without timezone
 ```
 
 Claude researches the file, writes a 1-phase plan with the fix and test, saves it to `.thoughts/plans/`.
 
 ```
-You:  /implement-plan .thoughts/plans/2026-03-04-fix-date-formatter.md
+You:  /rpi-implement .thoughts/plans/2026-03-04-fix-date-formatter.md
 ```
 
 Claude shows you the intended changes, you approve, it implements, runs tests, and proposes a commit.
 
 **Example — Add a missing environment variable:**
 ```
-You:  /create-plan Add REDIS_URL to the config module with a default of localhost:6379
+You:  /rpi-plan Add REDIS_URL to the config module with a default of localhost:6379
 ```
 
 One phase, two files modified, done in minutes.
@@ -128,7 +128,7 @@ Use when the feature touches multiple files, involves a choice between approache
 
 **Step 1: Research**
 ```
-You:  /create-research How does the API middleware chain work? Where are requests authenticated and validated?
+You:  /rpi-research How does the API middleware chain work? Where are requests authenticated and validated?
 ```
 Claude spawns sub-agents to explore your codebase in parallel. Returns a document with every relevant file path, the middleware execution order, existing patterns, and how requests flow through the system.
 
@@ -136,14 +136,14 @@ You review `.thoughts/research/2026-03-04-api-middleware.md` — maybe you redir
 
 **Step 2: Design**
 ```
-You:  /create-design .thoughts/research/2026-03-04-api-middleware.md
+You:  /rpi-design .thoughts/research/2026-03-04-api-middleware.md
       I want to add per-endpoint rate limiting. Should handle both authenticated and anonymous users.
 ```
 Claude presents 2-3 options (e.g., in-memory vs Redis, middleware vs decorator pattern), with pros/cons tied to your actual codebase. You pick an approach. It writes the design document with the decision rationale, component diagram, and risk assessment.
 
 **Step 3: Plan**
 ```
-You:  /create-plan .thoughts/designs/2026-03-04-api-rate-limiting.md
+You:  /rpi-plan .thoughts/designs/2026-03-04-api-rate-limiting.md
 ```
 Claude reads the design, spot-checks that the codebase still matches, and breaks the work into phases:
 - Phase 1: Rate limiter core module + unit tests
@@ -154,7 +154,7 @@ Each phase has specific file changes, code snippets, automated verification comm
 
 **Step 4: Implement**
 ```
-You:  /implement-plan .thoughts/plans/2026-03-04-api-rate-limiting.md
+You:  /rpi-implement .thoughts/plans/2026-03-04-api-rate-limiting.md
 ```
 Claude implements Phase 1, shows you a preview of all changes before writing code, runs the test suite, updates checkboxes in the plan, and proposes a commit. Then it pauses for your manual verification before starting Phase 2.
 
@@ -170,20 +170,20 @@ Use when the work spans multiple systems, would produce more than ~4 implementat
 
 **Step 1: Research**
 ```
-You:  /create-research How do we currently send emails? Is there any notification infrastructure? How do user preferences work?
+You:  /rpi-research How do we currently send emails? Is there any notification infrastructure? How do user preferences work?
 ```
 Produces a thorough map of everything notification-adjacent in your codebase.
 
 **Step 2: Design**
 ```
-You:  /create-design .thoughts/research/2026-03-04-notification-infrastructure.md
+You:  /rpi-design .thoughts/research/2026-03-04-notification-infrastructure.md
       Build a notification system supporting email, push, and in-app channels. Users should be able to set per-channel preferences.
 ```
 Claude goes into comprehensive mode — spawns multiple research sub-agents, identifies key design dimensions (channel abstraction, delivery strategy, preference storage, template system), presents options with trade-offs for each, validates that the chosen options compose well together, and writes the full design document.
 
 **Step 3: Tickets**
 ```
-You:  /create-tickets .thoughts/designs/2026-03-04-notification-system.md
+You:  /rpi-tickets .thoughts/designs/2026-03-04-notification-system.md
 ```
 Claude decomposes the design into discrete work units:
 ```
@@ -198,11 +198,11 @@ Each ticket is self-contained with its own scope, acceptance criteria, file list
 
 **Step 4-5: Plan and Implement (per ticket)**
 ```
-You:  /create-plan .thoughts/tickets/notif-001-core-model.md
-You:  /implement-plan .thoughts/plans/2026-03-04-notif-001-core-model.md
+You:  /rpi-plan .thoughts/tickets/notif-001-core-model.md
+You:  /rpi-implement .thoughts/plans/2026-03-04-notif-001-core-model.md
 
-You:  /create-plan .thoughts/tickets/notif-002-email-channel.md
-You:  /implement-plan .thoughts/plans/2026-03-04-notif-002-email-channel.md
+You:  /rpi-plan .thoughts/tickets/notif-002-email-channel.md
+You:  /rpi-implement .thoughts/plans/2026-03-04-notif-002-email-channel.md
 
 ...and so on for each ticket
 ```
@@ -213,17 +213,17 @@ Each ticket becomes its own plan → implement cycle. You can stop between ticke
 
 **Path: Research → Design → Structure → Tickets → Plan → Implement**
 
-Add the `/create-structure` stage when you need to make deliberate decisions about file layout, module boundaries, and interfaces before planning implementation — typically for new projects with many new files or large-scale reorganizations.
+Add the `/rpi-structure` stage when you need to make deliberate decisions about file layout, module boundaries, and interfaces before planning implementation — typically for new projects with many new files or large-scale reorganizations.
 
 ```
-You:  /create-structure .thoughts/designs/2026-03-04-new-service.md
+You:  /rpi-structure .thoughts/designs/2026-03-04-new-service.md
 ```
 
-This produces a structure document with every new and modified file, their responsibilities, module boundaries, public interfaces with concrete signatures, and a dependency graph. The structure document then feeds into `/create-tickets` or `/create-plan`.
+This produces a structure document with every new and modified file, their responsibilities, module boundaries, public interfaces with concrete signatures, and a dependency graph. The structure document then feeds into `/rpi-tickets` or `/rpi-plan`.
 
 ## How Each Stage Works
 
-### Research (`/create-research`)
+### Research (`/rpi-research`)
 
 **Purpose:** Document the codebase as-is. Pure fact-finding — no opinions, no recommendations.
 
@@ -238,7 +238,7 @@ For broad queries, Claude shows you what it found in an initial scan and asks if
 
 Output is a structured markdown document with YAML frontmatter, file:line references throughout, and a clear separation between findings and open questions.
 
-### Design (`/create-design`)
+### Design (`/rpi-design`)
 
 **Purpose:** Make architectural decisions and document trade-offs.
 
@@ -249,19 +249,19 @@ Three modes, auto-detected:
 
 The design stage is interactive. Claude presents options with concrete trade-offs (grounded in your actual codebase, not generic advice), makes a recommendation, and waits for your direction. After you choose, it validates that your combined choices work together before documenting.
 
-### Structure (`/create-structure`) — Optional
+### Structure (`/rpi-structure`) — Optional
 
 **Purpose:** Map a design to concrete file layout when the structure itself is complex.
 
 Only needed for greenfield projects or major reorganizations. Defines file changes, module boundaries, public APIs with concrete signatures, and a dependency graph.
 
-### Tickets (`/create-tickets`) — Optional
+### Tickets (`/rpi-tickets`) — Optional
 
 **Purpose:** Break a large design into independently plannable work units.
 
-Each ticket is self-contained — it extracts the relevant design decisions, interfaces, and constraints so that `/create-plan` can produce a focused plan without reading the full design document. Tickets include dependency graphs and recommended implementation order.
+Each ticket is self-contained — it extracts the relevant design decisions, interfaces, and constraints so that `/rpi-plan` can produce a focused plan without reading the full design document. Tickets include dependency graphs and recommended implementation order.
 
-### Plan (`/create-plan`)
+### Plan (`/rpi-plan`)
 
 **Purpose:** Create a phase-by-phase implementation plan with specific code changes and verification steps.
 
@@ -278,7 +278,7 @@ Every plan phase includes:
 
 All open questions must be resolved before the plan is finalized.
 
-### Implement (`/implement-plan`)
+### Implement (`/rpi-implement`)
 
 **Purpose:** Execute a plan phase-by-phase with verification at each step.
 
@@ -293,15 +293,15 @@ The implementation stage:
 
 If the plan doesn't match reality (codebase drifted since the plan was written), it stops and clearly explains the mismatch rather than silently improvising.
 
-Resumable: if you invoke `/implement-plan` on a partially-completed plan, it picks up from the first unchecked item.
+Resumable: if you invoke `/rpi-implement` on a partially-completed plan, it picks up from the first unchecked item.
 
-### Bonus: Commit (`/commit`)
+### Bonus: Commit (`/rpi-commit`)
 
 **Purpose:** Create clean, focused git commits without thinking about `git add` and message formatting.
 
-`/commit` inspects your working tree (staged, unstaged, and untracked files), groups related changes into logical commits, drafts messages matching your repo's existing commit style, and presents the plan for your approval before executing. It never adds Claude attribution or co-author lines — commits look like you wrote them.
+`/rpi-commit` inspects your working tree (staged, unstaged, and untracked files), groups related changes into logical commits, drafts messages matching your repo's existing commit style, and presents the plan for your approval before executing. It never adds Claude attribution or co-author lines — commits look like you wrote them.
 
-You can use `/commit` standalone anytime, or let `/implement-plan` handle commits at the end of each phase.
+You can use `/rpi-commit` standalone anytime, or let `/rpi-implement` handle commits at the end of each phase.
 
 ## The `.thoughts/` Directory
 
@@ -339,7 +339,7 @@ This skips adding `.thoughts/` to `.gitignore`, so all pipeline artifacts get co
 - **Research documents** become searchable codebase documentation that stays current — new team members can read them to understand how systems work instead of spelunking through code.
 - **Design documents** preserve decision rationale. When someone asks "why did we use Redis instead of Memcached?", the answer is in `.thoughts/designs/`, not lost in a Slack thread.
 - **Tickets and plans** give visibility into how features were decomposed and implemented, making code review easier and providing a template for similar future work.
-- **Any team member can pick up where another left off** — if one person does the research and design, another can run `/create-plan` and `/implement-plan` using those same documents.
+- **Any team member can pick up where another left off** — if one person does the research and design, another can run `/rpi-plan` and `/rpi-implement` using those same documents.
 
 **When to keep it local:**
 - Exploratory or throwaway research you don't want cluttering the repo
@@ -381,12 +381,12 @@ The script copies agents, commands, skills, and hooks from your global `~/.claud
 
 ## Tips
 
-- **Start small.** Try `/create-plan` on a bug fix to see how the plan → implement cycle feels before using the full pipeline.
+- **Start small.** Try `/rpi-plan` on a bug fix to see how the plan → implement cycle feels before using the full pipeline.
 - **Edit the artifacts.** The `.thoughts/` documents are yours. If a design decision is wrong, edit it before planning. If a plan phase is unnecessary, delete it.
 - **Use CLAUDE.md.** Add your project's test commands, linting setup, and conventions to `CLAUDE.md`. The pipeline stages pull verification commands from there.
-- **Redirect during research.** When `/create-research` shows initial findings, tell it to focus on specific areas rather than exploring everything.
+- **Redirect during research.** When `/rpi-research` shows initial findings, tell it to focus on specific areas rather than exploring everything.
 - **Skip stages when they don't add value.** The full pipeline exists for complex work. Most daily tasks only need Plan → Implement.
-- **Review the pre-review.** `/implement-plan` shows you exactly what it plans to change before writing code. This is your last checkpoint — use it.
+- **Review the pre-review.** `/rpi-implement` shows you exactly what it plans to change before writing code. This is your last checkpoint — use it.
 
 ## Using with Other AI Coding Tools
 
@@ -405,12 +405,13 @@ This workflow is built for Claude Code, but the methodology applies to any AI co
 │   ├── agents/
 │   │   └── codebase-analyzer.md       # Agent: traces code flow and documents implementations
 │   ├── commands/
-│   │   ├── create-research.md         # Command: /create-research
-│   │   ├── create-design.md           # Command: /create-design
-│   │   ├── create-structure.md        # Command: /create-structure
-│   │   ├── create-tickets.md          # Command: /create-tickets
-│   │   ├── create-plan.md             # Command: /create-plan
-│   │   └── implement-plan.md          # Command: /implement-plan
+│   │   ├── rpi-research.md             # Command: /rpi-research
+│   │   ├── rpi-design.md              # Command: /rpi-design
+│   │   ├── rpi-structure.md           # Command: /rpi-structure
+│   │   ├── rpi-tickets.md             # Command: /rpi-tickets
+│   │   ├── rpi-plan.md                # Command: /rpi-plan
+│   │   ├── rpi-implement.md           # Command: /rpi-implement
+│   │   └── rpi-commit.md              # Command: /rpi-commit
 │   └── skills/
 │       ├── find-patterns/SKILL.md     # Skill: finds existing code patterns to model after
 │       ├── analyze-thoughts/SKILL.md  # Skill: extracts insights from .thoughts/ documents

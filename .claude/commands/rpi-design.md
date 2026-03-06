@@ -7,7 +7,7 @@ model: opus
 
 Create high-level solution designs by exploring trade-offs, making architectural decisions, and documenting the chosen approach. This stage bridges research findings and implementation planning.
 
-This is part of the pipeline: **research → design → plan → implement**. For complex features involving many new files or major module reorganizations, `/create-structure` is available as an optional step between design and plan.
+This is part of the pipeline: **research → design → plan → implement**. For complex features involving many new files or major module reorganizations, `/rpi-structure` is available as an optional step between design and plan.
 
 Design is where you make the hard choices — choosing between approaches, identifying risks, and ensuring decisions compose well together. A good design document captures *why* choices were made (not just what was chosen), so future readers can evaluate whether the reasoning still holds when circumstances change.
 
@@ -27,7 +27,7 @@ Design is where you make the hard choices — choosing between approaches, ident
   2. Any relevant research documents from `.thoughts/research/`
   3. Constraints, non-functional requirements, or preferences
 
-  Tip: `/create-design .thoughts/research/2025-01-08-authentication-flow.md`
+  Tip: `/rpi-design .thoughts/research/2025-01-08-authentication-flow.md`
   ```
 
 ---
@@ -308,7 +308,7 @@ related_research: [path to research doc if available]
 ## File Structure (if applicable)
 <!-- Include this section when the design introduces new files/modules or reorganizes existing ones.
      For large-scale reorganizations or greenfield projects with many new files, consider using
-     /create-structure for a dedicated deep-dive instead. -->
+     /rpi-structure for a dedicated deep-dive instead. -->
 
 ### New Files
 - `path/to/new-file.ext` — [responsibility, key exports]
