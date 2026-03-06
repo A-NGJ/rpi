@@ -101,6 +101,13 @@ When revising based on feedback:
 ### Standalone Plan Template
 
 ````markdown
+---
+date: [Current date and time with timezone in ISO format]
+topic: "[Task Name]"
+tags: [plan, relevant-component-names]
+status: draft
+---
+
 # [Task Name] Implementation Plan
 
 ## Overview
@@ -253,6 +260,15 @@ Use the **Pipeline plan template** below.
 ### Pipeline Plan Template
 
 ````markdown
+---
+date: [Current date and time with timezone in ISO format]
+topic: "[Feature/Task Name]"
+tags: [plan, relevant-component-names]
+status: draft
+ticket: "[ticket ID if ticket-originated, omit otherwise]"
+design: "[path to design doc]"
+---
+
 # [Feature/Task Name] Implementation Plan
 
 ## Overview

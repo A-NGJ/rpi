@@ -93,7 +93,7 @@ Sequential numbering (`001`, `002`, `003`) reflects suggested implementation ord
 ---
 ticket: prefix-NNN
 title: "[Short Descriptive Title]"
-status: open
+status: draft
 depends_on: []          # ticket IDs this blocks on, e.g. ["auth-001"]
 design: "[path to design doc]"
 structure: "[path to structure doc, or omit]"

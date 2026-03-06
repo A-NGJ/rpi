@@ -117,7 +117,7 @@ branch: [Current branch name]
 repository: [Repository name]
 topic: "[User's Question/Topic]"
 tags: [research, codebase, relevant-component-names]
-status: complete
+status: draft
 ---
 
 # Research: [User's Question/Topic]
