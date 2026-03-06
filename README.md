@@ -82,8 +82,7 @@ AI coding assistants are powerful but unpredictable when given large tasks. They
 
 | Command | What It Does | Output |
 |---------|-------------|--------|
-| `/rpi-explore` | Investigates opportunities and ideas — opinionated scouting | Conversational (optional save) |
-| `/rpi-research` | Investigates the codebase — pure fact-finding, no opinions | `.thoughts/research/YYYY-MM-DD-topic.md` |
+| `/rpi-research` | Investigates the codebase — fact-finding with optional assessment | `.thoughts/research/YYYY-MM-DD-topic.md` |
 | `/rpi-design` | Makes architectural decisions with trade-off analysis | `.thoughts/designs/YYYY-MM-DD-topic.md` |
 | `/rpi-structure` | Defines file layout, module boundaries, interfaces | `.thoughts/structures/YYYY-MM-DD-topic.md` |
 | `/rpi-tickets` | Breaks a design into independently plannable work units | `.thoughts/tickets/prefix-NNN-name.md` |
@@ -228,13 +227,11 @@ This produces a structure document with every new and modified file, their respo
 
 ### Not Sure Where to Start?
 
-Use `/rpi-explore` when you have a vague idea but aren't ready to commit to a direction. It's opinionated scouting — unlike `/rpi-research` (which maps the terrain neutrally), explore forms assessments and recommends next steps.
+Use `/rpi-research` even when you have a vague idea. It handles both focused questions ("how does auth work?") and open-ended exploration ("what could we improve about error handling?"). For exploratory queries, it surfaces opportunities and trade-offs in an Assessment section and suggests which pipeline path to take next.
 
 ```
-You:  /rpi-explore What could we improve about error handling?
+You:  /rpi-research What could we improve about error handling?
 ```
-
-Claude investigates broadly, surfaces opportunities, and suggests which pipeline path to take next.
 
 ### After Implementation
 
@@ -245,19 +242,11 @@ Two optional commands help close the loop:
 
 ## How Each Stage Works
 
-### Explore (`/rpi-explore`)
-
-**Purpose:** Investigate a topic or vague idea to surface opportunities and recommended next steps — with opinions.
-
-Unlike `/rpi-research` (pure fact-finding), explore is opinionated scouting. It forms assessments, identifies what's worth doing, and suggests which pipeline path to take. Use it when you have a question like "should we migrate to X?" or "what could we improve about Y?" but aren't ready to commit to a direction.
-
-Output is conversational by default. You can optionally save findings to `.thoughts/research/` if they're worth preserving.
-
 ### Research (`/rpi-research`)
 
-**Purpose:** Document the codebase as-is. Pure fact-finding — no opinions, no recommendations.
+**Purpose:** Investigate the codebase — fact-finding with optional assessment.
 
-The research command spawns parallel sub-agents that use specialized skills:
+Works for both focused questions ("how does the auth pipeline work?") and open-ended exploration ("what could we improve about error handling?"). The command spawns parallel sub-agents that use specialized skills:
 - **locate-codebase** — Finds where files and components live
 - **codebase-analyzer** — Understands how specific code works (traces data flow, documents patterns)
 - **find-patterns** — Finds examples of existing patterns to model after
@@ -266,7 +255,7 @@ The research command spawns parallel sub-agents that use specialized skills:
 
 For broad queries, Claude shows you what it found in an initial scan and asks if you want to redirect focus before deep-diving.
 
-Output is a structured markdown document with YAML frontmatter, file:line references throughout, and a clear separation between findings and open questions. If the research comprehensively documents a module's behavior, it can optionally create or update a spec in `.thoughts/specs/`.
+Findings are always factual with concrete file:line references. When findings reveal clear pain points, opportunities, or trade-offs, an Assessment section provides an opinionated take — clearly separated from the facts. Output is optionally saved as a structured markdown document. If the research comprehensively documents a module's behavior, it can optionally create or update a spec in `.thoughts/specs/`.
 
 ### Design (`/rpi-design`)
 
@@ -480,7 +469,6 @@ This workflow is built for Claude Code, but the methodology applies to any AI co
 │   ├── agents/
 │   │   └── codebase-analyzer.md       # Agent: traces code flow and documents implementations
 │   ├── commands/
-│   │   ├── rpi-explore.md             # Command: /rpi-explore
 │   │   ├── rpi-research.md            # Command: /rpi-research
 │   │   ├── rpi-design.md              # Command: /rpi-design
 │   │   ├── rpi-structure.md           # Command: /rpi-structure

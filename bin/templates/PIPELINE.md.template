@@ -233,8 +233,7 @@ Research → Design → Structure → Tickets → Plan → Implement
 
 | Stage | Command | Input | Output Location |
 |-------|---------|-------|-----------------|
-| Explore | `/rpi-explore` | Vague idea or question | Conversational (optional save) |
-| Research | `/rpi-research` | Question or topic | `.thoughts/research/` |
+| Research | `/rpi-research` | Question, topic, or vague idea | `.thoughts/research/` |
 | Design | `/rpi-design` | Research doc or problem description | `.thoughts/designs/` |
 | Structure | `/rpi-structure` | Design doc | `.thoughts/structures/` |
 | Tickets | `/rpi-tickets` | Design doc (+ structure doc) | `.thoughts/tickets/` |

@@ -1,5 +1,5 @@
 ---
-description: Document codebase as-is with thoughts directory for historical context
+description: Investigate the codebase — fact-finding with optional assessment
 model: opus
 ---
 
@@ -7,11 +7,13 @@ model: opus
 
 Conduct research across the codebase to answer user questions by spawning parallel sub-agents and synthesizing their findings.
 
-## Why description-only (no recommendations)
+## Facts first, opinions when warranted
 
-This command is the first stage of a pipeline: **research → design → plan → implement**. Its output feeds directly into `/rpi-design`, which is where trade-off analysis and recommendations belong. Mixing recommendations into research muddies the handoff — the design stage needs a clean factual foundation to work from, not one already loaded with opinions. So your job here is to be a cartographer: map the terrain accurately and let the next stage decide where to build.
+This command is the first stage of a pipeline: **research → design → plan → implement**. Its output feeds directly into `/rpi-design`. Your primary job is cartography: map the terrain accurately — describe what exists, where it lives, how components connect, and what patterns are in use.
 
-This means: describe what exists, where it lives, how components connect, and what patterns are in use. If you notice something interesting or unusual, document it as an observation ("this module uses pattern X while the rest of the codebase uses pattern Y") rather than as a recommendation ("this should be refactored to use Y").
+But good research doesn't stop at raw facts. When your findings reveal clear pain points, opportunities, or trade-offs, include an **Assessment** section with your opinionated take. The key distinction: facts come first and stand on their own. Assessment is clearly separated and optional — include it when the findings warrant it, skip it when they don't.
+
+If you notice something interesting or unusual, document it as an observation in the findings ("this module uses pattern X while the rest of the codebase uses pattern Y"). If you have a view on what should be done about it, put that in the Assessment.
 
 ## Step 1: Receive the query
 
@@ -19,7 +21,9 @@ If the user provided a research question or topic as command arguments, proceed 
 
 If no arguments were provided, ask:
 ```
-What would you like me to research? Provide a question, topic, or file path and I'll explore the codebase thoroughly.
+What would you like me to research? Provide a question, topic, or file path and I'll investigate thoroughly.
+
+This works for both focused questions ("how does auth work?") and open-ended exploration ("what could we improve about error handling?").
 ```
 
 ## Step 2: Read mentioned files and check for existing research
@@ -34,9 +38,10 @@ What would you like me to research? Provide a question, topic, or file path and 
 Not every question needs the same level of investigation. Before spawning sub-agents, assess the query:
 
 - **Focused query** (e.g., "how does the categorization pipeline work?", "where is authentication handled?"): 1-2 targeted sub-agents are enough. Skip the full orchestration — just find the relevant code and explain it.
-- **Broad query** (e.g., "document the entire data model", "how do all the services interact?"): Full decomposition with multiple parallel sub-agents across different areas.
+- **Broad query** (e.g., "document the entire data model", "what's the tech debt situation?"): Full decomposition with multiple parallel sub-agents across different areas.
+- **Exploratory query** (e.g., "what could we improve about X?", "is it worth migrating to Y?"): Broad investigation focused on surfacing opportunities and trade-offs. The Assessment section becomes especially important here.
 
-For broad queries, break the question into composable research areas:
+For broad/exploratory queries, break the question into composable research areas:
 - Identify specific components, patterns, or concepts to investigate
 - Consider which directories, files, or architectural patterns are relevant
 - Create a task list to track subtasks
@@ -102,6 +107,13 @@ Wait for all sub-agents to complete, then:
 
 ## Step 7: Write the research document
 
+Ask the user if they want to save the findings:
+```
+Want me to save these findings to `.thoughts/research/YYYY-MM-DD-description.md`?
+```
+
+If the user declines, that's fine — research can be purely conversational. If they agree (or if the research is substantial enough that saving is clearly useful), write the document.
+
 **Filename:** `.thoughts/research/YYYY-MM-DD-description.md`
 - Include ticket number if available: `2025-01-08-ENG-1478-parent-child-tracking.md`
 - Without ticket: `2025-01-08-authentication-flow.md`
@@ -145,6 +157,19 @@ status: draft
 ## Architecture
 [Current patterns, conventions, and design implementations found]
 
+## Assessment
+<!-- Include when findings reveal clear pain points, opportunities, or trade-offs -->
+- **Pain points**: What's causing friction, complexity, or risk?
+- **Opportunities**: What could be improved, simplified, or added?
+- **Quick wins vs larger efforts**: What's easy to fix vs needs investment?
+- **What's NOT worth doing**: Areas that look problematic but aren't worth the effort
+
+## Suggested Next Steps
+<!-- Include when assessment points to clear actions -->
+- Ready to design [specific approach]? → `/rpi-design`
+- This looks like a small fix — plan it directly? → `/rpi-plan`
+- Need to break this into tickets first? → `/rpi-tickets`
+
 ## Web Research Findings
 <!-- Include only if web research was performed -->
 
@@ -160,6 +185,7 @@ status: draft
 
 - Present a concise summary of findings to the user
 - Include key file references for easy navigation
+- If the findings warrant it, include your assessment and suggested next steps
 - Ask if they have follow-up questions
 
 **For follow-ups:** Append to the same research document rather than creating a new one. Add a `## Follow-up: [brief description]` section and update the frontmatter:
@@ -222,3 +248,6 @@ updated_by: [path to this research doc]
 - Wait for all sub-agents to complete before synthesizing
 - Never write the research document with placeholder values
 - Use snake_case for multi-word frontmatter fields
+- Scale investigation effort to the topic — a simple question doesn't need five sub-agents
+- Be opinionated in the Assessment section — that's where your view belongs
+- Keep facts and opinions clearly separated — facts in Findings, opinions in Assessment
