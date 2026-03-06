@@ -375,6 +375,19 @@ When the user provides a path to an existing design doc that needs updating:
 6. **Respect Existing Patterns** — Prefer solutions that align with how the codebase already works. Diverging from established patterns has a real cost (cognitive overhead, inconsistency, maintenance burden) — only do it when the benefit clearly outweighs that cost.
 7. **Use Diagrams** — When describing component interactions, data flow, or state transitions, an ASCII diagram often communicates in 5 lines what takes 3 paragraphs of prose. Don't force them everywhere, but reach for them when relationships are the point.
 
+## Update specs (optional — all modes)
+
+If the design changes existing behavior (not just adding new code), check `.thoughts/specs/` for relevant spec files:
+
+- **If specs exist** for affected modules, note what behavior will change
+- Ask: "This design modifies [module] behavior. Want me to flag the affected specs at `.thoughts/specs/[domain].md` for update after implementation?"
+
+**Rules:**
+- Don't update specs to reflect the design — specs describe current behavior, not planned behavior
+- Instead, add a note in the spec's frontmatter: `pending_changes: [path to this design doc]`
+- Only flag specs when the design genuinely alters documented behavior
+- This step is always optional
+
 ## Visual Aids
 
 Use ASCII diagrams when they clarify the design. Common patterns:
