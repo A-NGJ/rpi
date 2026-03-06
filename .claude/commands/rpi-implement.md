@@ -23,6 +23,7 @@ When given a plan path:
 - **Read files fully** - never use limit/offset parameters, you need complete context
 - Think deeply about how the pieces fit together
 - Create a todo list to track your progress
+- Update the plan's frontmatter `status` from `draft` to `active` (if the plan has frontmatter)
 - Start implementing if you understand what needs to be done
 
 If no plan path provided, ask for one.
@@ -143,3 +144,10 @@ If the plan has existing checkmarks:
 - Verify previous work only if something seems off
 
 Remember: You're implementing a solution, not just checking boxes. Keep the end goal in mind and maintain forward momentum.
+
+## Completion
+
+When all phases are done and verified:
+
+- Update the plan's frontmatter `status` from `active` to `complete`
+- Announce: "All phases complete. Plan status updated to `complete`."
