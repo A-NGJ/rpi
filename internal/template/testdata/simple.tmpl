@@ -1,0 +1,10 @@
+---
+date: {{.Date}}
+topic: "{{.Topic}}"
+status: draft
+{{- if .Ticket}}
+ticket: "{{.Ticket}}"
+{{- end}}
+---
+
+# {{.TypeLabel}}: {{.Topic}}
