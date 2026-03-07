@@ -1,0 +1,189 @@
+package scanner
+
+import (
+	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/frontmatter"
+)
+
+// ArtifactInfo represents metadata about a scanned artifact.
+type ArtifactInfo struct {
+	Path     string  `json:"path"`
+	Type     string  `json:"type"`
+	Status   *string `json:"status"`
+	Title    *string `json:"title"`
+	Date     *string `json:"date,omitempty"`
+	TicketID *string `json:"ticket_id,omitempty"`
+}
+
+// Filters controls which artifacts are returned.
+type Filters struct {
+	Status     string
+	Type       string
+	Design     string
+	References string
+	Archivable bool
+}
+
+// Scan walks the thoughts directory and returns artifacts matching filters.
+func Scan(thoughtsDir string, filters Filters) ([]ArtifactInfo, error) {
+	var results []ArtifactInfo
+
+	err := filepath.Walk(thoughtsDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil // skip unreadable entries
+		}
+
+		// Skip archive directory
+		if info.IsDir() && info.Name() == "archive" {
+			return filepath.SkipDir
+		}
+
+		if info.IsDir() || !strings.HasSuffix(path, ".md") {
+			return nil
+		}
+
+		doc, parseErr := frontmatter.Parse(path)
+		if parseErr != nil {
+			return nil // skip unparseable files
+		}
+
+		artifact := buildInfo(doc, path)
+
+		if matches(doc, artifact, filters) {
+			results = append(results, artifact)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if results == nil {
+		results = []ArtifactInfo{}
+	}
+	return results, nil
+}
+
+func buildInfo(doc *frontmatter.Document, path string) ArtifactInfo {
+	a := ArtifactInfo{
+		Path: path,
+		Type: inferType(path),
+	}
+
+	if s, ok := getStr(doc.Frontmatter, "status"); ok {
+		a.Status = &s
+	}
+	if t, ok := getStr(doc.Frontmatter, "topic"); ok {
+		a.Title = &t
+	} else if t, ok := getStr(doc.Frontmatter, "title"); ok {
+		a.Title = &t
+	}
+	if d, ok := getStr(doc.Frontmatter, "date"); ok {
+		a.Date = &d
+	}
+	if id, ok := getStr(doc.Frontmatter, "ticket_id"); ok {
+		a.TicketID = &id
+	} else if id, ok := getStr(doc.Frontmatter, "ticket"); ok {
+		a.TicketID = &id
+	}
+
+	return a
+}
+
+func matches(doc *frontmatter.Document, info ArtifactInfo, f Filters) bool {
+	if f.Status != "" {
+		if info.Status == nil || *info.Status != f.Status {
+			return false
+		}
+	}
+
+	if f.Type != "" {
+		if info.Type != f.Type {
+			return false
+		}
+	}
+
+	if f.Design != "" {
+		val, ok := getStr(doc.Frontmatter, "design")
+		if !ok || val != f.Design {
+			return false
+		}
+	}
+
+	if f.Archivable {
+		if info.Status == nil {
+			return false
+		}
+		s := *info.Status
+		if s != "complete" && s != "superseded" {
+			return false
+		}
+	}
+
+	if f.References != "" {
+		if !fileReferences(doc, f.References) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// fileReferences checks if a document references the given path in frontmatter fields or body.
+func fileReferences(doc *frontmatter.Document, target string) bool {
+	// Check all frontmatter string values
+	for _, val := range doc.Frontmatter {
+		switch v := val.(type) {
+		case string:
+			if v == target {
+				return true
+			}
+		case []interface{}:
+			for _, item := range v {
+				if s, ok := item.(string); ok && s == target {
+					return true
+				}
+			}
+		}
+	}
+
+	// Check body text
+	return strings.Contains(doc.Body, target)
+}
+
+func inferType(path string) string {
+	parts := strings.Split(filepath.ToSlash(path), "/")
+	for _, p := range parts {
+		switch p {
+		case "plans":
+			return "plan"
+		case "tickets":
+			return "ticket"
+		case "designs":
+			return "design"
+		case "research":
+			return "research"
+		case "structures":
+			return "structure"
+		case "prs":
+			return "pr"
+		case "reviews":
+			return "review"
+		}
+	}
+	return "unknown"
+}
+
+func getStr(fm map[string]interface{}, key string) (string, bool) {
+	val, ok := fm[key]
+	if !ok {
+		return "", false
+	}
+	s, ok := val.(string)
+	return s, ok
+}
