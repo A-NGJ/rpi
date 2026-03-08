@@ -7,6 +7,8 @@ model: opus
 
 Map a design to concrete codebase structure — files, modules, interfaces, and dependencies.
 
+**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or use `claude-init` to set it up.
+
 **When to use this command**: For greenfield projects creating many new files, major module reorganizations, or when the file layout itself is complex enough to warrant a dedicated discussion. For most features, the design doc's optional "File Structure" section (via `/rpi-design`) and the plan's file listings (via `/rpi-plan`) provide sufficient coverage without a separate structure stage.
 
 **This command OWNS**: file layout, module boundaries, public interfaces/contracts, dependency graph, and naming conventions.
@@ -31,7 +33,8 @@ Tip: `/rpi-structure .thoughts/designs/2025-01-08-authentication-flow.md`
 ### Step 1: Context Gathering
 
 1. **Read the design document fully** (no limit/offset) before spawning sub-tasks
-2. **Read any linked research documents** referenced in the design
+2. **Resolve the artifact chain**: Run `rpi chain <design-path>`
+   Read all linked research and other documents it identifies.
 3. **Spawn parallel research sub-tasks** using the Task tool. Each sub-task should load the appropriate skill first, then perform its work:
    - Sub-task: "Load the `locate-codebase` skill, then find existing files/modules that will be affected by [feature]"
    - Sub-task (@codebase-analyzer): Understand current file organization, module patterns, and naming conventions
@@ -122,109 +125,20 @@ After structural buy-in:
 
 ### Step 4: Write the Structure Document
 
-Save to `.thoughts/structures/YYYY-MM-DD-ENG-XXXX-description.md`
-- Format: `YYYY-MM-DD-ENG-XXXX-description.md`
-- Without ticket: `2025-01-08-improve-error-handling.md`
+**Create the structure doc**: Run `rpi scaffold structure --topic "..." --design <path> --write`
 
-**Template:**
+This creates `.thoughts/structures/YYYY-MM-DD-description.md` with frontmatter pre-populated (`date`, `author`, `git_commit`, `branch`, `repository`, `topic`, `tags`, `status: draft`, `related_design`, `related_research`).
 
-````markdown
----
-date: [Current date and time with timezone in ISO format]
-author: [Author name]
-git_commit: [Current commit hash]
-branch: [Current branch name]
-repository: [Repository name]
-topic: "[Feature/Task Name]"
-tags: [structure, modules, relevant-component-names]
-status: draft
-related_design: [path to design doc]
-related_research: [path to research doc if available]
-last_updated: [Current date in YYYY-MM-DD format]
-last_updated_by: [Author name]
----
-
-# Structure: [Feature/Task Name]
-
-## Overview
-[Brief description of the structural changes needed to implement the design]
-
-## Context
-- **Design**: [Link to design document]
-- **Research**: [Link to research document if available]
-
-## Conventions Applied
-- **File naming**: [Convention followed, e.g., kebab-case.ts]
-- **Module pattern**: [Pattern followed, e.g., barrel exports via index.ts]
-- **Test placement**: [Convention followed, e.g., co-located __tests__/ directory]
-- **Type definitions**: [Convention followed, e.g., types.ts per module]
-
-## File Changes
-
-### Modified Files
-
-#### `path/to/existing-file.ext`
-- **Current role**: [What this file does now]
-- **Changes needed**: [What will be added/modified]
-- **Reason**: [Why this file needs to change, tied to design decision]
-
-#### `path/to/another-file.ext`
-[Same structure...]
-
-### New Files
-
-#### `path/to/new-file.ext`
-- **Responsibility**: [Single responsibility description]
-- **Exports**: [Key exports - functions, types, constants]
-- **Depends on**: [What it imports from]
-- **Depended on by**: [What will import from it]
-
-#### `path/to/new-test-file.ext`
-[Same structure...]
-
-## Module Boundaries
-
-### [Module/Component Name]
-- **Directory**: `path/to/module/`
-- **Public API**: [What it exposes to other modules]
-- **Internal**: [What stays private to the module]
-- **Dependencies**: [External modules it depends on]
-
-## Key Interfaces
-
-### [Interface Name]
-**Location**: `path/to/file.ext`
-**Used by**: [Components that depend on this interface]
-
-```[language]
-// Interface definition
-[type definition, function signature, or contract]
-```
-
-### [Interface Name 2]
-[Same structure...]
-
-## Dependency Graph
-
-```
-[Visual representation of module dependencies]
-[Module A] --> [Module B] --> [Module C]
-                           --> [Module D]
-```
-
-**Dependency rules:**
-- [Rule, e.g., "UI components never import directly from data layer"]
-- [Rule, e.g., "All cross-module communication goes through the service interface"]
-
-## Migration Notes (if modifying existing structure)
-- [Step to safely migrate, e.g., "Add new interface alongside old one before removing"]
-- [Backward compatibility consideration]
-
-## References
-- Design: `[path to design doc]`
-- Research: `[path to research doc]`
-- Similar structure: `[existing module path used as reference]`
-````
+**Fill in the document sections:**
+- Overview (brief description of structural changes)
+- Context (links to design and research docs)
+- Conventions Applied (file naming, module pattern, test placement, type definitions)
+- File Changes — Modified Files (current role, changes needed, reason) and New Files (responsibility, exports, depends on, depended on by)
+- Module Boundaries (directory, public API, internal, dependencies)
+- Key Interfaces (location, used by, interface definition code)
+- Dependency Graph (visual representation + dependency rules)
+- Migration Notes (if modifying existing structure)
+- References
 
 ### Step 5: Review & Iterate
 

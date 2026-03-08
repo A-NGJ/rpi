@@ -7,6 +7,8 @@ model: sonnet
 
 You are tasked with implementing an approved technical plan from `.thoughts/plans/`. These plans contain phases with specific changes and success criteria.
 
+**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or use `claude-init` to set it up.
+
 Plans come in two forms:
 - **Pipeline plans**: Reference design docs (`.thoughts/designs/`) and optionally structure docs (`.thoughts/structures/`). Read these when you need deeper context.
 - **Standalone plans**: Self-contained with all context inline (no design docs). These are typically for simpler tasks.
@@ -16,14 +18,14 @@ Plans come in two forms:
 When given a plan path:
 
 - Read the plan completely and check for any existing checkmarks (- [x])
-- Check for a "Source Documents" section:
-  - If it links design docs (and optionally structure docs) → **pipeline plan**: read those docs too
-  - If it has a "Context" section instead → **standalone plan**: all context is in the plan itself
-- Read the original ticket and all files mentioned in the plan
+- Resolve the artifact chain: run `rpi chain <plan-path>`
+  This returns linked design docs, tickets, research docs. Read the files it identifies.
+- Read all files mentioned in the plan
 - **Read files fully** - never use limit/offset parameters, you need complete context
 - Think deeply about how the pieces fit together
 - Create a todo list to track your progress
-- Update the plan's frontmatter `status` from `draft` to `active` (if the plan has frontmatter)
+- Update the plan status: run `rpi frontmatter transition <plan> active`
+- Check current progress: run `rpi verify completeness <plan>` to see completed vs remaining items
 - Start implementing if you understand what needs to be done
 
 If no plan path provided, ask for one.
@@ -140,6 +142,7 @@ Use sub-tasks sparingly - mainly for targeted debugging or exploring unfamiliar 
 If the plan has existing checkmarks:
 
 - Trust that completed work is done
+- Run `rpi verify completeness <plan>` to see what's done vs remaining
 - Pick up from the first unchecked item
 - Verify previous work only if something seems off
 
@@ -149,5 +152,5 @@ Remember: You're implementing a solution, not just checking boxes. Keep the end 
 
 When all phases are done and verified:
 
-- Update the plan's frontmatter `status` from `active` to `complete`
+- Update the plan status: run `rpi frontmatter transition <plan> complete`
 - Announce: "All phases complete. Plan status updated to `complete`."
