@@ -3,6 +3,7 @@ package scanner
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -205,6 +206,95 @@ func TestScanNoFrontmatter(t *testing.T) {
 	}
 	if results[0].Title != nil {
 		t.Errorf("plan title should be nil, got %v", *results[0].Title)
+	}
+}
+
+func TestFindReferencesFrontmatter(t *testing.T) {
+	dir := setupTestDir(t)
+
+	refs, err := FindReferences(dir, "designs/d1.md")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// t1 has design: designs/d1.md in frontmatter
+	// p1 has body reference
+	// r1 has body reference
+	if len(refs) != 3 {
+		t.Errorf("got %d refs, want 3", len(refs))
+		for _, r := range refs {
+			t.Logf("  %s -> %s", r.ReferencingFile, r.FieldOrLine)
+		}
+	}
+
+	// Check that at least one is a frontmatter field reference
+	foundField := false
+	for _, r := range refs {
+		if r.FieldOrLine == "design: designs/d1.md" {
+			foundField = true
+		}
+	}
+	if !foundField {
+		t.Error("expected a frontmatter field reference 'design: designs/d1.md'")
+	}
+}
+
+func TestFindReferencesUnreferenced(t *testing.T) {
+	dir := setupTestDir(t)
+
+	refs, err := FindReferences(dir, "nonexistent/file.md")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(refs) != 0 {
+		t.Errorf("got %d refs, want 0", len(refs))
+	}
+}
+
+func TestCountReferences(t *testing.T) {
+	dir := setupTestDir(t)
+
+	count, err := CountReferences(dir, "designs/d1.md")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if count != 3 {
+		t.Errorf("got count %d, want 3", count)
+	}
+}
+
+func TestCountReferencesZero(t *testing.T) {
+	dir := setupTestDir(t)
+
+	count, err := CountReferences(dir, "nonexistent.md")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if count != 0 {
+		t.Errorf("got count %d, want 0", count)
+	}
+}
+
+func TestFindReferencesBodyLine(t *testing.T) {
+	dir := setupTestDir(t)
+
+	refs, err := FindReferences(dir, "designs/d1.md")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// r1 references designs/d1.md in body
+	foundBody := false
+	for _, r := range refs {
+		if strings.Contains(r.ReferencingFile, "r1.md") && strings.Contains(r.FieldOrLine, "References designs/d1.md") {
+			foundBody = true
+		}
+	}
+	if !foundBody {
+		t.Error("expected a body line reference from r1.md")
 	}
 }
 

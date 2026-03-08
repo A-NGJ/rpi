@@ -156,6 +156,82 @@ func fileReferences(doc *frontmatter.Document, target string) bool {
 	return strings.Contains(doc.Body, target)
 }
 
+// ReferenceDetail describes where a reference was found.
+type ReferenceDetail struct {
+	ReferencingFile string `json:"referencing_file"`
+	FieldOrLine     string `json:"field_or_line"`
+}
+
+// FindReferences returns detailed info about all files referencing targetPath.
+func FindReferences(thoughtsDir, targetPath string) ([]ReferenceDetail, error) {
+	var results []ReferenceDetail
+
+	err := filepath.Walk(thoughtsDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
+		if info.IsDir() && info.Name() == "archive" {
+			return filepath.SkipDir
+		}
+		if info.IsDir() || !strings.HasSuffix(path, ".md") {
+			return nil
+		}
+
+		doc, parseErr := frontmatter.Parse(path)
+		if parseErr != nil {
+			return nil
+		}
+
+		// Check frontmatter fields
+		for key, val := range doc.Frontmatter {
+			switch v := val.(type) {
+			case string:
+				if v == targetPath {
+					results = append(results, ReferenceDetail{
+						ReferencingFile: path,
+						FieldOrLine:     key + ": " + v,
+					})
+				}
+			case []interface{}:
+				for _, item := range v {
+					if s, ok := item.(string); ok && s == targetPath {
+						results = append(results, ReferenceDetail{
+							ReferencingFile: path,
+							FieldOrLine:     key + ": " + s,
+						})
+					}
+				}
+			}
+		}
+
+		// Check body lines
+		for _, line := range strings.Split(doc.Body, "\n") {
+			if strings.Contains(line, targetPath) {
+				results = append(results, ReferenceDetail{
+					ReferencingFile: path,
+					FieldOrLine:     strings.TrimSpace(line),
+				})
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	if results == nil {
+		results = []ReferenceDetail{}
+	}
+	return results, nil
+}
+
+// CountReferences returns how many artifacts in thoughtsDir reference targetPath.
+func CountReferences(thoughtsDir, targetPath string) (int, error) {
+	refs, err := FindReferences(thoughtsDir, targetPath)
+	return len(refs), err
+}
+
 func inferType(path string) string {
 	parts := strings.Split(filepath.ToSlash(path), "/")
 	for _, p := range parts {
