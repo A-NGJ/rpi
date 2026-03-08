@@ -7,6 +7,8 @@ model: sonnet
 
 Move completed or superseded artifacts from `.thoughts/` to `.thoughts/archive/` to keep the active directory clean while preserving full history.
 
+**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or use `claude-init` to set it up.
+
 ## Input
 
 This command accepts two modes:
@@ -18,7 +20,7 @@ This command accepts two modes:
 
 ### If specific paths provided:
 
-1. Read each file and check its frontmatter `status` field
+1. Check each file's status: run `rpi frontmatter get <file> status`
 2. If status is `draft` or `active`, warn immediately:
    ```
    Warning: This artifact is still [draft/active]:
@@ -31,16 +33,9 @@ This command accepts two modes:
 
 ### If no paths provided (scan mode):
 
-1. Scan these `.thoughts/` subdirectories for markdown files with YAML frontmatter:
-   - `research/`
-   - `designs/`
-   - `structures/`
-   - `plans/`
-   - `tickets/`
-   - `specs/`
-2. Read the frontmatter of each file and extract the `status` field
-3. Collect all artifacts with `status: complete` or `status: superseded`
-4. Group candidates by directory type and present them:
+1. Run: `rpi archive scan`
+2. The output returns candidates with `status: complete` or `status: superseded`, grouped by type, with `ref_count` and `superseded_by` for each.
+3. Present the candidates:
 
 ```
 Archive candidates:
@@ -58,12 +53,10 @@ Designs (1):
 Which would you like to archive? (all / specific items / none)
 ```
 
-5. If no candidates found:
+4. If no candidates found:
    ```
    No archive candidates found. All artifacts are either draft or active.
    ```
-
-**For `superseded` artifacts**: Check for a `superseded_by` field in frontmatter and include it in the display so the user can see what replaced it.
 
 ## Step 2: Confirm Selection
 
@@ -83,7 +76,7 @@ Before moving any files, perform these safety checks:
 
 For each artifact about to be archived:
 
-1. Use Grep to search remaining (non-archived) `.thoughts/` files for references to the artifact's path
+1. Run: `rpi archive check-refs <path>`
 2. If references are found, warn:
    ```
    Cross-reference warning:
@@ -113,29 +106,13 @@ This is a double confirmation — the user was already warned in Step 1 and must
 
 For each confirmed artifact:
 
-1. **Determine destination**: `.thoughts/archive/YYYY-MM/[type]/[filename]`
-   - `YYYY-MM` is the current year-month (when the archive happens, not the artifact date)
-   - `[type]` is the source subdirectory (research, designs, plans, etc.)
-   - Example: `.thoughts/research/2026-01-15-auth-flow.md` → `.thoughts/archive/2026-03/research/2026-01-15-auth-flow.md`
+1. Run: `rpi archive move <path>` (or `rpi archive move <path> --force` to skip ref check warning)
+   This handles everything automatically:
+   - Updates frontmatter (`status: archived`, `archived_date: YYYY-MM-DD`)
+   - Creates the destination directory (`.thoughts/archive/YYYY-MM/[type]/`)
+   - Moves the file
 
-2. **Create directory structure** if it doesn't exist:
-   ```
-   .thoughts/archive/
-   └── 2026-03/
-       ├── research/
-       ├── designs/
-       └── plans/
-   ```
-
-3. **Update frontmatter**: Before moving, update the artifact's `status` to `archived` and add an `archived_date` field:
-   ```yaml
-   status: archived
-   archived_date: YYYY-MM-DD
-   ```
-
-4. **Move the file** to its archive destination
-
-5. **Report results**:
+2. **Report results**:
    ```
    Archived 3 artifacts to .thoughts/archive/2026-03/:
 

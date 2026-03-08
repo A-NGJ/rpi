@@ -9,6 +9,8 @@ Validate that an implementation matches its design artifacts across three dimens
 
 This command is purely advisory — it does not block anything. It can be re-run after fixes to confirm resolution.
 
+**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or use `claude-init` to set it up.
+
 ## Step 1: Receive the input
 
 If the user provided a path to a design doc, plan, or ticket as command arguments, proceed to Step 3.
@@ -19,16 +21,16 @@ If no arguments were provided, proceed to Step 2 (auto-detection).
 
 When no path is provided, detect from recent git changes:
 
-1. Run `git diff --name-only main...HEAD` to find changed files on the current branch
-   - If on `main` or the diff is empty, fall back to `git diff --name-only HEAD~5` (last 5 commits)
-2. Scan `.thoughts/plans/` for plans with `status: active` or recently completed phases (checked-off items)
-3. Scan `.thoughts/designs/` for designs with `status: active`
-4. If artifacts found, announce:
+1. Run in parallel:
+   - `rpi git-context changed-files` — files changed on the current branch (falls back to last 5 commits if on main)
+   - `rpi scan --status active --type plan` — find active plans
+   - `rpi scan --status active --type design` — find active designs
+2. If artifacts found, announce:
    ```
    Found active plan at [path] — verifying against it.
    ```
    Then proceed to Step 3 with the discovered path(s).
-5. If nothing found, ask:
+3. If nothing found, ask:
    ```
    I couldn't detect an active plan or design from recent git changes.
 
@@ -40,15 +42,15 @@ When no path is provided, detect from recent git changes:
 
 ## Step 3: Read referenced artifacts
 
-Read the provided or detected artifact(s) fully. Then follow the artifact chain:
+Read the provided or detected artifact(s) fully. Then resolve the artifact chain:
 
-- **If given a plan**: read the plan, then read any linked design doc, ticket, and structure doc from its "Source Documents" section
-- **If given a design doc**: read the design doc, then scan `.thoughts/plans/` for plans that reference it
-- **If given a ticket**: read the ticket, then read its `design:` field target, and scan `.thoughts/plans/` for plans referencing the ticket
+Run: `rpi chain <artifact-path>`
+
+This returns the full chain (plan → design → ticket → research) with metadata. Read the files it identifies.
 
 Also check:
 - `.thoughts/specs/` — if this directory exists, read any specs relevant to the changed domain areas
-- `git diff --name-only main...HEAD` (or last 5 commits) — to identify which files were actually changed in the implementation
+- Use the changed files list from `rpi git-context changed-files` to identify which files were actually changed in the implementation
 
 Present a summary before proceeding:
 
@@ -75,14 +77,18 @@ Check whether everything that was planned has been done.
 - Sub-task: "Verify completeness of the implementation. You are checking whether all planned work was actually completed.
 
   Context:
-  - [Include the plan content, ticket content, and list of changed files from git diff]
+  - [Include the plan content, ticket content, and list of changed files]
 
-  Check each of these:
+  Use these binary commands for mechanical checks:
+  - `rpi verify completeness <plan-path>` — returns checkbox counts (checked vs total) and file coverage (planned files vs actually changed files)
+  - `rpi verify markers` — scans changed files for TODO/FIXME/HACK markers
+
+  Then check each of these using your own judgment:
   1. **Plan phases**: Are all phases checked off? List any unchecked items.
   2. **Acceptance criteria**: If a ticket exists, are all acceptance criteria met? Read the actual implementation files to verify — don't trust checkboxes alone.
-  3. **TODO/FIXME/HACK markers**: Search for these markers in the changed files using Grep. Report any found in new or modified code.
+  3. **TODO/FIXME/HACK markers**: Report any found by `rpi verify markers` in new or modified code.
   4. **Test coverage**: Do tests exist for new functionality? Check that new public functions, components, or endpoints have corresponding test files or test cases.
-  5. **File coverage**: Were all files mentioned in the plan actually created or modified? Cross-reference the plan's file lists against `git diff --name-only`.
+  5. **File coverage**: Were all files mentioned in the plan actually created or modified? Use the file coverage output from `rpi verify completeness`.
 
   For each item, report:
   - PASS: [what was satisfied]
@@ -153,7 +159,8 @@ After all three sub-agents complete, synthesize their findings into a single rep
    - **Warnings (should fix)**: Incomplete test coverage, minor deviations, inconsistent patterns
    - **Notes (consider fixing)**: Style nits, minor naming mismatches, suggestions
 
-3. **Write the report** to `.thoughts/reviews/YYYY-MM-DD-verify-[topic].md` using the format below.
+3. **Write the report**: Run `rpi scaffold verify-report --topic "Verification: [feature]" --write`
+   This creates the report file at `.thoughts/reviews/` with frontmatter and section headers. Fill in each section with the sub-agent findings.
 
 4. **Present the summary** to the user:
    ```
@@ -169,49 +176,6 @@ After all three sub-agents complete, synthesize their findings into a single rep
    ```
 
    If blockers exist, list them directly in the summary so the user sees them immediately.
-
-## Report Format
-
-```markdown
----
-date: [ISO 8601 datetime with timezone]
-topic: "Verification: [Feature/Plan Name]"
-tags: [verification, relevant-areas]
-type: verification
-status: complete
-verified_against:
-  - [path to design/plan/ticket]
----
-
-# Verification: [Feature/Plan Name]
-
-## Summary
-[1-2 sentence overall assessment: pass / pass with warnings / issues found]
-
-## Completeness
-### Status: [pass / warnings / issues]
-- [x] [Completed item]
-- [ ] [Missing item — BLOCKER/WARNING]
-
-## Correctness
-### Status: [pass / warnings / issues]
-- [Finding with file:line reference and severity]
-
-## Coherence
-### Status: [pass / warnings / issues]
-- [Finding with file:line reference and severity]
-
-## Issues by Severity
-
-### Blockers (must fix)
-- [Issue description with file:line]
-
-### Warnings (should fix)
-- [Issue description with file:line]
-
-### Notes (consider fixing)
-- [Issue description with file:line]
-```
 
 ## Guidelines
 

@@ -7,16 +7,15 @@ model: sonnet
 
 Create git commits for changes in the working tree. This includes changes from the current session and any pre-existing staged or unstaged modifications.
 
+**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or use `claude-init` to set it up.
+
 ## Process
 
 ### 1. Understand the changes
 
-Run these commands in parallel to get the full picture:
+Run: `rpi git-context`
 
-- `git status` — see all tracked, untracked, and staged files (never use `-uall`)
-- `git diff` — unstaged changes
-- `git diff --staged` — already-staged changes
-- `git log --oneline -n 10` — recent commits, so you can match the repo's message style
+This returns branch, status (tracked/untracked/staged files), diff summary, and recent commits as JSON. Use this to get the full picture.
 
 Review the conversation history to understand the intent behind changes. If there are staged files not discussed in the conversation, inspect them too — the user may have edited files manually.
 
@@ -24,14 +23,14 @@ Review the conversation history to understand the intent behind changes. If ther
 
 Before planning commits, scan the changeset for issues:
 
-- **Sensitive files**: If you see `.env`, credentials, secrets, API keys, or large binaries in the changeset, warn the user and exclude them unless explicitly told otherwise.
+- **Sensitive files**: Run `rpi git-context sensitive-check` to detect `.env`, credentials, secrets, API keys, or large binaries in the changeset. Warn the user and exclude them unless explicitly told otherwise.
 - **Nothing to commit**: If the working tree is clean (no staged, unstaged, or untracked changes), tell the user and stop — don't create an empty commit.
 
 ### 3. Plan your commit(s)
 
 - Group related files into logical, focused commits — prefer smaller over monolithic
 - Draft commit messages in imperative mood, focusing on the "why" not the "what"
-- Match the repo's existing commit style based on `git log` output. If there aren't any commit conventions detected, follow commitizen convention:
+- Match the repo's existing commit style from the recent commits in the `rpi git-context` output. If there aren't any commit conventions detected, follow commitizen convention:
   - `feat: add user authentication`
   - `fix: resolve null pointer in data loader`
   - `refactor: extract validation into shared module`
