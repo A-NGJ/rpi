@@ -9,7 +9,7 @@ Validate that an implementation matches its design artifacts across three dimens
 
 This command is purely advisory — it does not block anything. It can be re-run after fixes to confirm resolution.
 
-**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or use `claude-init` to set it up.
+**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or use `rpi-init` to set it up.
 
 ## Step 1: Receive the input
 

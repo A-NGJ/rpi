@@ -11,7 +11,7 @@ This is part of the pipeline: **research → design → plan → implement**. Fo
 
 Design is where you make the hard choices — choosing between approaches, identifying risks, and ensuring decisions compose well together. A good design document captures *why* choices were made (not just what was chosen), so future readers can evaluate whether the reasoning still holds when circumstances change.
 
-**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or use `claude-init` to set it up.
+**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or use `rpi-init` to set it up.
 
 ## Initial Response
 

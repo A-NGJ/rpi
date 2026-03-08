@@ -7,7 +7,7 @@ model: opus
 
 Map a design to concrete codebase structure — files, modules, interfaces, and dependencies.
 
-**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or use `claude-init` to set it up.
+**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or use `rpi-init` to set it up.
 
 **When to use this command**: For greenfield projects creating many new files, major module reorganizations, or when the file layout itself is complex enough to warrant a dedicated discussion. For most features, the design doc's optional "File Structure" section (via `/rpi-design`) and the plan's file listings (via `/rpi-plan`) provide sufficient coverage without a separate structure stage.
 

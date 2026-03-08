@@ -9,7 +9,7 @@ Break down a design document (and optional structure document) into discrete, sc
 
 This is part of the pipeline: **research → design → [structure] → tickets → plan → implement**. Use this when a design covers enough complexity that planning it as a single unit would produce an unwieldy plan. Tickets give you control over implementation order, scope, and parallelism.
 
-**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or use `claude-init` to set it up.
+**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or use `rpi-init` to set it up.
 
 **When to use tickets vs. straight to plan:**
 - **Skip tickets** when the design is focused enough that `/rpi-plan` can handle it directly (1-3 phases, single concern)

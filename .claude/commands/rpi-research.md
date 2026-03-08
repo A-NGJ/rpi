@@ -7,7 +7,7 @@ model: opus
 
 Conduct research across the codebase to answer user questions by spawning parallel sub-agents and synthesizing their findings.
 
-**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or use `claude-init` to set it up.
+**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or use `rpi-init` to set it up.
 
 ## Facts first, opinions when warranted
 

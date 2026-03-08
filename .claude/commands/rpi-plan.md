@@ -7,7 +7,7 @@ model: opus
 
 Create implementation plans with phased tasks, success criteria, and verification steps.
 
-**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or use `claude-init` to set it up.
+**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or use `rpi-init` to set it up.
 
 **Two modes — auto-detected from input:**
 
