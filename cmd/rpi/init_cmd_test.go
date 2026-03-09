@@ -8,96 +8,332 @@ import (
 	"testing"
 )
 
-func TestInitCreatesAllDirs(t *testing.T) {
-	dir := t.TempDir()
-	oldFlag := thoughtsDirFlag
-	thoughtsDirFlag = dir
-	defer func() { thoughtsDirFlag = oldFlag }()
+func resetInitFlags() {
+	initForce = false
+	initNoClaudeMD = false
+	initTrackThoughts = false
+}
 
+func runInitInDir(t *testing.T, dir string) (*bytes.Buffer, error) {
+	t.Helper()
+	resetInitFlags()
 	buf := new(bytes.Buffer)
 	cmd := initCmd
 	cmd.SetOut(buf)
+	err := cmd.RunE(cmd, []string{dir})
+	return buf, err
+}
 
-	if err := cmd.RunE(cmd, nil); err != nil {
+func TestInitCreatesAllDirs(t *testing.T) {
+	dir := t.TempDir()
+	buf, err := runInitInDir(t, dir)
+	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	expected := []string{
-		"research", "designs", "structures", "tickets",
-		"plans", "specs", "reviews", "archive",
-	}
-	for _, d := range expected {
-		path := filepath.Join(dir, d)
+	// Verify .claude/ subdirs
+	claudeSubdirs := []string{"agents", "commands", "skills", "hooks"}
+	for _, d := range claudeSubdirs {
+		path := filepath.Join(dir, ".claude", d)
 		info, err := os.Stat(path)
 		if err != nil {
-			t.Errorf("directory %s not created: %v", d, err)
+			t.Errorf(".claude/%s not created: %v", d, err)
 			continue
 		}
 		if !info.IsDir() {
-			t.Errorf("%s is not a directory", d)
+			t.Errorf(".claude/%s is not a directory", d)
 		}
 	}
 
+	// Verify .thoughts/ subdirs
+	thoughtsSubdirs := []string{
+		"research", "designs", "structures", "tickets",
+		"plans", "specs", "reviews", "archive", "prs",
+	}
+	for _, d := range thoughtsSubdirs {
+		path := filepath.Join(dir, ".thoughts", d)
+		info, err := os.Stat(path)
+		if err != nil {
+			t.Errorf(".thoughts/%s not created: %v", d, err)
+			continue
+		}
+		if !info.IsDir() {
+			t.Errorf(".thoughts/%s is not a directory", d)
+		}
+	}
+
+	// Verify CLAUDE.md and PIPELINE.md created
+	if _, err := os.Stat(filepath.Join(dir, "CLAUDE.md")); err != nil {
+		t.Error("CLAUDE.md not created")
+	}
+	if _, err := os.Stat(filepath.Join(dir, ".thoughts", "PIPELINE.md")); err != nil {
+		t.Error(".thoughts/PIPELINE.md not created")
+	}
+
+	// Verify .gitignore entries
+	gitignore, err := os.ReadFile(filepath.Join(dir, ".gitignore"))
+	if err != nil {
+		t.Fatalf("failed to read .gitignore: %v", err)
+	}
+	if !strings.Contains(string(gitignore), ".claude/settings.local.json") {
+		t.Error(".gitignore missing .claude/settings.local.json entry")
+	}
+	if !strings.Contains(string(gitignore), ".thoughts/") {
+		t.Error(".gitignore missing .thoughts/ entry")
+	}
+
 	output := buf.String()
-	if strings.Count(output, "created ") != 8 {
-		t.Errorf("expected 8 'created' lines, got output:\n%s", output)
+	if !strings.Contains(output, "Created .claude/agents/") {
+		t.Error("output missing .claude/agents/ creation message")
+	}
+	if !strings.Contains(output, "Created .thoughts/research/") {
+		t.Error("output missing .thoughts/research/ creation message")
 	}
 }
 
 func TestInitIdempotent(t *testing.T) {
 	dir := t.TempDir()
-	oldFlag := thoughtsDirFlag
-	thoughtsDirFlag = dir
-	defer func() { thoughtsDirFlag = oldFlag }()
 
 	// First run
-	buf := new(bytes.Buffer)
-	cmd := initCmd
-	cmd.SetOut(buf)
-	if err := cmd.RunE(cmd, nil); err != nil {
+	_, err := runInitInDir(t, dir)
+	if err != nil {
 		t.Fatalf("first run error: %v", err)
 	}
 
-	// Second run
-	buf.Reset()
-	if err := cmd.RunE(cmd, nil); err != nil {
-		t.Fatalf("second run error: %v", err)
+	// Second run should error (`.claude/` exists)
+	_, err = runInitInDir(t, dir)
+	if err == nil {
+		t.Fatal("second run should return error")
 	}
-
-	output := buf.String()
-	if !strings.Contains(output, "already initialized") {
-		t.Errorf("expected 'already initialized', got:\n%s", output)
+	if !strings.Contains(err.Error(), ".claude/ already exists") {
+		t.Errorf("expected '.claude/ already exists' error, got: %v", err)
 	}
 }
 
 func TestInitPartial(t *testing.T) {
 	dir := t.TempDir()
-	oldFlag := thoughtsDirFlag
-	thoughtsDirFlag = dir
-	defer func() { thoughtsDirFlag = oldFlag }()
 
-	// Pre-create some directories
-	os.MkdirAll(filepath.Join(dir, "research"), 0755)
-	os.MkdirAll(filepath.Join(dir, "plans"), 0755)
-	os.MkdirAll(filepath.Join(dir, "archive"), 0755)
+	// Pre-create some .thoughts/ dirs but not .claude/
+	os.MkdirAll(filepath.Join(dir, ".thoughts", "research"), 0755)
+	os.MkdirAll(filepath.Join(dir, ".thoughts", "plans"), 0755)
 
-	buf := new(bytes.Buffer)
-	cmd := initCmd
-	cmd.SetOut(buf)
-
-	if err := cmd.RunE(cmd, nil); err != nil {
+	_, err := runInitInDir(t, dir)
+	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	output := buf.String()
-	// Should create 5 missing dirs (designs, structures, tickets, specs, reviews)
-	if strings.Count(output, "created ") != 5 {
-		t.Errorf("expected 5 'created' lines, got output:\n%s", output)
+	// All dirs should exist
+	for _, d := range []string{"designs", "structures", "tickets", "specs", "reviews", "archive", "prs"} {
+		path := filepath.Join(dir, ".thoughts", d)
+		if _, err := os.Stat(path); err != nil {
+			t.Errorf(".thoughts/%s not created: %v", d, err)
+		}
 	}
-	if strings.Contains(output, "research") {
-		t.Error("should not have created already-existing 'research' dir")
+}
+
+func TestInitForce(t *testing.T) {
+	dir := t.TempDir()
+
+	// First run
+	_, err := runInitInDir(t, dir)
+	if err != nil {
+		t.Fatalf("first run error: %v", err)
 	}
-	if strings.Contains(output, "already initialized") {
-		t.Error("should not print 'already initialized' when some dirs were created")
+
+	// Write custom CLAUDE.md content
+	claudeMD := filepath.Join(dir, "CLAUDE.md")
+	original, _ := os.ReadFile(claudeMD)
+	os.WriteFile(claudeMD, []byte("custom content"), 0644)
+
+	// Second run with --force
+	resetInitFlags()
+	initForce = true
+	buf := new(bytes.Buffer)
+	cmd := initCmd
+	cmd.SetOut(buf)
+	err = cmd.RunE(cmd, []string{dir})
+	if err != nil {
+		t.Fatalf("--force run error: %v", err)
+	}
+
+	// CLAUDE.md should be overwritten with template content
+	data, err := os.ReadFile(claudeMD)
+	if err != nil {
+		t.Fatalf("read CLAUDE.md: %v", err)
+	}
+	if string(data) == "custom content" {
+		t.Error("--force should have overwritten CLAUDE.md")
+	}
+	if string(data) != string(original) {
+		t.Error("--force should have restored template content")
+	}
+}
+
+func TestInitNoClaudeMD(t *testing.T) {
+	dir := t.TempDir()
+
+	resetInitFlags()
+	initNoClaudeMD = true
+	buf := new(bytes.Buffer)
+	cmd := initCmd
+	cmd.SetOut(buf)
+	err := cmd.RunE(cmd, []string{dir})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// CLAUDE.md should not exist
+	if _, err := os.Stat(filepath.Join(dir, "CLAUDE.md")); err == nil {
+		t.Error("CLAUDE.md should not be created with --no-claude-md")
+	}
+
+	// PIPELINE.md should still exist
+	if _, err := os.Stat(filepath.Join(dir, ".thoughts", "PIPELINE.md")); err != nil {
+		t.Error(".thoughts/PIPELINE.md should still be created")
+	}
+}
+
+func TestInitTrackThoughts(t *testing.T) {
+	dir := t.TempDir()
+
+	resetInitFlags()
+	initTrackThoughts = true
+	buf := new(bytes.Buffer)
+	cmd := initCmd
+	cmd.SetOut(buf)
+	err := cmd.RunE(cmd, []string{dir})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	gitignore, err := os.ReadFile(filepath.Join(dir, ".gitignore"))
+	if err != nil {
+		t.Fatalf("failed to read .gitignore: %v", err)
+	}
+
+	if strings.Contains(string(gitignore), ".thoughts/") {
+		t.Error(".thoughts/ should not be in .gitignore with --track-thoughts")
+	}
+	if !strings.Contains(string(gitignore), ".claude/settings.local.json") {
+		t.Error(".claude/settings.local.json should still be in .gitignore")
+	}
+}
+
+func TestInitTargetDir(t *testing.T) {
+	dir := t.TempDir()
+	target := filepath.Join(dir, "myproject")
+	os.MkdirAll(target, 0755)
+
+	_, err := runInitInDir(t, target)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if _, err := os.Stat(filepath.Join(target, ".claude", "commands")); err != nil {
+		t.Error(".claude/commands not created in target dir")
+	}
+	if _, err := os.Stat(filepath.Join(target, ".thoughts", "plans")); err != nil {
+		t.Error(".thoughts/plans not created in target dir")
+	}
+	if _, err := os.Stat(filepath.Join(target, "CLAUDE.md")); err != nil {
+		t.Error("CLAUDE.md not created in target dir")
+	}
+}
+
+func TestInitExistingClaudeDir(t *testing.T) {
+	dir := t.TempDir()
+
+	// Pre-create .claude/
+	os.MkdirAll(filepath.Join(dir, ".claude"), 0755)
+
+	_, err := runInitInDir(t, dir)
+	if err == nil {
+		t.Fatal("should error when .claude/ exists without --force")
+	}
+	if !strings.Contains(err.Error(), ".claude/ already exists") {
+		t.Errorf("expected '.claude/ already exists' error, got: %v", err)
+	}
+}
+
+func TestInitGitignore(t *testing.T) {
+	dir := t.TempDir()
+
+	_, err := runInitInDir(t, dir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(dir, ".gitignore"))
+	if err != nil {
+		t.Fatalf("failed to read .gitignore: %v", err)
+	}
+
+	content := string(data)
+	if !strings.Contains(content, ".claude/settings.local.json") {
+		t.Error("missing .claude/settings.local.json entry")
+	}
+	if !strings.Contains(content, ".thoughts/") {
+		t.Error("missing .thoughts/ entry")
+	}
+}
+
+func TestInitGitignoreIdempotent(t *testing.T) {
+	dir := t.TempDir()
+
+	// First run
+	_, err := runInitInDir(t, dir)
+	if err != nil {
+		t.Fatalf("first run error: %v", err)
+	}
+
+	// Second run with --force
+	resetInitFlags()
+	initForce = true
+	buf := new(bytes.Buffer)
+	cmd := initCmd
+	cmd.SetOut(buf)
+	err = cmd.RunE(cmd, []string{dir})
+	if err != nil {
+		t.Fatalf("--force run error: %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(dir, ".gitignore"))
+	if err != nil {
+		t.Fatalf("failed to read .gitignore: %v", err)
+	}
+
+	content := string(data)
+	if strings.Count(content, ".claude/settings.local.json") != 1 {
+		t.Errorf(".claude/settings.local.json appears %d times, want 1", strings.Count(content, ".claude/settings.local.json"))
+	}
+	if strings.Count(content, ".thoughts/") != 1 {
+		t.Errorf(".thoughts/ appears %d times, want 1", strings.Count(content, ".thoughts/"))
+	}
+}
+
+func TestInitTemplateContent(t *testing.T) {
+	dir := t.TempDir()
+
+	_, err := runInitInDir(t, dir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Verify CLAUDE.md has template content
+	claudeData, err := os.ReadFile(filepath.Join(dir, "CLAUDE.md"))
+	if err != nil {
+		t.Fatalf("read CLAUDE.md: %v", err)
+	}
+	if !strings.Contains(string(claudeData), "# CLAUDE.md") {
+		t.Error("CLAUDE.md missing expected template header")
+	}
+
+	// Verify PIPELINE.md has template content
+	pipelineData, err := os.ReadFile(filepath.Join(dir, ".thoughts", "PIPELINE.md"))
+	if err != nil {
+		t.Fatalf("read PIPELINE.md: %v", err)
+	}
+	if !strings.Contains(string(pipelineData), "# Development Pipeline") {
+		t.Error("PIPELINE.md missing expected template header")
 	}
 }
