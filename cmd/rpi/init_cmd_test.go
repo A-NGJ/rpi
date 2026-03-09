@@ -12,7 +12,6 @@ func resetInitFlags() {
 	initForce = false
 	initNoClaudeMD = false
 	initTrackThoughts = false
-	initAll = false
 	initUpdate = false
 	initAgentsOnly = false
 	initCommandsOnly = false
@@ -343,6 +342,67 @@ func TestInitTemplateContent(t *testing.T) {
 	}
 }
 
+func TestInitInstallsWorkflowFiles(t *testing.T) {
+	dir := t.TempDir()
+	buf, err := runInitInDir(t, dir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Verify embedded agents are installed
+	if _, err := os.Stat(filepath.Join(dir, ".claude", "agents", "codebase-analyzer.md")); err != nil {
+		t.Error("agents/codebase-analyzer.md not installed")
+	}
+
+	// Verify embedded commands are installed
+	for _, cmd := range []string{"rpi-plan.md", "rpi-research.md", "rpi-design.md", "rpi-implement.md"} {
+		if _, err := os.Stat(filepath.Join(dir, ".claude", "commands", cmd)); err != nil {
+			t.Errorf("commands/%s not installed", cmd)
+		}
+	}
+
+	// Verify embedded skills are installed
+	for _, skill := range []string{"find-patterns", "analyze-thoughts", "locate-codebase", "locate-thoughts"} {
+		if _, err := os.Stat(filepath.Join(dir, ".claude", "skills", skill, "SKILL.md")); err != nil {
+			t.Errorf("skills/%s/SKILL.md not installed", skill)
+		}
+	}
+
+	output := buf.String()
+	if !strings.Contains(output, "Installed") {
+		t.Error("output missing install confirmation")
+	}
+}
+
+func TestInitDoesNotOverwriteWithoutForce(t *testing.T) {
+	dir := t.TempDir()
+	_, err := runInitInDir(t, dir)
+	if err != nil {
+		t.Fatalf("first run error: %v", err)
+	}
+
+	// Modify an installed file
+	cmdFile := filepath.Join(dir, ".claude", "commands", "rpi-plan.md")
+	os.WriteFile(cmdFile, []byte("custom content"), 0644)
+
+	// Second run with --force
+	resetInitFlags()
+	initForce = true
+	buf := new(bytes.Buffer)
+	cmd := initCmd
+	cmd.SetOut(buf)
+	err = cmd.RunE(cmd, []string{dir})
+	if err != nil {
+		t.Fatalf("--force run error: %v", err)
+	}
+
+	// File should be overwritten
+	data, _ := os.ReadFile(cmdFile)
+	if string(data) == "custom content" {
+		t.Error("--force should have overwritten customized file")
+	}
+}
+
 // setupDotfiles creates a fake dotfiles directory with test files.
 func setupDotfiles(t *testing.T) string {
 	t.Helper()
@@ -355,167 +415,6 @@ func setupDotfiles(t *testing.T) string {
 	os.MkdirAll(filepath.Join(dotfiles, "agents", "subdir"), 0755)
 	os.WriteFile(filepath.Join(dotfiles, "agents", "subdir", "nested.md"), []byte("nested"), 0644)
 	return dotfiles
-}
-
-func TestInitAll(t *testing.T) {
-	dotfiles := setupDotfiles(t)
-	t.Setenv("DOTFILES_CLAUDE", dotfiles)
-
-	dir := t.TempDir()
-	resetInitFlags()
-	initAll = true
-	buf := new(bytes.Buffer)
-	cmd := initCmd
-	cmd.SetOut(buf)
-	err := cmd.RunE(cmd, []string{dir})
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	// Verify all components copied
-	for _, comp := range []string{"agents", "commands", "skills", "hooks"} {
-		path := filepath.Join(dir, ".claude", comp, "test.md")
-		data, err := os.ReadFile(path)
-		if err != nil {
-			t.Errorf("%s/test.md not copied: %v", comp, err)
-			continue
-		}
-		if string(data) != comp+" content" {
-			t.Errorf("%s/test.md has wrong content: %s", comp, data)
-		}
-	}
-
-	// Verify recursive copy
-	nested := filepath.Join(dir, ".claude", "agents", "subdir", "nested.md")
-	data, err := os.ReadFile(nested)
-	if err != nil {
-		t.Fatalf("nested file not copied: %v", err)
-	}
-	if string(data) != "nested" {
-		t.Errorf("nested file has wrong content: %s", data)
-	}
-
-	output := buf.String()
-	if !strings.Contains(output, "Copied") {
-		t.Error("output missing copy confirmation")
-	}
-}
-
-func TestInitAllAgentsOnly(t *testing.T) {
-	dotfiles := setupDotfiles(t)
-	t.Setenv("DOTFILES_CLAUDE", dotfiles)
-
-	dir := t.TempDir()
-	resetInitFlags()
-	initAll = true
-	initAgentsOnly = true
-	buf := new(bytes.Buffer)
-	cmd := initCmd
-	cmd.SetOut(buf)
-	err := cmd.RunE(cmd, []string{dir})
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	// agents should be copied
-	if _, err := os.Stat(filepath.Join(dir, ".claude", "agents", "test.md")); err != nil {
-		t.Error("agents/test.md should be copied")
-	}
-
-	// commands, skills, hooks should NOT have test.md from dotfiles
-	for _, comp := range []string{"commands", "skills", "hooks"} {
-		path := filepath.Join(dir, ".claude", comp, "test.md")
-		if _, err := os.Stat(path); err == nil {
-			t.Errorf("%s/test.md should not be copied with --agents-only", comp)
-		}
-	}
-}
-
-func TestInitAllCommandsOnly(t *testing.T) {
-	dotfiles := setupDotfiles(t)
-	t.Setenv("DOTFILES_CLAUDE", dotfiles)
-
-	dir := t.TempDir()
-	resetInitFlags()
-	initAll = true
-	initCommandsOnly = true
-	buf := new(bytes.Buffer)
-	cmd := initCmd
-	cmd.SetOut(buf)
-	err := cmd.RunE(cmd, []string{dir})
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	if _, err := os.Stat(filepath.Join(dir, ".claude", "commands", "test.md")); err != nil {
-		t.Error("commands/test.md should be copied")
-	}
-	if _, err := os.Stat(filepath.Join(dir, ".claude", "agents", "test.md")); err == nil {
-		t.Error("agents/test.md should not be copied with --commands-only")
-	}
-}
-
-func TestInitAllSkillsOnly(t *testing.T) {
-	dotfiles := setupDotfiles(t)
-	t.Setenv("DOTFILES_CLAUDE", dotfiles)
-
-	dir := t.TempDir()
-	resetInitFlags()
-	initAll = true
-	initSkillsOnly = true
-	buf := new(bytes.Buffer)
-	cmd := initCmd
-	cmd.SetOut(buf)
-	err := cmd.RunE(cmd, []string{dir})
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	if _, err := os.Stat(filepath.Join(dir, ".claude", "skills", "test.md")); err != nil {
-		t.Error("skills/test.md should be copied")
-	}
-	if _, err := os.Stat(filepath.Join(dir, ".claude", "agents", "test.md")); err == nil {
-		t.Error("agents/test.md should not be copied with --skills-only")
-	}
-}
-
-func TestInitAllDotfilesEnv(t *testing.T) {
-	dotfiles := setupDotfiles(t)
-	t.Setenv("DOTFILES_CLAUDE", dotfiles)
-
-	dir := t.TempDir()
-	resetInitFlags()
-	initAll = true
-	buf := new(bytes.Buffer)
-	cmd := initCmd
-	cmd.SetOut(buf)
-	err := cmd.RunE(cmd, []string{dir})
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	// Verify it used the env var path (files exist)
-	if _, err := os.Stat(filepath.Join(dir, ".claude", "agents", "test.md")); err != nil {
-		t.Error("DOTFILES_CLAUDE env var not respected")
-	}
-}
-
-func TestInitAllMissingSource(t *testing.T) {
-	t.Setenv("DOTFILES_CLAUDE", "/nonexistent/path")
-
-	dir := t.TempDir()
-	resetInitFlags()
-	initAll = true
-	buf := new(bytes.Buffer)
-	cmd := initCmd
-	cmd.SetOut(buf)
-	err := cmd.RunE(cmd, []string{dir})
-	if err == nil {
-		t.Fatal("expected error for missing dotfiles source")
-	}
-	if !strings.Contains(err.Error(), "dotfiles source not found") {
-		t.Errorf("expected 'dotfiles source not found' error, got: %v", err)
-	}
 }
 
 func TestCopyDirectory(t *testing.T) {
@@ -547,7 +446,7 @@ func TestCopyDirectory(t *testing.T) {
 	}
 }
 
-// initAndSetupForUpdate initializes a project with --all, then returns the dir
+// initAndSetupForUpdate initializes a project, then returns the dir
 // for subsequent --update tests.
 func initAndSetupForUpdate(t *testing.T, dotfiles string) string {
 	t.Helper()
@@ -555,7 +454,6 @@ func initAndSetupForUpdate(t *testing.T, dotfiles string) string {
 	t.Setenv("DOTFILES_CLAUDE", dotfiles)
 
 	resetInitFlags()
-	initAll = true
 	buf := new(bytes.Buffer)
 	cmd := initCmd
 	cmd.SetOut(buf)

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/templates"
+	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/workflow"
 	"github.com/spf13/cobra"
 )
 
@@ -16,7 +17,6 @@ var (
 	initForce         bool
 	initNoClaudeMD    bool
 	initTrackThoughts bool
-	initAll           bool
 	initUpdate        bool
 	initAgentsOnly    bool
 	initCommandsOnly  bool
@@ -57,11 +57,10 @@ func init() {
 	initCmd.Flags().BoolVar(&initForce, "force", false, "Overwrite existing files and directories")
 	initCmd.Flags().BoolVar(&initNoClaudeMD, "no-claude-md", false, "Skip CLAUDE.md generation")
 	initCmd.Flags().BoolVar(&initTrackThoughts, "track-thoughts", false, "Do not add .thoughts/ to .gitignore")
-	initCmd.Flags().BoolVar(&initAll, "all", false, "Copy agents, commands, skills, and hooks from dotfiles")
 	initCmd.Flags().BoolVar(&initUpdate, "update", false, "Update/refresh configs from dotfiles (sync mode)")
-	initCmd.Flags().BoolVar(&initAgentsOnly, "agents-only", false, "Only copy agents (use with --all or --update)")
-	initCmd.Flags().BoolVar(&initCommandsOnly, "commands-only", false, "Only copy commands (use with --all or --update)")
-	initCmd.Flags().BoolVar(&initSkillsOnly, "skills-only", false, "Only copy skills (use with --all or --update)")
+	initCmd.Flags().BoolVar(&initAgentsOnly, "agents-only", false, "Only copy agents (use with --update)")
+	initCmd.Flags().BoolVar(&initCommandsOnly, "commands-only", false, "Only copy commands (use with --update)")
+	initCmd.Flags().BoolVar(&initSkillsOnly, "skills-only", false, "Only copy skills (use with --update)")
 	rootCmd.AddCommand(initCmd)
 }
 
@@ -151,21 +150,12 @@ func runInit(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Copy configs from dotfiles (only with --all)
-	if initAll {
-		source := dotfilesSource()
-		if _, err := os.Stat(source); os.IsNotExist(err) {
-			return fmt.Errorf("dotfiles source not found: %s", source)
-		}
-		for _, c := range filterComponents(source, claudeDir) {
-			n, err := copyDirectory(c.src, c.dest)
-			if err != nil {
-				logWarning(w, fmt.Sprintf("Failed to copy %s: %v", c.name, err))
-				continue
-			}
-			logSuccess(w, fmt.Sprintf("Copied %d %s", n, c.name))
-		}
+	// Install embedded workflow files (agents, commands, skills)
+	n, err := workflow.Install(claudeDir, initForce)
+	if err != nil {
+		return fmt.Errorf("install workflow files: %w", err)
 	}
+	logSuccess(w, fmt.Sprintf("Installed %d workflow files (agents, commands, skills)", n))
 
 	return nil
 }
