@@ -1,27 +1,18 @@
 package templates
 
 import (
-	_ "embed"
 	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
+
+	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/workflow"
 )
 
-//go:embed CLAUDE.md.template
-var claudeTemplate string
-
-//go:embed PIPELINE.md.template
-var pipelineTemplate string
-
-// knownTemplates maps user-facing names to embedded content.
-var knownTemplates map[string]string
-
-func init() {
-	knownTemplates = map[string]string{
-		"CLAUDE.md":   claudeTemplate,
-		"PIPELINE.md": pipelineTemplate,
-	}
+// knownTemplates maps user-facing names to their asset paths inside workflow/assets/.
+var knownTemplates = map[string]string{
+	"CLAUDE.md":   "templates/CLAUDE.md.template",
+	"PIPELINE.md": "templates/PIPELINE.md.template",
 }
 
 // UserTemplatesDir returns the path to ~/.rpi/templates/.
@@ -43,12 +34,16 @@ func EnsureUserTemplates() error {
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return fmt.Errorf("create templates dir: %w", err)
 	}
-	for name, content := range knownTemplates {
+	for name, assetPath := range knownTemplates {
 		path := filepath.Join(dir, name+".template")
 		if _, err := os.Stat(path); err == nil {
 			continue // user file exists, don't overwrite
 		}
-		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		content, err := workflow.ReadAsset(assetPath)
+		if err != nil {
+			return fmt.Errorf("read embedded %s: %w", name, err)
+		}
+		if err := os.WriteFile(path, content, 0644); err != nil {
 			return fmt.Errorf("write %s: %w", path, err)
 		}
 	}
@@ -60,7 +55,7 @@ func EnsureUserTemplates() error {
 // falls back to embedded default.
 // Returns an error if the name is not recognized.
 func Get(name string) (string, error) {
-	_, ok := knownTemplates[name]
+	assetPath, ok := knownTemplates[name]
 	if !ok {
 		return "", fmt.Errorf("unknown template: %s", name)
 	}
@@ -75,7 +70,11 @@ func Get(name string) (string, error) {
 	}
 
 	// Fall back to embedded
-	return knownTemplates[name], nil
+	data, err := workflow.ReadAsset(assetPath)
+	if err != nil {
+		return "", fmt.Errorf("read embedded %s: %w", name, err)
+	}
+	return string(data), nil
 }
 
 // Names returns all available template names in sorted order.

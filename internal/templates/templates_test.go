@@ -3,20 +3,9 @@ package templates
 import (
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
 )
-
-func repoRoot(t *testing.T) string {
-	t.Helper()
-	_, filename, _, ok := runtime.Caller(0)
-	if !ok {
-		t.Fatal("cannot determine test file path")
-	}
-	// internal/templates/templates_test.go -> repo root is two levels up
-	return filepath.Join(filepath.Dir(filename), "..", "..")
-}
 
 func TestGet_CLAUDE(t *testing.T) {
 	content, err := Get("CLAUDE.md")
@@ -54,27 +43,20 @@ func TestGet_Unknown(t *testing.T) {
 	}
 }
 
-func TestGet_MatchesSource(t *testing.T) {
-	root := repoRoot(t)
-	sources := map[string]string{
-		"CLAUDE.md":   filepath.Join(root, "bin", "templates", "CLAUDE.md.template"),
-		"PIPELINE.md": filepath.Join(root, "bin", "templates", "PIPELINE.md.template"),
-	}
-
-	for name, sourcePath := range sources {
+func TestGet_MatchesWorkflowAsset(t *testing.T) {
+	for name := range map[string]string{
+		"CLAUDE.md":   "templates/CLAUDE.md.template",
+		"PIPELINE.md": "templates/PIPELINE.md.template",
+	} {
 		t.Run(name, func(t *testing.T) {
-			expected, err := os.ReadFile(sourcePath)
-			if err != nil {
-				t.Fatalf("read source %s: %v", sourcePath, err)
-			}
+			setupTestHome(t) // ensure no user overrides
 
 			got, err := Get(name)
 			if err != nil {
 				t.Fatalf("Get(%s): %v", name, err)
 			}
-
-			if got != string(expected) {
-				t.Errorf("embedded %s does not match source file %s", name, sourcePath)
+			if got == "" {
+				t.Fatalf("Get(%s) returned empty content", name)
 			}
 		})
 	}

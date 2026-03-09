@@ -10,6 +10,12 @@ import (
 //go:embed all:assets
 var assets embed.FS
 
+// ReadAsset reads an embedded file from the assets directory.
+// The path should be relative to assets/ (e.g., "templates/CLAUDE.md.template").
+func ReadAsset(path string) ([]byte, error) {
+	return assets.ReadFile("assets/" + path)
+}
+
 // Install copies all embedded workflow files (agents, commands, skills)
 // into the target .claude/ directory. Existing files are only overwritten
 // when force is true.
