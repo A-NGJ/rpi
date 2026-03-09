@@ -57,23 +57,17 @@ AI coding assistants are powerful but unpredictable when given large tasks. They
 
 3. Initialize your target project:
    ```bash
-   rpi init --all /path/to/your/project
+   rpi init /path/to/your/project
    ```
 
    This creates:
-   - `.claude/` -- Agents, commands, skills, and hooks for Claude Code
+   - `.claude/` -- Agents, commands, skills, templates, and hooks (embedded in the binary)
    - `.thoughts/` -- Directory for all pipeline artifacts (gitignored by default)
    - `CLAUDE.md` -- Project-level instructions for Claude Code
 
    Add `--track-thoughts` to commit `.thoughts/` to git so your team can share research, designs, and plans.
 
-4. Alternatively, copy the `.claude/` directory manually into your project:
-   ```bash
-   cp -r .claude/ /path/to/your/project/.claude/
-   mkdir -p /path/to/your/project/.thoughts/{research,designs,plans,structures,tickets,specs,prs,reviews}
-   ```
-
-5. Start Claude Code in your project and use the slash commands.
+4. Start Claude Code in your project and use the slash commands.
 
 ### The Slash Commands
 
@@ -118,12 +112,12 @@ See [full `.thoughts/` documentation](docs/thoughts-directory.md) for directory 
 
 ## The `rpi init` Command
 
-The `rpi init` command bootstraps the workflow into any project. It copies agents, commands, skills, and hooks from your global `~/.claude/` directory.
+The `rpi init` command bootstraps the workflow into any project. All workflow files (agents, commands, skills, templates) are embedded in the `rpi` binary -- no external dotfiles or source repo needed.
 
 ```bash
-rpi init --all ~/projects/my-app              # Full init
-rpi init --all --track-thoughts                # Share .thoughts/ via git
-rpi init --update                              # Update existing configs
+rpi init ~/projects/my-app                    # Full init
+rpi init --track-thoughts                      # Share .thoughts/ via git
+rpi init --update                              # Sync custom dotfiles into existing project
 ```
 
 See [full `rpi init` documentation](docs/rpi-init.md) for all options and flags.
@@ -145,31 +139,24 @@ This workflow is built for Claude Code, but the methodology applies to any AI co
 
 ```
 .
-├── cmd/rpi/                           # rpi CLI binary (Go)
-├── internal/templates/                # Embedded CLAUDE.md and PIPELINE.md templates
+├── cmd/rpi/                              # rpi CLI binary (Go)
+├── internal/
+|   ├── workflow/assets/                  # All embedded assets (installed by rpi init)
+|   |   ├── agents/                       # Agent definitions
+|   |   ├── commands/                     # Slash command definitions (rpi-plan, rpi-research, etc.)
+|   |   ├── skills/                       # Skill definitions (find-patterns, locate-codebase, etc.)
+|   |   └── templates/                    # Scaffold + document templates (.tmpl, .template)
+|   └── templates/                        # Template resolution with user-override support
 ├── docs/
-|   ├── workflow-guide.md              # Choosing Your Path (detailed examples)
-|   ├── stages.md                      # How Each Stage Works (detailed)
-|   ├── thoughts-directory.md          # .thoughts/ directory documentation
-|   └── rpi-init.md                    # rpi init command documentation
-├── .claude/
+|   ├── workflow-guide.md                 # Choosing Your Path (detailed examples)
+|   ├── stages.md                         # How Each Stage Works (detailed)
+|   ├── thoughts-directory.md             # .thoughts/ directory documentation
+|   └── rpi-init.md                       # rpi init command documentation
+├── .claude/                              # This repo's own working copy of the workflow
 |   ├── agents/
-|   |   └── codebase-analyzer.md       # Agent: traces code flow and documents implementations
 |   ├── commands/
-|   |   ├── rpi-research.md            # Command: /rpi-research
-|   |   ├── rpi-design.md              # Command: /rpi-design
-|   |   ├── rpi-structure.md           # Command: /rpi-structure
-|   |   ├── rpi-tickets.md             # Command: /rpi-tickets
-|   |   ├── rpi-plan.md                # Command: /rpi-plan
-|   |   ├── rpi-implement.md           # Command: /rpi-implement
-|   |   ├── rpi-verify.md              # Command: /rpi-verify
-|   |   ├── rpi-archive.md             # Command: /rpi-archive
-|   |   └── rpi-commit.md              # Command: /rpi-commit
-|   └── skills/
-|       ├── find-patterns/SKILL.md     # Skill: finds existing code patterns to model after
-|       ├── analyze-thoughts/SKILL.md  # Skill: extracts insights from .thoughts/ documents
-|       ├── locate-thoughts/SKILL.md   # Skill: discovers documents in .thoughts/
-|       └── locate-codebase/SKILL.md   # Skill: finds where code lives in the codebase
+|   ├── skills/
+|   └── templates/
 ```
 
 ## Acknowledgments

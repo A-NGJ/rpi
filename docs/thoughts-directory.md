@@ -49,7 +49,7 @@ By default, `.thoughts/` is added to `.gitignore` -- useful when you want pipeli
 To track `.thoughts/` in git, use the `--track-thoughts` flag during initialization:
 
 ```bash
-rpi init --all --track-thoughts
+rpi init --track-thoughts
 ```
 
 This skips adding `.thoughts/` to `.gitignore`, so all pipeline artifacts get committed alongside your code.
