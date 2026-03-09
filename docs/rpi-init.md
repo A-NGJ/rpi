@@ -29,29 +29,6 @@ rpi init --track-thoughts   # Don't gitignore .thoughts/ (track in git)
 - `CLAUDE.md` -- Project-level instructions for Claude Code
 - `.thoughts/PIPELINE.md` -- Pipeline reference guide
 
-## Update Mode
-
-Use `--update` to sync custom configs from a dotfiles directory into an existing project. This is useful for overlaying personal agents, commands, or skills on top of the embedded defaults.
-
-- **New files** are copied automatically
-- **Unchanged files** are skipped
-- **Differing files** are skipped with a warning (use `--force` to overwrite)
-- **CLAUDE.md** sections missing from the template are appended
-
-```bash
-rpi init --update                    # Sync all components from dotfiles
-rpi init --update --agents-only      # Sync only agents
-rpi init --update --commands-only    # Sync only commands
-rpi init --update --skills-only      # Sync only skills
-rpi init --update --force            # Overwrite differing files
-```
-
-The dotfiles source defaults to `~/.claude/`. Set the `DOTFILES_CLAUDE` environment variable to use a different directory:
-
-```bash
-DOTFILES_CLAUDE=~/dotfiles/.claude rpi init --update
-```
-
 ## Installation
 
 Build and install the `rpi` binary:

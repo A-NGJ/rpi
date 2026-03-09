@@ -117,7 +117,6 @@ The `rpi init` command bootstraps the workflow into any project. All workflow fi
 ```bash
 rpi init ~/projects/my-app                    # Full init
 rpi init --track-thoughts                      # Share .thoughts/ via git
-rpi init --update                              # Sync custom dotfiles into existing project
 ```
 
 See [full `rpi init` documentation](docs/rpi-init.md) for all options and flags.
@@ -152,11 +151,6 @@ This workflow is built for Claude Code, but the methodology applies to any AI co
 |   ├── stages.md                         # How Each Stage Works (detailed)
 |   ├── thoughts-directory.md             # .thoughts/ directory documentation
 |   └── rpi-init.md                       # rpi init command documentation
-├── .claude/                              # This repo's own working copy of the workflow
-|   ├── agents/
-|   ├── commands/
-|   ├── skills/
-|   └── templates/
 ```
 
 ## Acknowledgments
