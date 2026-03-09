@@ -19,6 +19,7 @@ var chainCmd = &cobra.Command{
 }
 
 func init() {
+	addFormatFlag(chainCmd)
 	rootCmd.AddCommand(chainCmd)
 }
 

@@ -20,6 +20,7 @@ var verifyCmd = &cobra.Command{
 }
 
 func init() {
+	addFormatFlag(verifyCmd)
 	rootCmd.AddCommand(verifyCmd)
 }
 

@@ -60,6 +60,7 @@ type archiveScanResult struct {
 }
 
 func init() {
+	archiveCmd.PersistentFlags().StringVar(&thoughtsDirFlag, "thoughts-dir", ".thoughts", "Path to .thoughts/ directory")
 	archiveMoveCmd.Flags().BoolVar(&archiveMoveForce, "force", false, "Skip ref check warning")
 	archiveCmd.AddCommand(archiveScanCmd)
 	archiveCmd.AddCommand(archiveCheckRefsCmd)

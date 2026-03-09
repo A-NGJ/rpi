@@ -54,6 +54,8 @@ at the correct path under .thoughts/.`,
 }
 
 func init() {
+	addThoughtsDirFlag(scaffoldCmd)
+	addTemplatesDirFlag(scaffoldCmd)
 	scaffoldCmd.Flags().StringVar(&topicFlag, "topic", "", "Topic/title for the artifact")
 	scaffoldCmd.Flags().StringVar(&ticketFlag, "ticket", "", "Ticket ID (e.g., cli-002)")
 	scaffoldCmd.Flags().StringVar(&designFlag, "design", "", "Path to design document")

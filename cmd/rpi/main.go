@@ -22,10 +22,16 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-func init() {
-	rootCmd.PersistentFlags().StringVar(&formatFlag, "format", "", "Output format: json, md, text")
-	rootCmd.PersistentFlags().StringVar(&thoughtsDirFlag, "thoughts-dir", ".thoughts", "Path to .thoughts/ directory")
-	rootCmd.PersistentFlags().StringVar(&templatesDirFlag, "templates-dir", ".claude/templates", "Path to templates directory")
+func addFormatFlag(cmd *cobra.Command) {
+	cmd.Flags().StringVar(&formatFlag, "format", "", "Output format: json, md, text")
+}
+
+func addThoughtsDirFlag(cmd *cobra.Command) {
+	cmd.Flags().StringVar(&thoughtsDirFlag, "thoughts-dir", ".thoughts", "Path to .thoughts/ directory")
+}
+
+func addTemplatesDirFlag(cmd *cobra.Command) {
+	cmd.Flags().StringVar(&templatesDirFlag, "templates-dir", ".claude/templates", "Path to templates directory")
 }
 
 func main() {

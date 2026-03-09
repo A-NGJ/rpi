@@ -26,6 +26,8 @@ var scanCmd = &cobra.Command{
 }
 
 func init() {
+	addFormatFlag(scanCmd)
+	addThoughtsDirFlag(scanCmd)
 	scanCmd.Flags().StringVar(&scanStatus, "status", "", "Filter by frontmatter status")
 	scanCmd.Flags().StringVar(&scanType, "type", "", "Filter by artifact type (ticket, plan, design, etc.)")
 	scanCmd.Flags().StringVar(&scanDesign, "design", "", "Filter by frontmatter design field")

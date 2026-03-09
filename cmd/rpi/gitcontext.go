@@ -18,6 +18,7 @@ var gitContextCmd = &cobra.Command{
 }
 
 func init() {
+	addFormatFlag(gitContextCmd)
 	rootCmd.AddCommand(gitContextCmd)
 }
 
