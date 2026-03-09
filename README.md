@@ -20,7 +20,7 @@ research/   designs/   plans/     tests +
 - [Choosing Your Path](#choosing-your-path)
 - [How Each Stage Works](#how-each-stage-works)
 - [The `.thoughts/` Directory](#the-thoughts-directory)
-- [The `rpi-init` Script](#the-rpi-init-script)
+- [The `rpi init` Command](#the-rpi-init-command)
 - [Tips](#tips)
 - [Using with Other AI Coding Tools](#using-with-other-ai-coding-tools)
 - [Project Structure](#project-structure)
@@ -50,10 +50,14 @@ AI coding assistants are powerful but unpredictable when given large tasks. They
    cd ai-agent-research-plan-implement-flow
    ```
 
-2. Run the initialization script in your target project:
+2. Build and install the `rpi` binary:
    ```bash
-   # From your project directory
-   /path/to/ai-agent-research-plan-implement-flow/bin/rpi-init --all /path/to/your/project
+   make install
+   ```
+
+3. Initialize your target project:
+   ```bash
+   rpi init --all /path/to/your/project
    ```
 
    This creates:
@@ -63,13 +67,13 @@ AI coding assistants are powerful but unpredictable when given large tasks. They
 
    Add `--track-thoughts` to commit `.thoughts/` to git so your team can share research, designs, and plans.
 
-3. Alternatively, copy the `.claude/` directory manually into your project:
+4. Alternatively, copy the `.claude/` directory manually into your project:
    ```bash
    cp -r .claude/ /path/to/your/project/.claude/
    mkdir -p /path/to/your/project/.thoughts/{research,designs,plans,structures,tickets,specs,prs,reviews}
    ```
 
-4. Start Claude Code in your project and use the slash commands.
+5. Start Claude Code in your project and use the slash commands.
 
 ### The Slash Commands
 
@@ -112,17 +116,17 @@ By default `.thoughts/` is gitignored, but you can share it with your team using
 
 See [full `.thoughts/` documentation](docs/thoughts-directory.md) for directory structure, naming conventions, specs, status lifecycle, and team sharing options.
 
-## The `rpi-init` Script
+## The `rpi init` Command
 
-The `bin/rpi-init` script bootstraps the workflow into any project. It copies agents, commands, skills, and hooks from your global `~/.claude/` directory.
+The `rpi init` command bootstraps the workflow into any project. It copies agents, commands, skills, and hooks from your global `~/.claude/` directory.
 
 ```bash
-rpi-init --all ~/projects/my-app              # Full init
-rpi-init --all --track-thoughts                # Share .thoughts/ via git
-rpi-init --update                              # Update existing configs
+rpi init --all ~/projects/my-app              # Full init
+rpi init --all --track-thoughts                # Share .thoughts/ via git
+rpi init --update                              # Update existing configs
 ```
 
-See [full `rpi-init` documentation](docs/rpi-init.md) for all options and flags.
+See [full `rpi init` documentation](docs/rpi-init.md) for all options and flags.
 
 ## Tips
 
@@ -141,16 +145,13 @@ This workflow is built for Claude Code, but the methodology applies to any AI co
 
 ```
 .
-├── bin/
-|   ├── rpi-init                    # Project initialization script
-|   └── templates/
-|       ├── CLAUDE.md.template         # Template for project CLAUDE.md
-|       └── PIPELINE.md.template       # Pipeline reference document
+├── cmd/rpi/                           # rpi CLI binary (Go)
+├── internal/templates/                # Embedded CLAUDE.md and PIPELINE.md templates
 ├── docs/
 |   ├── workflow-guide.md              # Choosing Your Path (detailed examples)
 |   ├── stages.md                      # How Each Stage Works (detailed)
 |   ├── thoughts-directory.md          # .thoughts/ directory documentation
-|   └── rpi-init.md                 # rpi-init script documentation
+|   └── rpi-init.md                    # rpi init command documentation
 ├── .claude/
 |   ├── agents/
 |   |   └── codebase-analyzer.md       # Agent: traces code flow and documents implementations

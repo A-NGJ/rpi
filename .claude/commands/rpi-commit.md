@@ -7,7 +7,7 @@ model: sonnet
 
 Create git commits for changes in the working tree. This includes changes from the current session and any pre-existing staged or unstaged modifications.
 
-**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or use `rpi-init` to set it up.
+**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or `make install`.
 
 ## Process
 

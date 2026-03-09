@@ -11,12 +11,10 @@ clean:
 
 install: build
 	mkdir -p $(HOME)/.local/bin
-	ln -sf $(CURDIR)/bin/rpi-init $(HOME)/.local/bin/rpi-init
-	ln -sf $(CURDIR)/bin/rpi $(HOME)/.local/bin/rpi
-	@echo "Installed rpi-init and rpi to ~/.local/bin/"
+	cp $(CURDIR)/bin/rpi $(HOME)/.local/bin/rpi
+	@echo "Installed rpi to ~/.local/bin/"
 	@echo "Make sure ~/.local/bin is in your PATH"
 
 uninstall:
-	rm -f $(HOME)/.local/bin/rpi-init
 	rm -f $(HOME)/.local/bin/rpi
-	@echo "Removed rpi-init and rpi from ~/.local/bin/"
+	@echo "Removed rpi from ~/.local/bin/"
