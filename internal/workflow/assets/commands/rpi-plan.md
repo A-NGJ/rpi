@@ -222,6 +222,7 @@ When revising based on feedback:
 - **Scope change** (add/remove tasks): update the Scope line and affected phase tasks
 - **Approach change**: re-research if needed — say so rather than guessing
 - Keep iterating until the user confirms or stops giving feedback
+- If the user confirms that the plan looks good, load `/rpi-implement` to start implementation based on the plan.
 
 ---
 
