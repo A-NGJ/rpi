@@ -351,7 +351,7 @@ func TestInitInstallsWorkflowFiles(t *testing.T) {
 	}
 
 	// Verify embedded commands are installed
-	for _, cmd := range []string{"rpi-plan.md", "rpi-research.md", "rpi-design.md", "rpi-implement.md"} {
+	for _, cmd := range []string{"rpi-plan.md", "rpi-explore.md", "rpi-propose.md", "rpi-implement.md"} {
 		if _, err := os.Stat(filepath.Join(dir, ".claude", "commands", cmd)); err != nil {
 			t.Errorf("commands/%s not installed", cmd)
 		}
