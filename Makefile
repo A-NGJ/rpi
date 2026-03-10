@@ -11,6 +11,7 @@ clean:
 
 install: build
 	mkdir -p $(HOME)/.local/bin
+	rm -f $(HOME)/.local/bin/rpi
 	cp $(CURDIR)/bin/rpi $(HOME)/.local/bin/rpi
 	@echo "Installed rpi to ~/.local/bin/"
 	@echo "Make sure ~/.local/bin is in your PATH"
