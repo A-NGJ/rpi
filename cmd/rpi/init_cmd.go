@@ -127,7 +127,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 	}
 
 	// Manage .gitignore
-	if err := ensureGitignoreEntry(w, targetDir, ".claude/settings.local.json"); err != nil {
+	if err := ensureGitignoreEntry(w, targetDir, ".claude/"); err != nil {
 		logWarning(w, fmt.Sprintf("Failed to update .gitignore: %v", err))
 	}
 	if !initTrackThoughts {

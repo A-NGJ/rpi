@@ -75,8 +75,8 @@ func TestInitCreatesAllDirs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to read .gitignore: %v", err)
 	}
-	if !strings.Contains(string(gitignore), ".claude/settings.local.json") {
-		t.Error(".gitignore missing .claude/settings.local.json entry")
+	if !strings.Contains(string(gitignore), ".claude/") {
+		t.Error(".gitignore missing .claude/ entry")
 	}
 	if !strings.Contains(string(gitignore), ".thoughts/") {
 		t.Error(".gitignore missing .thoughts/ entry")
@@ -214,8 +214,8 @@ func TestInitTrackThoughts(t *testing.T) {
 	if strings.Contains(string(gitignore), ".thoughts/") {
 		t.Error(".thoughts/ should not be in .gitignore with --track-thoughts")
 	}
-	if !strings.Contains(string(gitignore), ".claude/settings.local.json") {
-		t.Error(".claude/settings.local.json should still be in .gitignore")
+	if !strings.Contains(string(gitignore), ".claude/") {
+		t.Error(".claude/ should still be in .gitignore")
 	}
 }
 
@@ -269,8 +269,8 @@ func TestInitGitignore(t *testing.T) {
 	}
 
 	content := string(data)
-	if !strings.Contains(content, ".claude/settings.local.json") {
-		t.Error("missing .claude/settings.local.json entry")
+	if !strings.Contains(content, ".claude/") {
+		t.Error("missing .claude/ entry")
 	}
 	if !strings.Contains(content, ".thoughts/") {
 		t.Error("missing .thoughts/ entry")
@@ -303,8 +303,8 @@ func TestInitGitignoreIdempotent(t *testing.T) {
 	}
 
 	content := string(data)
-	if strings.Count(content, ".claude/settings.local.json") != 1 {
-		t.Errorf(".claude/settings.local.json appears %d times, want 1", strings.Count(content, ".claude/settings.local.json"))
+	if strings.Count(content, ".claude/") != 1 {
+		t.Errorf(".claude/ appears %d times, want 1", strings.Count(content, ".claude/"))
 	}
 	if strings.Count(content, ".thoughts/") != 1 {
 		t.Errorf(".thoughts/ appears %d times, want 1", strings.Count(content, ".thoughts/"))
