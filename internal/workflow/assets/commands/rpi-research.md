@@ -1,9 +1,9 @@
 ---
-description: Explore the codebase to understand problems before proposing solutions
+description: Research the codebase to understand problems before proposing solutions
 model: opus
 ---
 
-# Explore Codebase
+# Research Codebase
 
 Investigate the codebase conversationally to understand how things work, find patterns, and surface insights — without being forced to produce artifacts.
 
@@ -17,7 +17,7 @@ If the user provided a question or topic as command arguments, proceed directly 
 
 If no arguments were provided, ask:
 ```
-What would you like to explore? Provide a question, topic, or file path and I'll investigate.
+What would you like to research? Provide a question, topic, or file path and I'll investigate.
 
 This works for focused questions ("how does auth work?") and open-ended exploration ("what could we improve about error handling?").
 ```

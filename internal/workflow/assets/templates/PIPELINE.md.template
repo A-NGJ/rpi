@@ -3,7 +3,7 @@
 Standard workflow for taking features from idea to implementation.
 
 ```
-[Explore] → Propose → Plan → Implement
+[Research] → Propose → Plan → Implement
     │           │        │        │
     ▼           ▼        ▼        ▼
 (optional)  .thoughts/ .thoughts/ code +
@@ -11,13 +11,13 @@ Standard workflow for taking features from idea to implementation.
 research/                         commits
 ```
 
-Explore is conversational by default — no artifact unless you ask. Everything else produces a document that the next stage consumes.
+Research is conversational by default — no artifact unless you ask. Everything else produces a document that the next stage consumes.
 
 ---
 
-## Explore
+## Research
 
-**Command**: `/rpi-explore`
+**Command**: `/rpi-research`
 
 **Purpose**: Investigate the codebase conversationally. Understand how things work, find patterns, surface insights — without being forced to produce artifacts.
 
@@ -159,7 +159,7 @@ Explore is conversational by default — no artifact unless you ask. Everything 
 
 | Command | Input | Output |
 |---------|-------|--------|
-| `/rpi-explore` | Question or topic | Conversational (optional `.thoughts/research/`) |
+| `/rpi-research` | Question or topic | Conversational (optional `.thoughts/research/`) |
 | `/rpi-propose` | Description, research doc, or existing proposal | `.thoughts/proposals/` |
 | `/rpi-plan` | Proposal doc or task description | `.thoughts/plans/` |
 | `/rpi-implement` | Plan doc | Code + tests + commits |
@@ -171,7 +171,7 @@ Explore is conversational by default — no artifact unless you ask. Everything 
 
 **"How does X work?"**:
 ```
-Explore
+Research
 ```
 
 **Bug fix or small change**:
@@ -186,7 +186,7 @@ Propose → Plan → Implement
 
 **Unclear feature (need to understand first)**:
 ```
-Explore → Propose → Plan → Implement
+Research → Propose → Plan → Implement
 ```
 
 **Complex multi-concern feature**:

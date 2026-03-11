@@ -7,7 +7,7 @@ model: opus
 
 Investigate the codebase, analyze trade-offs, and produce a proposal document that captures what we learned, what we decided, and why. This merges investigation, design, and structural planning into a single command with human checkpoints at every meaningful juncture.
 
-This is part of the pipeline: **explore → propose → plan → implement**. Propose is where the hard choices happen — understanding the terrain, weighing options, and committing to an approach. The output is a proposal document that Plan consumes directly.
+This is part of the pipeline: **research → propose → plan → implement**. Propose is where the hard choices happen — understanding the terrain, weighing options, and committing to an approach. The output is a proposal document that Plan consumes directly.
 
 **Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or `make install`.
 
