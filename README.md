@@ -1,11 +1,11 @@
-# AI Agent: Explore-Propose-Plan-Implement Flow
+# AI Agent: Research-Propose-Plan-Implement Flow
 
-A structured development workflow for AI coding agents that turns vague feature requests into shipped code through a pipeline of discrete, reviewable stages. Built for [Claude Code](https://docs.anthropic.com/en/docs/claude-code), but the underlying methodology -- Explore -> Propose -> Plan -> Implement -- works with any AI coding tool.
+A structured development workflow for AI coding agents that turns vague feature requests into shipped code through a pipeline of discrete, reviewable stages. Built for [Claude Code](https://docs.anthropic.com/en/docs/claude-code), but the underlying methodology -- Research -> Propose -> Plan -> Implement -- works with any AI coding tool.
 
-Instead of asking an AI to "just implement it" and hoping for the best, this workflow forces deliberate progression through **Explore -> Propose -> Plan -> Implement**. Each stage produces a document you can review, edit, and approve before moving on.
+Instead of asking an AI to "just implement it" and hoping for the best, this workflow forces deliberate progression through **Research -> Propose -> Plan -> Implement**. Each stage produces a document you can review, edit, and approve before moving on.
 
 ```
-Explore -> Propose -> Plan -> Implement
+Research -> Propose -> Plan -> Implement
    |          |        |        |
    v          v        v        v
 .thoughts/  .thoughts/ .thoughts/ code +
@@ -32,7 +32,7 @@ research/   proposals/ plans/     tests +
 
 AI coding assistants are powerful but unpredictable when given large tasks. They skip steps, make questionable architectural choices, and produce code that doesn't fit the codebase. This workflow solves that by:
 
-- **Separating thinking from doing** -- Explore gathers facts. Propose makes decisions with trade-offs. Plan specifies exact changes. Implement executes them.
+- **Separating thinking from doing** -- Research gathers facts. Propose makes decisions with trade-offs. Plan specifies exact changes. Implement executes them.
 - **Creating review checkpoints** -- You approve each stage before the next one starts. Bad decisions get caught early, not after 500 lines of wrong code.
 - **Building persistent context** -- All artifacts live in `.thoughts/`, so you and your team (or the AI) can pick up where you left off across sessions.
 - **Scaling to complexity** -- Simple bug fix? Skip straight to Plan -> Implement. Complex feature? Use Propose -> Plan -> Implement.
@@ -40,7 +40,7 @@ AI coding assistants are powerful but unpredictable when given large tasks. They
 
 ### Key Concepts
 
-- **Staged pipeline** -- Work flows through discrete stages (Explore → Propose → Plan → Implement), each with a clear input and output. You choose how many stages to use based on task complexity.
+- **Staged pipeline** -- Work flows through discrete stages (Research → Propose → Plan → Implement), each with a clear input and output. You choose how many stages to use based on task complexity.
 - **`.thoughts/` as persistent context** -- All artifacts live in a local directory that survives across sessions. The AI doesn't need to re-discover your codebase every time -- it reads the documents from previous stages.
 - **Artifact chains** -- Documents link to each other through frontmatter metadata (a plan links to its proposal, which links to its research). The `rpi chain` command resolves these links automatically so the AI loads exactly the context it needs.
 - **Frontmatter-driven metadata** -- Every document carries YAML frontmatter with status, dates, tags, and cross-references. The CLI uses this for filtering, status transitions, and archive decisions -- keeping mechanical bookkeeping out of the LLM.
@@ -85,7 +85,7 @@ AI coding assistants are powerful but unpredictable when given large tasks. They
 
 | Command | What It Does | Output |
 |---------|-------------|--------|
-| `/rpi-explore` | Investigates the codebase -- conversational fact-finding | Conversation (optionally `.thoughts/research/YYYY-MM-DD-topic.md`) |
+| `/rpi-research` | Investigates the codebase -- conversational fact-finding | Conversation (optionally `.thoughts/research/YYYY-MM-DD-topic.md`) |
 | `/rpi-propose` | Investigates, analyzes, and proposes solutions with trade-offs | `.thoughts/proposals/YYYY-MM-DD-topic.md` |
 | `/rpi-plan` | Creates phased implementation plan with success criteria | `.thoughts/plans/YYYY-MM-DD-topic.md` |
 | `/rpi-implement` | Executes a plan phase-by-phase with verification | Code, tests, and commits |
@@ -98,16 +98,16 @@ AI coding assistants are powerful but unpredictable when given large tasks. They
 Not every task needs every stage. Match the path to your task's complexity:
 
 - **Small tasks** (bug fixes, config changes) -- skip straight to **Plan -> Implement**. `/rpi-plan` does lightweight research on the fly.
-- **Medium tasks** (focused features, single-concern changes) -- use **Propose -> Plan -> Implement**. Optionally run `/rpi-explore` first if the codebase is unfamiliar.
+- **Medium tasks** (focused features, single-concern changes) -- use **Propose -> Plan -> Implement**. Optionally run `/rpi-research` first if the codebase is unfamiliar.
 - **Large tasks** (multi-concern features, major refactors) -- use **Propose -> Plan -> Implement**, where `/rpi-plan` decomposes the proposal into independently plannable units.
 
-Not sure where to start? Use `/rpi-explore` with any question -- it handles both focused investigation and open-ended exploration.
+Not sure where to start? Use `/rpi-research` with any question -- it handles both focused investigation and open-ended research.
 
 See the [full workflow guide](docs/workflow-guide.md) for detailed examples of each path.
 
 ## How Each Stage Works
 
-Each slash command maps to a pipeline stage with a specific purpose. Explore gathers facts, Propose makes decisions, Plan specifies changes, and Implement executes them.
+Each slash command maps to a pipeline stage with a specific purpose. Research gathers facts, Propose makes decisions, Plan specifies changes, and Implement executes them.
 
 See [detailed stage descriptions](docs/stages.md) for how each command works, its modes, and what it produces.
 
@@ -135,7 +135,7 @@ See [full `rpi init` documentation](docs/rpi-init.md) for all options and flags.
 - **Start small.** Try `/rpi-plan` on a bug fix to see how the plan -> implement cycle feels before using the full pipeline.
 - **Edit the artifacts.** The `.thoughts/` documents are yours. If a proposal decision is wrong, edit it before planning. If a plan phase is unnecessary, delete it.
 - **Use CLAUDE.md.** Add your project's test commands, linting setup, and conventions to `CLAUDE.md`. The pipeline stages pull verification commands from there.
-- **Redirect during exploration.** When `/rpi-explore` shows initial findings, tell it to focus on specific areas rather than exploring everything.
+- **Redirect during research.** When `/rpi-research` shows initial findings, tell it to focus on specific areas rather than researching everything.
 - **Skip stages when they don't add value.** The full pipeline exists for complex work. Most daily tasks only need Plan -> Implement.
 - **Review the pre-review.** `/rpi-implement` shows you exactly what it plans to change before writing code. This is your last checkpoint -- use it.
 
@@ -175,7 +175,7 @@ Every stage produces a document you can read, edit, reject, or share with your t
 ├── internal/
 |   ├── workflow/assets/                  # All embedded assets (installed by rpi init)
 |   |   ├── agents/                       # Agent definitions
-|   |   ├── commands/                     # Slash command definitions (rpi-plan, rpi-explore, rpi-propose, etc.)
+|   |   ├── commands/                     # Slash command definitions (rpi-plan, rpi-research, rpi-propose, etc.)
 |   |   ├── skills/                       # Skill definitions (find-patterns, locate-codebase, etc.)
 |   |   └── templates/                    # Scaffold + document templates (.tmpl, .template)
 |   └── templates/                        # Template resolution with user-override support

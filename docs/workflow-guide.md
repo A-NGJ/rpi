@@ -32,13 +32,13 @@ One phase, two files modified, done in minutes.
 
 **Path: Propose -> Plan -> Implement**
 
-Use when the feature touches multiple files, involves a choice between approaches, or you're working in unfamiliar code. Optionally run `/rpi-explore` first if you need to understand the codebase before proposing.
+Use when the feature touches multiple files, involves a choice between approaches, or you're working in unfamiliar code. Optionally run `/rpi-research` first if you need to understand the codebase before proposing.
 
 **Example -- Add rate limiting to the API:**
 
-**Step 1 (optional): Explore**
+**Step 1 (optional): Research**
 ```
-You:  /rpi-explore How does the API middleware chain work? Where are requests authenticated and validated?
+You:  /rpi-research How does the API middleware chain work? Where are requests authenticated and validated?
 ```
 Claude explores your codebase conversationally. You discuss findings interactively -- no artifact is created by default. If the exploration is thorough enough, you can ask it to save findings to `.thoughts/research/`.
 
@@ -75,11 +75,11 @@ Use when the work spans multiple systems, would produce more than ~4 implementat
 
 **Example -- Build a notification system (email, push, in-app):**
 
-**Step 1 (optional): Explore**
+**Step 1 (optional): Research**
 ```
-You:  /rpi-explore How do we currently send emails? Is there any notification infrastructure? How do user preferences work?
+You:  /rpi-research How do we currently send emails? Is there any notification infrastructure? How do user preferences work?
 ```
-Conversational exploration to build understanding before proposing.
+Conversational research to build understanding before proposing.
 
 **Step 2: Propose**
 ```
@@ -111,10 +111,10 @@ Claude implements unit by unit. You can stop between units, come back the next d
 
 ## Not Sure Where to Start?
 
-Use `/rpi-explore` even when you have a vague idea. It handles both focused questions ("how does auth work?") and open-ended exploration ("what could we improve about error handling?"). It's conversational -- you discuss findings interactively and decide whether to save research or move straight to `/rpi-propose`.
+Use `/rpi-research` even when you have a vague idea. It handles both focused questions ("how does auth work?") and open-ended research ("what could we improve about error handling?"). It's conversational -- you discuss findings interactively and decide whether to save research or move straight to `/rpi-propose`.
 
 ```
-You:  /rpi-explore What could we improve about error handling?
+You:  /rpi-research What could we improve about error handling?
 ```
 
 ## After Implementation

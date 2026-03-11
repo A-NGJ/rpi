@@ -1,6 +1,6 @@
 # How Each Stage Works
 
-## Explore (`/rpi-explore`)
+## Research (`/rpi-research`)
 
 **Purpose:** Investigate the codebase -- conversational fact-finding with optional research artifact.
 
@@ -11,7 +11,7 @@ Works for both focused questions ("how does the auth pipeline work?") and open-e
 - **locate-thoughts** -- Discovers relevant historical documents in `.thoughts/`
 - **analyze-thoughts** -- Extracts key insights from existing documents
 
-Exploration is conversational by default -- no artifact is created unless you ask. For broad queries, Claude shows you what it found in an initial scan and asks if you want to redirect focus before deep-diving.
+Research is conversational by default -- no artifact is created unless you ask. For broad queries, Claude shows you what it found in an initial scan and asks if you want to redirect focus before deep-diving.
 
 Findings are always factual with concrete file:line references. When findings reveal clear pain points, opportunities, or trade-offs, an Assessment section provides an opinionated take -- clearly separated from the facts. If you want to save findings, ask Claude to write them to `.thoughts/research/`. If the exploration comprehensively documents a module's behavior, it can optionally create or update a spec in `.thoughts/specs/`.
 

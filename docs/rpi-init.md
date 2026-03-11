@@ -21,7 +21,7 @@ rpi init --track-thoughts   # Don't gitignore .thoughts/ (track in git)
 ## What it creates
 
 - `.claude/agents/` -- Agent definitions (e.g., codebase-analyzer)
-- `.claude/commands/` -- Slash command definitions (rpi-plan, rpi-explore, rpi-propose, etc.)
+- `.claude/commands/` -- Slash command definitions (rpi-plan, rpi-research, rpi-propose, etc.)
 - `.claude/skills/` -- Skill definitions (find-patterns, locate-codebase, etc.)
 - `.claude/templates/` -- Scaffold templates for plans, proposals, research docs, etc.
 - `.claude/hooks/` -- Empty directory for custom hooks

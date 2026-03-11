@@ -7,7 +7,7 @@ This file provides guidance to Claude Code when working with this repository.
 This project introduces a structured workflow for software development, emphasizing clear documentation, incremental implementation, and rigorous testing.
 
 It consists of the following key components:
-- **RPI Workflow**: A set of commands for the Explore-Propose-Plan-Implement workflow in form of commands and skills in markdown format.
+- **RPI Workflow**: A set of commands for the Research-Propose-Plan-Implement workflow in form of commands and skills in markdown format.
 - **RPI Binary**: A command-line tool to manage the RPI workflow, written in go.
 
 ## Git Workflow 
@@ -20,7 +20,7 @@ This project uses a `.thoughts/` directory for persistent context:
 
 ```
 .thoughts/
-├── research/      # Codebase research notes (optional, from /rpi-explore)
+├── research/      # Codebase research notes (optional, from /rpi-research)
 ├── proposals/     # Solution proposals (created by /rpi-propose)
 ├── plans/         # Implementation plans (created by /rpi-plan)
 ├── specs/         # Living behavioral specs
@@ -45,7 +45,7 @@ This project uses a `.thoughts/` directory for persistent context:
 
 ### Development Pipeline
 
-See `.thoughts/PIPELINE.md` for the full workflow guide covering: Explore → Propose → Plan → Implement.
+See `.thoughts/PIPELINE.md` for the full workflow guide covering: Research → Propose → Plan → Implement.
 
 ## Implementing Plans
 

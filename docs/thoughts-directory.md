@@ -34,7 +34,7 @@ draft -> active -> complete
 
 Specs are living documents that describe the **current behavior** of a module or domain -- not planned changes. They're created and updated as a byproduct of research and implementation:
 
-- `/rpi-explore` can optionally create or update a spec when it documents a module's behavior comprehensively
+- `/rpi-research` can optionally create or update a spec when it documents a module's behavior comprehensively
 - `/rpi-propose` can flag existing specs with `pending_changes` when a proposal will alter documented behavior
 - Specs are updated to reflect reality *after* implementation, not during design
 
