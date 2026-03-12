@@ -82,7 +82,8 @@ Want me to save these findings to `.thoughts/research/`? This makes them availab
 If they agree:
 1. Run `rpi scaffold research --topic "..." --write`
 2. Fill in key findings, file references, and assessment
-3. Present the path: "Saved to `.thoughts/research/YYYY-MM-DD-topic.md`"
+3. Mark as active: `rpi frontmatter transition <research-path> active`
+4. Present the path: "Saved to `.thoughts/research/YYYY-MM-DD-topic.md`"
 
 **Do not force artifact creation.** The default is conversational — only save when requested or clearly useful.
 

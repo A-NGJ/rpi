@@ -89,6 +89,20 @@ This creates `.thoughts/proposals/YYYY-MM-DD-description.md` with frontmatter pr
 
 Fill in the sections — for Quick mode, focus on: Summary, Constraints & Requirements, Design Decisions (often just one), References. Skip sections that don't apply (Architecture, File Structure, etc.).
 
+**Mark proposal as active**: `rpi frontmatter transition <proposal-path> active`
+
+**Transition upstream artifacts**: If this proposal was created from a research doc:
+1. Re-read the research doc's key findings, suggested next steps, and open questions
+2. Verify the proposal addresses them — check each finding was incorporated or explicitly scoped out, each question was answered or deferred with rationale
+3. If all points are covered: `rpi frontmatter transition <research-path> complete`
+4. If gaps remain, note them:
+   ```
+   Research doc has unaddressed items:
+   - [item not covered in proposal]
+
+   Mark research as complete anyway, or leave it active?
+   ```
+
 ### Step 4: Create/Update Specs
 
 **This step is explicit, not optional.**
@@ -116,7 +130,21 @@ For features that involve multiple interacting decisions, new components, or sig
 Build a thorough understanding of the terrain before proposing solutions.
 
 1. **Read all mentioned files fully** before spawning sub-tasks
-2. **Resolve the artifact chain** if a research doc was provided:
+2. **Validate upstream status** if a research doc was provided:
+   Run: `rpi frontmatter get <research-path> status`
+   - If `active`: proceed — this is the expected state
+   - If `draft`: warn the user:
+     ```
+     Warning: Research doc is still in draft — it may not be finalized.
+     Consider running `/rpi-research` to complete it first.
+     Proceed anyway? (yes / no)
+     ```
+   - If `complete`: warn the user:
+     ```
+     Warning: Research doc is already marked complete — it may have already been consumed by a previous proposal.
+     Proceed anyway? (yes / no)
+     ```
+3. **Resolve the artifact chain** if a research doc was provided:
    Run: `rpi chain <input-path>`
    Read all files it identifies.
 3. **Check for existing proposals** on the same topic:
@@ -249,6 +277,20 @@ This creates `.thoughts/proposals/YYYY-MM-DD-description.md` with frontmatter pr
 - What This Proposal Does NOT Cover
 - Open Questions (resolve all before marking complete)
 - References
+
+**Mark proposal as active**: `rpi frontmatter transition <proposal-path> active`
+
+**Transition upstream artifacts**: If this proposal was created from a research doc:
+1. Re-read the research doc's key findings, suggested next steps, and open questions
+2. Verify the proposal addresses them — check each finding was incorporated or explicitly scoped out, each question was answered or deferred with rationale
+3. If all points are covered: `rpi frontmatter transition <research-path> complete`
+4. If gaps remain, note them:
+   ```
+   Research doc has unaddressed items:
+   - [item not covered in proposal]
+
+   Mark research as complete anyway, or leave it active?
+   ```
 
 ### Step 5: Create/Update Specs
 

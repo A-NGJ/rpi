@@ -113,7 +113,22 @@ For complex tasks that already went through the pipeline. Triggered by proposal 
 
 1. **Read project conventions** — check for `CLAUDE.md` in the project root and note the actual commands for running tests, type checking, and linting. These will be used in success criteria instead of generic placeholders.
 
-2. **Resolve the input document chain.**
+2. **Validate upstream status** of the proposal:
+   Run: `rpi frontmatter get <proposal-path> status`
+   - If `active`: proceed — this is the expected state
+   - If `draft`: warn the user:
+     ```
+     Warning: Proposal is still in draft — it may not be finalized.
+     Consider running `/rpi-propose` to complete it first.
+     Proceed anyway? (yes / no)
+     ```
+   - If `complete`: warn the user:
+     ```
+     Warning: Proposal is already marked complete — it may have already been consumed by a previous plan.
+     Proceed anyway? (yes / no)
+     ```
+
+3. **Resolve the input document chain.**
 
    Run: `rpi chain <input-path>`
 
@@ -222,7 +237,24 @@ This creates the file at `.thoughts/plans/YYYY-MM-DD-description.md` with frontm
 - Commit step (stage list + message)
 - "Pause for manual confirmation" note between phases
 
-### Step 6: Review & Iterate
+### Step 6: Transition Upstream Artifacts
+
+After the plan is written, transition the proposal it was built from:
+1. Re-read the proposal's open questions, design decisions, and scope
+2. Verify the plan covers all decisions — each design decision maps to at least one phase/task, nothing was silently dropped
+3. If all points are covered: `rpi frontmatter transition <proposal-path> complete`
+4. If the proposal links to research that is still `active` or `draft`, check it too:
+   - Verify research findings were addressed by the proposal (they should have been — but catch cases where `/rpi-propose` didn't transition)
+   - If covered: `rpi frontmatter transition <research-path> complete`
+5. If gaps remain in either artifact, note them:
+   ```
+   Upstream artifacts have unaddressed items:
+   - [proposal/research item not covered in plan]
+
+   Mark as complete anyway, or leave current status?
+   ```
+
+### Step 7: Review & Iterate
 
 Present the plan with a brief summary:
 ```

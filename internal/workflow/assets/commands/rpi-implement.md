@@ -17,6 +17,13 @@ Plans come in two forms:
 
 When given a plan path:
 
+- **Validate plan status**: run `rpi frontmatter get <plan-path> status`
+  - If `draft` or `active`: proceed (draft = fresh plan, active = resuming)
+  - If `complete`: warn the user:
+    ```
+    Warning: This plan is already marked complete — it appears to have been fully implemented.
+    Proceeding may duplicate work. Continue anyway? (yes / no)
+    ```
 - Read the plan completely and check for any existing checkmarks (- [x])
 - Resolve the artifact chain: run `rpi chain <plan-path>`
   This returns linked proposals, research docs. Read the files it identifies.
