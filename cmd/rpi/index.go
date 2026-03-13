@@ -24,6 +24,18 @@ var (
 var indexCmd = &cobra.Command{
 	Use:   "index",
 	Short: "Build and query a codebase symbol index",
+	Long: `Build and query a regex-based symbol index stored at .rpi/index.json.
+
+Supports Go, Python, JavaScript/TypeScript, and Rust. Extracts function,
+class, struct, interface, and type alias definitions.`,
+	Example: `  # Build the index
+  rpi index build
+
+  # Search for symbols
+  rpi index query "HandleRequest"
+
+  # Check index freshness
+  rpi index status`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cmd.Help()
 	},
@@ -32,26 +44,67 @@ var indexCmd = &cobra.Command{
 var indexBuildCmd = &cobra.Command{
 	Use:   "build",
 	Short: "Build a symbol index of the codebase",
-	RunE:  runIndexBuild,
+	Long: `Walk the codebase, extract function/class/struct/interface definitions using
+regex patterns, and save the index to .rpi/index.json.
+
+Use --lang to restrict indexing to specific languages (comma-separated).`,
+	Example: `  # Index the entire codebase
+  rpi index build
+
+  # Index only Go and Python files
+  rpi index build --lang go,py
+
+  # Force a full rebuild
+  rpi index build --force`,
+	RunE: runIndexBuild,
 }
 
 var indexQueryCmd = &cobra.Command{
 	Use:   "query <pattern>",
 	Short: "Search for symbols in the index",
-	Args:  cobra.ExactArgs(1),
-	RunE:  runIndexQuery,
+	Long: `Case-insensitive substring match on symbol names. Use --kind to filter by
+symbol kind (function, method, class, struct, interface, type_alias) and
+--exported to show only exported symbols.`,
+	Example: `  # Find all symbols matching "resolve"
+  rpi index query resolve
+
+  # Find exported functions only
+  rpi index query handler --kind function --exported
+
+  # Output as markdown table
+  rpi index query scan --format md`,
+	Args: cobra.ExactArgs(1),
+	RunE: runIndexQuery,
 }
 
 var indexFilesCmd = &cobra.Command{
 	Use:   "files",
 	Short: "List all indexed files",
-	RunE:  runIndexFiles,
+	Long: `List indexed files with their language, symbol count, and file size.
+Use --lang to filter by language.`,
+	Example: `  # List all indexed files
+  rpi index files
+
+  # List only Go files
+  rpi index files --lang go
+
+  # Output as markdown table
+  rpi index files --format md`,
+	RunE: runIndexFiles,
 }
 
 var indexStatusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Show index metadata and freshness",
-	RunE:  runIndexStatus,
+	Long: `Show index metadata: age, file count, stale files, languages, symbol count,
+and index size. Output is plain text by default; use --format json for JSON.`,
+	Example: `  rpi index status
+  # Index: .rpi/index.json
+  # Built: 2026-03-13T10:00:00Z (120s ago)
+  # Files: 42 (3 stale)
+  # Symbols: 384
+  # Languages: go: 30, py: 12`,
+	RunE: runIndexStatus,
 }
 
 func init() {

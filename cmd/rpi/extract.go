@@ -18,9 +18,24 @@ var (
 var extractCmd = &cobra.Command{
 	Use:   "extract <path>",
 	Short: "Extract a section from a markdown file",
-	Long:  "Parse a markdown file and extract the content of a specific ## heading by case-insensitive prefix match, or list all available section headings.",
-	Args:  cobra.ExactArgs(1),
-	RunE:  runExtract,
+	Long: `Parse a markdown file and extract the content of a specific ## heading, or
+list all available section headings.
+
+Use --section for case-insensitive prefix match against ## headings.
+Use --list-sections to discover available headings. These flags are
+mutually exclusive.
+
+Output formats: text (default), json, md.`,
+	Example: `  # Extract a section by name (case-insensitive prefix match)
+  rpi extract .thoughts/proposals/2026-03-13-auth.md --section "summary"
+
+  # List all section headings in a file
+  rpi extract .thoughts/proposals/2026-03-13-auth.md --list-sections
+
+  # Extract as JSON
+  rpi extract .thoughts/proposals/2026-03-13-auth.md --section "overview" --format json`,
+	Args: cobra.ExactArgs(1),
+	RunE: runExtract,
 }
 
 func init() {

@@ -15,6 +15,23 @@ import (
 var archiveCmd = &cobra.Command{
 	Use:   "archive",
 	Short: "Archive operations for .thoughts/ artifacts",
+	Long: `Manage the archive lifecycle for .thoughts/ artifacts.
+
+An artifact is archivable when its status is "complete" or "superseded" and
+it is not already in the archive/ subdirectory. Archived files are moved to
+.thoughts/archive/YYYY-MM/<type>/ with their frontmatter updated (status set
+to "archived", archived_date added).`,
+	Example: `  # Discover archivable artifacts
+  rpi archive scan
+
+  # Check if an artifact has active references
+  rpi archive check-refs .thoughts/proposals/2026-03-13-auth.md
+
+  # Archive an artifact (fails with exit 3 if active refs exist)
+  rpi archive move .thoughts/plans/2026-03-13-auth.md
+
+  # Force archive even with active references
+  rpi archive move --force .thoughts/plans/2026-03-13-auth.md`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cmd.Help()
 	},
@@ -23,21 +40,39 @@ var archiveCmd = &cobra.Command{
 var archiveScanCmd = &cobra.Command{
 	Use:   "scan",
 	Short: "Discover archivable artifacts with reference counts",
-	RunE:  runArchiveScan,
+	Long: `Find artifacts with status "complete" or "superseded" that are not already
+in archive/. Returns each artifact's path, type, status, title, and the
+number of other artifacts that reference it.`,
+	Example: `  rpi archive scan
+  # → [{"path": ".thoughts/plans/...", "type": "plan", "status": "complete", "ref_count": 0}]`,
+	RunE: runArchiveScan,
 }
 
 var archiveCheckRefsCmd = &cobra.Command{
 	Use:   "check-refs <path>",
 	Short: "Find all files referencing a given path",
-	Args:  cobra.ExactArgs(1),
-	RunE:  runArchiveCheckRefs,
+	Long: `Search frontmatter fields and body text of all .thoughts/ files for
+references to the given path. Returns a list of files that reference it.`,
+	Example: `  rpi archive check-refs .thoughts/proposals/2026-03-13-auth.md
+  # → [".thoughts/plans/2026-03-13-auth.md"]`,
+	Args: cobra.ExactArgs(1),
+	RunE: runArchiveCheckRefs,
 }
 
 var archiveMoveCmd = &cobra.Command{
 	Use:   "move <path>",
 	Short: "Archive an artifact: update frontmatter and move to archive/",
-	Args:  cobra.ExactArgs(1),
-	RunE:  runArchiveMove,
+	Long: `Update the artifact's frontmatter (status → "archived", adds archived_date)
+and move the file to .thoughts/archive/YYYY-MM/<type>/.
+
+Exits with code 3 if the file has active references. Use --force to override.`,
+	Example: `  rpi archive move .thoughts/plans/2026-03-13-auth.md
+  # → {"from": "...", "to": ".thoughts/archive/2026-03/plans/...", "frontmatter_updated": true}
+
+  # Override active reference check
+  rpi archive move --force .thoughts/plans/2026-03-13-auth.md`,
+	Args: cobra.ExactArgs(1),
+	RunE: runArchiveMove,
 }
 
 var archiveMoveForce bool

@@ -46,8 +46,33 @@ func logInfo(w io.Writer, msg string) {
 var initCmd = &cobra.Command{
 	Use:   "init [directory]",
 	Short: "Initialize project with workflow directories and rules file for Claude Code or OpenCode",
-	Args:  cobra.MaximumNArgs(1),
-	RunE:  runInit,
+	Long: `Initialize a project with the RPI workflow structure.
+
+Targets:
+  claude    Creates .claude/ with agents, commands, skills, hooks subdirectories
+            and a CLAUDE.md rules file (default)
+  opencode  Creates .opencode/ with the same structure and an AGENTS.md rules file
+
+Also creates:
+  .thoughts/        Artifact directory hierarchy (research, proposals, plans, etc.)
+  PIPELINE.md       Workflow guide in .thoughts/
+  .rpi/index.json   Codebase symbol index
+
+Use --force to reinitialize an existing project. Use --no-claude-md to skip
+rules file generation. Use --track-thoughts to keep .thoughts/ tracked in git.`,
+	Example: `  # Initialize for Claude Code (default)
+  rpi init
+
+  # Initialize for OpenCode
+  rpi init --target opencode
+
+  # Reinitialize with force
+  rpi init --force
+
+  # Initialize in a specific directory without rules file
+  rpi init ./my-project --no-claude-md`,
+	Args: cobra.MaximumNArgs(1),
+	RunE: runInit,
 }
 
 func init() {

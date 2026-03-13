@@ -12,9 +12,25 @@ import (
 var gitContextCmd = &cobra.Command{
 	Use:   "git-context [action]",
 	Short: "Consolidated git state gathering",
-	Long:  "Gather consolidated git context (branch, status, commits, diff, sensitive files) as JSON.\nOptional actions: changed-files, sensitive-check.",
-	Args:  cobra.MaximumNArgs(1),
-	RunE:  runGitContext,
+	Long: `Gather consolidated git context as JSON.
+
+Without an action, returns full context: branch, commit, status, recent
+commits, diff summary, and sensitive file scan results.
+
+Actions:
+  changed-files     Files changed vs main branch (falls back to last 10 commits)
+  sensitive-check   Scan staged files for sensitive filenames (.env, .pem, .key,
+                    credentials) and content patterns (password=, API_KEY=, RSA keys)`,
+	Example: `  # Full git context
+  rpi git-context
+
+  # List changed files
+  rpi git-context changed-files
+
+  # Check staged files for sensitive content before committing
+  rpi git-context sensitive-check`,
+	Args: cobra.MaximumNArgs(1),
+	RunE: runGitContext,
 }
 
 func init() {
