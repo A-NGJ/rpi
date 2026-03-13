@@ -2,3 +2,11 @@
 .claude
 bin/rpi
 walkthrough.md
+
+# RPI workflow
+.claude/
+.rpi/
+.opencode/
+
+# RPI workflow
+.thoughts/
