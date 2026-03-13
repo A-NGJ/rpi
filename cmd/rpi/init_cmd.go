@@ -17,6 +17,7 @@ var (
 	initForce         bool
 	initNoClaudeMD    bool
 	initTrackThoughts bool
+	initTarget        string
 )
 
 const (
@@ -44,16 +45,45 @@ func logInfo(w io.Writer, msg string) {
 
 var initCmd = &cobra.Command{
 	Use:   "init [directory]",
-	Short: "Initialize project with .claude/ and .thoughts/ directory structure",
+	Short: "Initialize project with workflow directories and rules file for Claude Code or OpenCode",
 	Args:  cobra.MaximumNArgs(1),
 	RunE:  runInit,
 }
 
 func init() {
 	initCmd.Flags().BoolVar(&initForce, "force", false, "Overwrite existing files and directories")
-	initCmd.Flags().BoolVar(&initNoClaudeMD, "no-claude-md", false, "Skip CLAUDE.md generation")
+	initCmd.Flags().BoolVar(&initNoClaudeMD, "no-claude-md", false, "Skip rules file generation (CLAUDE.md or AGENTS.md)")
 	initCmd.Flags().BoolVar(&initTrackThoughts, "track-thoughts", false, "Do not add .thoughts/ to .gitignore")
+	initCmd.Flags().StringVar(&initTarget, "target", "claude", `AI coding tool to initialize for: "claude" or "opencode"`)
 	rootCmd.AddCommand(initCmd)
+}
+
+type targetConfig struct {
+	toolDir   string // ".claude" or ".opencode"
+	subdirs   []string
+	rulesFile string // "CLAUDE.md" or "AGENTS.md"
+	target    workflow.Target
+}
+
+func resolveTargetConfig(t string) (targetConfig, error) {
+	switch t {
+	case "claude":
+		return targetConfig{
+			toolDir:   ".claude",
+			subdirs:   []string{"agents", "commands", "skills", "hooks"},
+			rulesFile: "CLAUDE.md",
+			target:    workflow.TargetClaude,
+		}, nil
+	case "opencode":
+		return targetConfig{
+			toolDir:   ".opencode",
+			subdirs:   []string{"agents", "commands", "skills", "hooks"},
+			rulesFile: "AGENTS.md",
+			target:    workflow.TargetOpenCode,
+		}, nil
+	default:
+		return targetConfig{}, fmt.Errorf("unknown target %q: must be \"claude\" or \"opencode\"", t)
+	}
 }
 
 func runInit(cmd *cobra.Command, args []string) error {
@@ -62,23 +92,27 @@ func runInit(cmd *cobra.Command, args []string) error {
 		targetDir = args[0]
 	}
 
-	w := cmd.OutOrStdout()
-
-	claudeDir := filepath.Join(targetDir, ".claude")
-
-	// Check if already initialized
-	if _, err := os.Stat(claudeDir); err == nil && !initForce {
-		return fmt.Errorf(".claude/ already exists; use --force to reinitialize")
+	cfg, err := resolveTargetConfig(initTarget)
+	if err != nil {
+		return err
 	}
 
-	// Create .claude/ subdirs
-	claudeSubdirs := []string{"agents", "commands", "skills", "hooks"}
-	for _, d := range claudeSubdirs {
-		path := filepath.Join(claudeDir, d)
+	w := cmd.OutOrStdout()
+
+	toolDirPath := filepath.Join(targetDir, cfg.toolDir)
+
+	// Check if already initialized
+	if _, err := os.Stat(toolDirPath); err == nil && !initForce {
+		return fmt.Errorf("%s/ already exists; use --force to reinitialize", cfg.toolDir)
+	}
+
+	// Create tool subdirs
+	for _, d := range cfg.subdirs {
+		path := filepath.Join(toolDirPath, d)
 		if err := os.MkdirAll(path, 0755); err != nil {
 			return fmt.Errorf("create %s: %w", path, err)
 		}
-		logSuccess(w, fmt.Sprintf("Created .claude/%s/", d))
+		logSuccess(w, fmt.Sprintf("Created %s/%s/", cfg.toolDir, d))
 	}
 
 	// Create .thoughts/ subdirs
@@ -95,20 +129,20 @@ func runInit(cmd *cobra.Command, args []string) error {
 		logSuccess(w, fmt.Sprintf("Created .thoughts/%s/", d))
 	}
 
-	// Generate CLAUDE.md
+	// Generate rules file (CLAUDE.md or AGENTS.md)
 	if !initNoClaudeMD {
-		claudeMDPath := filepath.Join(targetDir, "CLAUDE.md")
-		if _, err := os.Stat(claudeMDPath); err == nil && !initForce {
-			logWarning(w, "CLAUDE.md already exists (use --force to overwrite)")
+		rulesPath := filepath.Join(targetDir, cfg.rulesFile)
+		if _, err := os.Stat(rulesPath); err == nil && !initForce {
+			logWarning(w, fmt.Sprintf("%s already exists (use --force to overwrite)", cfg.rulesFile))
 		} else {
-			content, err := templates.Get("CLAUDE.md")
+			content, err := templates.Get(cfg.rulesFile)
 			if err != nil {
-				return fmt.Errorf("get CLAUDE.md template: %w", err)
+				return fmt.Errorf("get %s template: %w", cfg.rulesFile, err)
 			}
-			if err := os.WriteFile(claudeMDPath, []byte(content), 0644); err != nil {
-				return fmt.Errorf("write CLAUDE.md: %w", err)
+			if err := os.WriteFile(rulesPath, []byte(content), 0644); err != nil {
+				return fmt.Errorf("write %s: %w", cfg.rulesFile, err)
 			}
-			logSuccess(w, "Created CLAUDE.md")
+			logSuccess(w, fmt.Sprintf("Created %s", cfg.rulesFile))
 		}
 	}
 
@@ -128,7 +162,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 	}
 
 	// Manage .gitignore
-	if err := ensureGitignoreEntry(w, targetDir, ".claude/"); err != nil {
+	if err := ensureGitignoreEntry(w, targetDir, cfg.toolDir+"/"); err != nil {
 		logWarning(w, fmt.Sprintf("Failed to update .gitignore: %v", err))
 	}
 	if !initTrackThoughts {
@@ -138,11 +172,11 @@ func runInit(cmd *cobra.Command, args []string) error {
 	}
 
 	// Install embedded workflow files (agents, commands, skills)
-	n, err := workflow.Install(claudeDir, initForce)
+	n, err := workflow.InstallTo(toolDirPath, cfg.target, initForce)
 	if err != nil {
 		return fmt.Errorf("install workflow files: %w", err)
 	}
-	logSuccess(w, fmt.Sprintf("Installed %d workflow files (agents, commands, skills)", n))
+	logSuccess(w, fmt.Sprintf("Installed %d workflow files to %s/ (agents, commands, skills)", n, cfg.toolDir))
 
 	// Add .rpi/ to .gitignore
 	if err := ensureGitignoreEntry(w, targetDir, ".rpi/"); err != nil {

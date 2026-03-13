@@ -12,6 +12,7 @@ func resetInitFlags() {
 	initForce = false
 	initNoClaudeMD = false
 	initTrackThoughts = false
+	initTarget = "claude"
 }
 
 func runInitInDir(t *testing.T, dir string) (*bytes.Buffer, error) {
@@ -482,5 +483,136 @@ func TestCopyDirectory(t *testing.T) {
 	data, _ = os.ReadFile(filepath.Join(dest, "sub", "c.txt"))
 	if string(data) != "ccc" {
 		t.Errorf("sub/c.txt content: got %q, want %q", data, "ccc")
+	}
+}
+
+func runInitOpenCode(t *testing.T, dir string) (*bytes.Buffer, error) {
+	t.Helper()
+	resetInitFlags()
+	initTarget = "opencode"
+	buf := new(bytes.Buffer)
+	cmd := initCmd
+	cmd.SetOut(buf)
+	err := cmd.RunE(cmd, []string{dir})
+	return buf, err
+}
+
+func TestInitOpenCode(t *testing.T) {
+	dir := t.TempDir()
+	buf, err := runInitOpenCode(t, dir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Verify .opencode/ subdirs
+	for _, d := range []string{"agents", "commands", "skills", "hooks"} {
+		path := filepath.Join(dir, ".opencode", d)
+		info, err := os.Stat(path)
+		if err != nil {
+			t.Errorf(".opencode/%s not created: %v", d, err)
+			continue
+		}
+		if !info.IsDir() {
+			t.Errorf(".opencode/%s is not a directory", d)
+		}
+	}
+
+	// Verify AGENTS.md generated, CLAUDE.md absent
+	if _, err := os.Stat(filepath.Join(dir, "AGENTS.md")); err != nil {
+		t.Error("AGENTS.md not created")
+	}
+	if _, err := os.Stat(filepath.Join(dir, "CLAUDE.md")); err == nil {
+		t.Error("CLAUDE.md should not be created for opencode target")
+	}
+
+	// Verify .opencode/ in .gitignore
+	gitignore, err := os.ReadFile(filepath.Join(dir, ".gitignore"))
+	if err != nil {
+		t.Fatalf("failed to read .gitignore: %v", err)
+	}
+	if !strings.Contains(string(gitignore), ".opencode/") {
+		t.Error(".gitignore missing .opencode/ entry")
+	}
+	// .claude/ should NOT be in .gitignore
+	if strings.Contains(string(gitignore), ".claude/") {
+		t.Error(".gitignore should not contain .claude/ for opencode target")
+	}
+
+	// Verify command frontmatter transform (model: opus → full ID)
+	cmdData, err := os.ReadFile(filepath.Join(dir, ".opencode", "commands", "rpi-research.md"))
+	if err != nil {
+		t.Fatalf("read rpi-research.md: %v", err)
+	}
+	if !strings.Contains(string(cmdData), "model: anthropic/claude-opus-4-6") {
+		t.Error("command model should be transformed to full provider ID")
+	}
+
+	// Verify command body transform (@codebase-analyzer mention)
+	if strings.Contains(string(cmdData), "Sub-task (@codebase-analyzer):") {
+		t.Error("Sub-task (@codebase-analyzer): should be transformed in body")
+	}
+	if !strings.Contains(string(cmdData), "@codebase-analyzer") {
+		t.Error("body should contain @codebase-analyzer mention")
+	}
+
+	// Verify agent frontmatter transform
+	agentData, err := os.ReadFile(filepath.Join(dir, ".opencode", "agents", "codebase-analyzer.md"))
+	if err != nil {
+		t.Fatalf("read codebase-analyzer.md: %v", err)
+	}
+	if !strings.Contains(string(agentData), "mode: subagent") {
+		t.Error("agent should have mode: subagent")
+	}
+
+	// Verify TodoWrite removed from rpi-plan.md
+	planData, err := os.ReadFile(filepath.Join(dir, ".opencode", "commands", "rpi-plan.md"))
+	if err != nil {
+		t.Fatalf("read rpi-plan.md: %v", err)
+	}
+	if strings.Contains(string(planData), "TodoWrite") {
+		t.Error("TodoWrite should be removed from command body")
+	}
+
+	output := buf.String()
+	if !strings.Contains(output, "Created .opencode/agents/") {
+		t.Error("output missing .opencode/agents/ creation message")
+	}
+	if !strings.Contains(output, "Installed") {
+		t.Error("output missing install confirmation")
+	}
+}
+
+func TestInitOpenCodeAlreadyExists(t *testing.T) {
+	dir := t.TempDir()
+
+	// First run
+	_, err := runInitOpenCode(t, dir)
+	if err != nil {
+		t.Fatalf("first run error: %v", err)
+	}
+
+	// Second run should error
+	_, err = runInitOpenCode(t, dir)
+	if err == nil {
+		t.Fatal("second run should return error")
+	}
+	if !strings.Contains(err.Error(), ".opencode/ already exists") {
+		t.Errorf("expected '.opencode/ already exists' error, got: %v", err)
+	}
+}
+
+func TestInitInvalidTarget(t *testing.T) {
+	dir := t.TempDir()
+	resetInitFlags()
+	initTarget = "invalid"
+	buf := new(bytes.Buffer)
+	cmd := initCmd
+	cmd.SetOut(buf)
+	err := cmd.RunE(cmd, []string{dir})
+	if err == nil {
+		t.Fatal("should error for invalid target")
+	}
+	if !strings.Contains(err.Error(), "unknown target") {
+		t.Errorf("expected 'unknown target' error, got: %v", err)
 	}
 }
