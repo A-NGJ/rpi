@@ -21,8 +21,33 @@ var (
 var scanCmd = &cobra.Command{
 	Use:   "scan",
 	Short: "Discover and filter artifacts in .thoughts/",
-	Long:  "Walk .thoughts/ directory, parse frontmatter, and return artifacts matching filter criteria.",
-	RunE:  runScan,
+	Long: `Walk .thoughts/ directory (excludes archive/), parse YAML frontmatter from
+each .md file, and return artifacts matching filter criteria.
+
+Filters can be combined; all filters must match (AND logic).
+Valid types: plan, proposal, research, spec, review
+Valid statuses: draft, active, complete, superseded, archived
+
+Output is JSON by default; use --format md for a markdown table.`,
+	Example: `  # All draft research artifacts
+  rpi scan --type research --status draft
+
+  # Artifacts ready to archive (complete or superseded, not in archive/)
+  rpi scan --archivable
+
+  # Find artifacts that reference a specific file
+  rpi scan --references .thoughts/proposals/2026-03-13-auth.md
+
+  # Sample JSON output:
+  # [
+  #   {
+  #     "path": ".thoughts/research/2026-03-13-auth.md",
+  #     "type": "research",
+  #     "status": "draft",
+  #     "title": "auth flow investigation"
+  #   }
+  # ]`,
+	RunE: runScan,
 }
 
 func init() {

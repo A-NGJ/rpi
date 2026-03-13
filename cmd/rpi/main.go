@@ -16,7 +16,32 @@ var (
 var rootCmd = &cobra.Command{
 	Use:   "rpi",
 	Short: "RPI workflow CLI — context-offloading tool for .thoughts/ artifacts",
-	Long:  "RPI workflow CLI — context-offloading tool for .thoughts/ artifacts.\n\nHandles template scaffolding, YAML frontmatter manipulation, artifact chain\nresolution, directory scanning, git context gathering, and archive operations.",
+	Long: `RPI workflow CLI — manages .thoughts/ artifacts for the
+Research → Propose → Plan → Implement → Verify → Archive pipeline.
+
+Each stage produces a markdown artifact in .thoughts/ with YAML frontmatter.
+Artifacts link to each other via frontmatter fields (research, proposal,
+depends_on), forming dependency chains that rpi can resolve.
+
+Workflow example:
+  # Scaffold a research artifact
+  rpi scaffold research --topic "auth flow" --write
+
+  # Check what artifacts exist
+  rpi scan --type research --status draft
+
+  # Resolve the full chain from a plan back to its research
+  rpi chain .thoughts/plans/2026-03-13-auth.md
+
+  # Check plan progress during implementation
+  rpi verify completeness .thoughts/plans/2026-03-13-auth.md
+
+  # Update artifact status
+  rpi frontmatter transition .thoughts/plans/2026-03-13-auth.md complete
+
+  # Find and archive completed artifacts
+  rpi archive scan
+  rpi archive move .thoughts/plans/2026-03-13-auth.md`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cmd.Help()
 	},

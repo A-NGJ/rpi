@@ -38,10 +38,31 @@ var scaffoldCmd = &cobra.Command{
 	Short: "Generate artifact files from templates",
 	Long: `Generate pre-filled artifact files from .tmpl templates.
 
-Types: research, propose, plan, verify-report, spec
+Types and their subdirectories:
+  research      → .thoughts/research/
+  propose       → .thoughts/proposals/
+  plan          → .thoughts/plans/
+  verify-report → .thoughts/reviews/
+  spec          → .thoughts/specs/
 
 By default, outputs rendered markdown to stdout. Use --write to create the file
-at the correct path under .thoughts/.`,
+at .thoughts/<subdir>/YYYY-MM-DD-<slugified-topic>.md.
+
+Frontmatter is auto-populated with current date, git commit, branch, and repo name.`,
+	Example: `  # Create a research artifact
+  rpi scaffold research --topic "auth flow" --write
+    → .thoughts/research/2026-03-13-auth-flow.md
+
+  # Create a plan linked to a proposal
+  rpi scaffold plan --proposal .thoughts/proposals/2026-03-13-auth.md --topic "auth refactor" --write
+    → .thoughts/plans/2026-03-13-auth-refactor.md
+
+  # Create a proposal linked to research
+  rpi scaffold propose --topic "caching strategy" --research .thoughts/research/2026-03-13-caching.md --write
+    → .thoughts/proposals/2026-03-13-caching-strategy.md
+
+  # Preview to stdout without creating a file
+  rpi scaffold spec --topic "user permissions"`,
 	Args: cobra.ExactArgs(1),
 	RunE: runScaffold,
 }

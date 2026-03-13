@@ -14,9 +14,31 @@ import (
 var verifyCmd = &cobra.Command{
 	Use:   "verify <action> [file-path]",
 	Short: "Deterministic verification checks",
-	Long:  "Run deterministic verification checks.\nActions:\n  completeness <plan-path>  — checkbox counts and file coverage (plan path required)\n  markers [file-path]       — TODO/FIXME/HACK scan (optional, defaults to git-changed files excluding templates)",
-	Args:  cobra.RangeArgs(1, 2),
-	RunE:  runVerify,
+	Long: `Run deterministic verification checks on plans and source files.
+
+Actions:
+  completeness <plan-path>  Parse a plan file for checkboxes (- [ ] / - [x])
+                            and **File**: path entries. Compare plan files against
+                            git changed files. Reports checked/unchecked counts
+                            with phase context, plus file coverage (missing from
+                            git, unexpected in git).
+  markers [file-path]       Scan for TODO/FIXME/HACK markers. Without a file
+                            argument, scans git-changed files (excluding .tmpl/.tpl
+                            templates).
+
+Output is JSON by default.`,
+	Example: `  # Check plan progress and file coverage
+  rpi verify completeness .thoughts/plans/2026-03-13-auth.md
+  # → {"total_checkboxes": 12, "checked": 8, "unchecked": 4, ...}
+
+  # Scan for TODO/FIXME/HACK in changed files
+  rpi verify markers
+  # → {"markers": [...], "count": {"TODO": 2}}
+
+  # Scan a specific file
+  rpi verify markers cmd/rpi/scan.go`,
+	Args: cobra.RangeArgs(1, 2),
+	RunE: runVerify,
 }
 
 func init() {
