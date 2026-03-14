@@ -154,12 +154,9 @@ func TestInstallTo_OpenCode(t *testing.T) {
 		t.Error("original model: opus should be replaced")
 	}
 
-	// Verify command body transform
-	if strings.Contains(string(cmdData), "Sub-task (@codebase-analyzer):") {
-		t.Error("Sub-task (@codebase-analyzer): should be transformed")
-	}
-	if !strings.Contains(string(cmdData), "@codebase-analyzer") {
-		t.Error("body should contain @codebase-analyzer mention")
+	// Verify command body is tool-agnostic (no Sub-task syntax)
+	if strings.Contains(string(cmdData), "Sub-task") {
+		t.Error("command body should not contain tool-specific Sub-task syntax")
 	}
 
 	// Verify agent frontmatter transform

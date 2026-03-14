@@ -547,12 +547,9 @@ func TestInitOpenCode(t *testing.T) {
 		t.Error("command model should be transformed to full provider ID")
 	}
 
-	// Verify command body transform (@codebase-analyzer mention)
-	if strings.Contains(string(cmdData), "Sub-task (@codebase-analyzer):") {
-		t.Error("Sub-task (@codebase-analyzer): should be transformed in body")
-	}
-	if !strings.Contains(string(cmdData), "@codebase-analyzer") {
-		t.Error("body should contain @codebase-analyzer mention")
+	// Verify command body is tool-agnostic (no Sub-task syntax)
+	if strings.Contains(string(cmdData), "Sub-task") {
+		t.Error("command body should not contain tool-specific Sub-task syntax")
 	}
 
 	// Verify agent frontmatter transform
