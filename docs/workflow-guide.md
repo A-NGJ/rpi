@@ -123,3 +123,12 @@ Two optional commands help close the loop:
 
 - **`/rpi-verify`** -- Validates that your implementation matches the proposal artifacts. Checks completeness, correctness, and coherence. Run it after `/rpi-implement` or anytime you want a second opinion on whether the code matches the plan.
 - **`/rpi-archive`** -- Moves completed artifacts to `.thoughts/archive/` to keep the active directory clean. Run it when a feature is fully shipped and you no longer need the research/proposals/plan documents in the active directories.
+
+## Tips
+
+- **Start small.** Try `/rpi-plan` on a bug fix to see how the plan -> implement cycle feels before using the full pipeline.
+- **Edit the artifacts.** The `.thoughts/` documents are yours. If a proposal decision is wrong, edit it before planning. If a plan phase is unnecessary, delete it.
+- **Use CLAUDE.md.** Add your project's test commands, linting setup, and conventions to `CLAUDE.md`. The pipeline stages pull verification commands from there.
+- **Redirect during research.** When `/rpi-research` shows initial findings, tell it to focus on specific areas rather than researching everything.
+- **Skip stages when they don't add value.** The full pipeline exists for complex work. Most daily tasks only need Plan -> Implement.
+- **Review the pre-review.** `/rpi-implement` shows you exactly what it plans to change before writing code. This is your last checkpoint -- use it.
