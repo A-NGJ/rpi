@@ -30,7 +30,7 @@ For focused decisions: choosing between approaches, designing a single component
 ### Step 1: Understand the decision
 
 1. Read any mentioned files fully
-2. Use `rpi index query "[topic]"` to locate relevant files, then read them. For decisions touching multiple areas, also look for similar patterns in the codebase.
+2. Use `rpi` to query the codebase index for files related to the topic, then read them. For decisions touching multiple areas, also look for similar patterns in the codebase.
 3. Present the decision frame: what needs to be decided, the relevant codebase context (with file:line refs), and the constraints. If the user already specified the options, skip straight to analysis.
 
 ### Step 2: Trade-off analysis
@@ -64,8 +64,8 @@ Build a thorough understanding of the terrain before proposing solutions.
 1. **Read all mentioned files fully** before investigating further
 2. **Check upstream context** — if a research doc was provided, use `rpi` to check its status and resolve the full artifact chain. Read all files it identifies. Warn if the research is still in draft or already complete. Also check for existing proposals on the same topic.
 3. **Investigate the relevant areas** (parallelize when possible):
-   - Run `rpi scan` to find existing documents about this topic in `.thoughts/`
-   - Run `rpi index query "[feature]"` to locate relevant files, then read them
+   - Use `rpi` to scan for existing documents about this topic in `.thoughts/`
+   - Use `rpi` to query the codebase index for files related to the feature, then read them
    - Understand the current architecture and patterns in the affected areas
    - Find how similar problems are solved in the codebase — concrete examples with file:line refs
 4. **Surface relevant non-functional concerns** — consider which genuinely matter (performance, reliability, security, observability). Don't force-fit all of them.

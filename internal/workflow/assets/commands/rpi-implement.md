@@ -28,7 +28,7 @@ When given a plan path:
 - **Read files fully** - never use limit/offset parameters, you need complete context
 - Think deeply about how the pieces fit together
 - Update the plan status: use `rpi` to transition the plan to active
-- Check current progress: use `rpi verify completeness` on the plan to see completed vs remaining items
+- Check current progress: use `rpi` to check the plan's completeness — completed vs remaining items
 - Start implementing if you understand what needs to be done
 
 If no plan path provided, ask for one.
@@ -142,7 +142,7 @@ If you're stuck on unfamiliar code, research it before guessing.
 If the plan has existing checkmarks:
 
 - Trust that completed work is done
-- Use `rpi verify completeness` on the plan to see what's done vs remaining
+- Use `rpi` to check the plan's completeness — what's done vs remaining
 - Pick up from the first unchecked item
 - Verify previous work only if something seems off
 

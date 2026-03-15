@@ -28,8 +28,8 @@ For tasks that don't need the full propose → plan pipeline: bug fixes, small f
 2. Read any provided files fully
 3. Research proportional to complexity:
    - **Obvious** (specific file/function named): read those files directly
-   - **Moderate** (area known, pattern unclear): use `rpi index query "[task]"` to locate files, then read them
-   - **Cross-cutting** (multiple systems): investigate in parallel — find relevant files with `rpi index query`, understand how similar things are done in the codebase, read the key implementation files
+   - **Moderate** (area known, pattern unclear): use `rpi` to query the codebase index for related files, then read them
+   - **Cross-cutting** (multiple systems): investigate in parallel — use `rpi` to query the codebase index for relevant files, understand how similar things are done in the codebase, read the key implementation files
 4. If the task is ambiguous or you have questions, present findings and open questions before writing the plan. If everything is clear, write the plan directly.
 
 ### Step 2: Write the plan

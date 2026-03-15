@@ -21,7 +21,7 @@ If no arguments were provided, ask what they'd like to research — this works f
 ## Step 2: Read mentioned files and check existing context
 
 - If the user mentions specific files, read them fully before doing anything else
-- Run `rpi scan --type research` to check for existing research on this topic
+- Use `rpi` to check for existing research artifacts on this topic
   - If relevant research exists, mention it and build on it
 
 ## Step 3: Assess scope and investigate
@@ -33,10 +33,10 @@ Scale investigation effort to the question:
 
 To investigate (adapt to scope — parallelize when possible):
 
-1. Run `rpi index query "[topic]"` to locate relevant files, then read them
+1. Use `rpi` to query the codebase index for files related to the topic, then read them
 2. Understand how the key code works — read the implementation and trace the logic
 3. Find existing patterns related to the topic — look for similar code with file:line refs
-4. Run `rpi scan` to surface any existing documents about this topic in `.thoughts/`
+4. Use `rpi` to scan for existing documents about this topic in `.thoughts/`
 
 For focused questions, skip tasks that aren't relevant.
 
