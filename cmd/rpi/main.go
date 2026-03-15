@@ -21,10 +21,8 @@ Research → Propose → Plan → Implement → Verify → Archive pipeline.
 
 Each stage produces a markdown artifact in .thoughts/ with YAML frontmatter.
 Artifacts link to each other via frontmatter fields (research, proposal,
-depends_on), forming dependency chains that rpi can resolve.
-
-Workflow example:
-  # Scaffold a research artifact
+depends_on), forming dependency chains that rpi can resolve.`,
+	Example: `  # Scaffold a research artifact
   rpi scaffold research --topic "auth flow" --write
 
   # Check what artifacts exist

@@ -48,7 +48,23 @@ Types and their subdirectories:
 By default, outputs rendered markdown to stdout. Use --write to create the file
 at .thoughts/<subdir>/YYYY-MM-DD-<slugified-topic>.md.
 
-Frontmatter is auto-populated with current date, git commit, branch, and repo name.`,
+Frontmatter is auto-populated with current date, git commit, branch, and repo name.
+
+The rendered file contains YAML frontmatter and section headings from the template:
+
+  ---
+  date: 2026-03-15T10:00:00+01:00
+  topic: "auth flow"
+  tags: [research]
+  status: draft
+  ---
+
+  # Research: auth flow
+
+  ## Research Question
+  ## Summary
+  ## Detailed Findings
+  ...`,
 	Example: `  # Create a research artifact
   rpi scaffold research --topic "auth flow" --write
     → .thoughts/research/2026-03-13-auth-flow.md
