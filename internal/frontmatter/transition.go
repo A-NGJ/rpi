@@ -4,9 +4,11 @@ import "fmt"
 
 // validTransitions defines the allowed status state machine.
 var validTransitions = map[string][]string{
-	"draft":    {"active", "superseded"},
-	"active":   {"complete", "superseded"},
-	"complete": {"archived", "superseded"},
+	"draft":       {"active", "approved", "superseded"},
+	"active":      {"complete", "superseded"},
+	"approved":    {"implemented", "superseded"},
+	"complete":    {"archived", "superseded"},
+	"implemented": {"archived", "superseded"},
 }
 
 // Transition validates and applies a status change.
