@@ -3,15 +3,16 @@
 Standard workflow for taking features from idea to implementation.
 
 ```
-[Research] → Propose → Plan → Implement
-    │           │        │        │
-    ▼           ▼        ▼        ▼
-(optional)  .thoughts/ .thoughts/ code +
-.thoughts/  proposals/ plans/     tests +
-research/                         commits
+[Research] → Propose → [spec + proposal] → Plan → Implement → Verify
+    │           │              │               │        │          │
+    ▼           ▼              ▼               ▼        ▼          ▼
+(optional)  .thoughts/    Approve/Edit     .thoughts/  code +   .thoughts/
+.thoughts/  proposals/ +  (gate 1:         plans/      tests +  reviews/
+research/   specs/         contract                    commits
+                           agreed?)
 ```
 
-Research is conversational by default — no artifact unless you ask. Everything else produces a document that the next stage consumes.
+Research is conversational by default — no artifact unless you ask. Everything else produces a document that the next stage consumes. The spec is the behavioral contract that bridges Propose and Plan — nothing gets implemented until the contract is approved.
 
 ---
 
@@ -59,7 +60,7 @@ Research is conversational by default — no artifact unless you ask. Everything
 1. Quick context gathering (1-2 sub-tasks)
 2. Trade-off analysis with recommendation
 3. Write proposal doc
-4. Create/update specs
+4. Create/update spec (behavioral contract with test cases) → present for approval
 
 **Full mode** (complex features):
 1. Investigate codebase (parallel sub-agents)
@@ -67,13 +68,12 @@ Research is conversational by default — no artifact unless you ask. Everything
 3. Explore design options → **human checkpoint**
 4. Synthesize chosen direction → **human checkpoint**
 5. Write proposal doc
-6. Create/update specs
+6. Create/update spec (behavioral contract with test cases)
+7. Review spec contract & iterate → **approval gate**
 
-**Output**: `.thoughts/proposals/YYYY-MM-DD-description.md`
-- Summary, investigation findings, constraints
-- Design decisions with alternatives and rationale
-- Architecture and file structure (when applicable)
-- Risks and mitigations
+**Output**: `.thoughts/proposals/YYYY-MM-DD-description.md` + `.thoughts/specs/<module>.md`
+- Proposal: summary, investigation findings, constraints, design decisions, rationale
+- Spec: purpose, behaviors (prefixed IDs), constraints (Must/Must Not/Out of Scope), test cases (Given/When/Then)
 
 **When to use**:
 - When there are multiple valid approaches and you need to choose
@@ -99,10 +99,10 @@ Research is conversational by default — no artifact unless you ask. Everything
 - Task description → **Standalone mode** (lightweight research + plan)
 
 **Process**:
-1. Read all provided context (proposal, specs, key files)
+1. Read all provided context (proposal, approved spec, key files) — the spec is the behavioral contract the plan must satisfy
 2. **Scope assessment**: single concern ≤4 phases → single plan; multiple concerns → decompose into separate plan files
-3. Define phases, success criteria, commit strategy
-4. Write plan file(s)
+3. Define phases (each maps to spec behaviors), success criteria, commit strategy
+4. Write plan file(s) with `spec:` frontmatter linking the approved spec
 
 **Output**: `.thoughts/plans/YYYY-MM-DD-description.md`
 - Phased implementation with file changes and code snippets
@@ -139,14 +139,13 @@ Research is conversational by default — no artifact unless you ask. Everything
    - Run automated verification
    - Sensitive-check before staging, commit
    - Pause for manual verification
-3. After all phases: review and update specs to match final behavior
-4. Mark plan as complete
+3. After all phases: verify spec conformance — if mismatch found, amend spec first (get approval), then continue
+4. Transition spec to `implemented`, mark plan as complete
 
 **Output**: Code changes, tests, and commits
-- Working code matching the plan's specifications
-- Passing test suite
+- Working code conforming to the spec's behavioral contract
+- Passing test suite with `// spec:XX-N` traceability comments
 - Updated plan file with checked-off items
-- Updated specs reflecting final behavior
 
 **Example**:
 ```
@@ -196,12 +195,22 @@ Propose → Plan (decomposes) → Implement (per unit)
 
 ## Spec Lifecycle
 
-Specs in `.thoughts/specs/` are living documents that track module behavior across the pipeline:
+Specs in `.thoughts/specs/` are behavioral contracts that drive the pipeline:
+
+Status: `draft` → `approved` → `implemented` → `archived`
 
 ```
-Propose:   create/update specs (baseline behavior, pre-change)
-              ↓
-Plan:      read specs as implementation guidelines
-              ↓
-Implement: update specs if behavior diverged (final behavior, post-change)
+Propose:   create spec (behavioral contract with test cases)
+                ↓
+         Approve / Edit  ← gate 1: contract agreed?
+                ↓
+Plan:      derive phases from approved spec behaviors
+                ↓
+         Approve / Edit  ← gate 2: design agreed?
+                ↓
+Implement: code must conform to spec — diverge? amend spec first
+                ↓
+Verify:    check spec conformance + test coverage
+                ↓
+           transition spec to `implemented`
 ```
