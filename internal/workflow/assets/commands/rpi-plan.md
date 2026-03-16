@@ -30,7 +30,8 @@ For tasks that don't need the full propose → plan pipeline: bug fixes, small f
    - **Obvious** (specific file/function named): read those files directly
    - **Moderate** (area known, pattern unclear): use `rpi` to query the codebase index for related files, then read them
    - **Cross-cutting** (multiple systems): investigate in parallel — use `rpi` to query the codebase index for relevant files, understand how similar things are done in the codebase, read the key implementation files
-4. If the task is ambiguous or you have questions, present findings and open questions before writing the plan. If everything is clear, write the plan directly.
+4. Check `.thoughts/specs/` for specs covering the affected area. Bug fix: spec defines correct behavior — the bug deviates from it. Feature: spec shows existing behaviors — ensure they aren't broken. Refactor: all spec behaviors must remain unchanged. No spec exists: note it; if the change is significant, include "create spec" as a plan task.
+5. If the task is ambiguous or you have questions, present findings and open questions before writing the plan. If everything is clear, write the plan directly.
 
 ### Step 2: Write the plan
 
@@ -53,7 +54,7 @@ For complex tasks that already went through the pipeline. Triggered by proposal 
 1. Check the project's conventions for test/lint/build commands
 2. Use `rpi` to check the proposal's status — warn if it's still in draft or already marked complete
 3. Use `rpi` to resolve the full artifact chain from the proposal. Read all linked files fully.
-4. Check `.thoughts/specs/` for specs covering modules affected by this proposal
+4. Read specs covering modules affected by this proposal — these are the behavioral contracts the plan must satisfy
 5. Spot-check 3-5 key files from the proposal against the current codebase — flag any significant drift
 6. Present validation results and any scoping questions before proceeding
 
@@ -74,9 +75,10 @@ Present proposed phases for buy-in before writing the full plan.
 
 ### Step 4: Write the plan
 
-Use `rpi` to scaffold and save a plan artifact linked to the proposal. Fill in all phases with:
+Use `rpi` to scaffold and save a plan artifact linked to the proposal (include `--spec` flag to link the approved spec). Fill in all phases with:
 - Overview of what the phase accomplishes and its dependencies
 - Tasks with file paths and change descriptions (include key code snippets)
+- Each phase maps to spec behaviors — note which behavior IDs (XX-N) each phase addresses
 - Tests in the same phase as the code they test
 - Success criteria split into automated (use the project's actual test/lint commands) and manual verification
 - Commit step (stage list + message)

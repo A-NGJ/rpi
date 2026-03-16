@@ -152,10 +152,11 @@ Remember: You're implementing a solution, not just checking boxes. Keep the end 
 
 When all phases are done and verified:
 
-1. **Update specs** — check `.thoughts/specs/` for specs affected by this implementation:
-   - Review specs against the actual implementation
-   - If behavior diverged from what was spec'd (scope changes, discoveries during implementation): update specs to match final behavior
-   - Present spec updates → human checkpoint: "Updated specs to reflect final behavior — accurate?"
+1. **Verify spec conformance** — check `.thoughts/specs/` for specs linked to this plan or covering affected modules:
+   - For each spec behavior (XX-N), verify the implementation satisfies it
+   - Check that test files contain `// spec:XX-N` comments for traceability
+   - If a mismatch is found: STOP. Present the divergence clearly. The spec must be amended first (get user approval on the spec change), then continue.
+   - Once all behaviors are verified, use `rpi` to transition the spec to `implemented`
    - Skip this step if no relevant specs exist
 
 2. **Update the plan status**: use `rpi` to mark the plan as complete

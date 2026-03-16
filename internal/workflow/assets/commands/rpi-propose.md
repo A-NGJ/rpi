@@ -5,9 +5,9 @@ model: opus
 
 # Solution Proposal
 
-Investigate the codebase, analyze trade-offs, and produce a proposal document that captures what we learned, what we decided, and why.
+Investigate the codebase, analyze trade-offs, and produce a proposal with a behavioral spec that captures what we learned, what we decided, and what the system should do.
 
-This is part of the pipeline: **research → propose → plan → implement**. Propose is where the hard choices happen — understanding the terrain, weighing options, and committing to an approach. The output is a proposal document that Plan consumes directly.
+This is part of the pipeline: **research → propose → plan → implement**. Propose is where the hard choices happen — understanding the terrain, weighing options, and committing to an approach. The spec is the culminating deliverable — a behavioral contract with test cases that defines what success looks like before any code is written. The proposal captures *why* (reasoning, trade-offs); the spec captures *what* (behavioral contract).
 
 **Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or `make install`.
 Run `rpi --help` to discover available commands and `rpi <command> --help` for detailed usage with examples.
@@ -37,7 +37,7 @@ For focused decisions: choosing between approaches, designing a single component
 
 Present options with concrete trade-offs — how each works, pros, cons, and whether it fits existing patterns (with file:line evidence). Give a clear recommendation with reasoning tied to the specific constraints.
 
-### Step 3: Write proposal
+### Step 3: Write proposal and spec
 
 After the user confirms direction:
 
@@ -47,7 +47,9 @@ Use `rpi` to transition the proposal to active status.
 
 If this proposal was created from a research doc, use `rpi` to check whether the research findings are fully addressed, then transition it to complete. If gaps remain, note them and ask.
 
-Check `.thoughts/specs/` for specs covering affected modules — update stale ones, create new ones for significantly affected modules not yet documented. Present any created/updated specs for review.
+**Create the spec contract**: Use `rpi` to scaffold a spec for the affected module(s) using the SDD template. Fill in: Purpose, Behavior (with prefixed IDs), Constraints (Must / Must Not / Out of Scope), and Test Cases (Given/When/Then). If a spec already exists for the affected module, update it with new/changed behaviors instead of creating a new one.
+
+Present the spec to the user for approval or editing. Once accepted, use `rpi` to transition the spec from `draft` to `approved`.
 
 Then suggest: `→ /rpi-plan .thoughts/proposals/YYYY-MM-DD-description.md`
 
@@ -86,7 +88,7 @@ After the user selects directions, validate the combined choices work together:
 
 Present the cohesive proposal for review before writing.
 
-### Step 4: Write proposal
+### Step 4: Write proposal and spec
 
 Use `rpi` to scaffold and save a proposal artifact (linking to the research doc if one exists). Fill in all sections: Summary, Investigation Findings, Constraints & Requirements, Design Decisions, Architecture, File Structure, Risks & Mitigations, What This Proposal Does NOT Cover, References.
 
@@ -94,11 +96,15 @@ Use `rpi` to transition the proposal to active status.
 
 If created from a research doc, verify the research findings are addressed, then use `rpi` to transition it to complete. If gaps remain, note them and ask.
 
-Check `.thoughts/specs/` and update or create specs for affected modules. Present for review.
+**Create the spec contract**: Use `rpi` to scaffold a spec for the affected module(s) using the SDD template. Fill in: Purpose, Behavior (with prefixed IDs), Constraints (Must / Must Not / Out of Scope), and Test Cases (Given/When/Then). If a spec already exists for the affected module, update it with new/changed behaviors instead of creating a new one.
 
-### Step 5: Review & iterate
+Present the spec to the user for approval or editing.
 
-Present the draft proposal location. Iterate based on feedback. Resolve all open questions before marking the proposal complete.
+### Step 5: Review spec contract & iterate
+
+Focus on the spec as the contract that drives all downstream work. Iterate based on feedback — refine behaviors, constraints, and test cases until the user is satisfied. Resolve all open questions before proceeding.
+
+Once accepted, use `rpi` to transition the spec from `draft` to `approved`.
 
 Then suggest: `→ /rpi-plan .thoughts/proposals/YYYY-MM-DD-description.md`
 
@@ -127,4 +133,4 @@ When the user provides a path to an existing proposal that needs updating:
 4. **Be focused** — design at the right level of abstraction: architecture and key interfaces, not implementation details
 5. **Resolve open questions** — don't finalize with unresolved questions
 6. **Respect existing patterns** — prefer solutions that align with how the codebase already works
-7. **Specs are not optional** — every proposal must end with a spec review/creation step
+7. **Specs are the contract** — every proposal culminates in a spec presented for approval. The spec captures *what*, the proposal captures *why*
