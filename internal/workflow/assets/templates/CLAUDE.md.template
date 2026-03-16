@@ -43,6 +43,10 @@ This project uses a `.thoughts/` directory for persistent context:
 
 See `.thoughts/PIPELINE.md` for the full workflow guide covering: Explore → Propose → Plan → Implement.
 
+### RPI CLI
+
+The `rpi` binary manages `.thoughts/` artifacts. See `.rpi/cli-reference.md` for all available commands and flags. Run `rpi init --update` to regenerate after CLI changes.
+
 ## Implementing Plans
 
 - When implementing a plan from `.thoughts/plans/`, present intended changes for each phase before writing code. Pause between phases for manual verification. Update checkboxes in the plan file as items complete, and resume from the first unchecked item if checkboxes already exist.

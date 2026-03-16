@@ -9,8 +9,7 @@ Investigate the codebase conversationally to understand how things work, find pa
 
 This is the entry point for unclear or open-ended questions: "How does X work?", "What's going on with Y?", "Can we improve Z?". When insights crystallize into something actionable, suggest `/rpi-propose`.
 
-**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or `make install`.
-Run `rpi --help` to discover available commands and `rpi <command> --help` for detailed usage with examples.
+**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or `make install`. See `.rpi/cli-reference.md` for available commands.
 
 ## Step 1: Receive the question
 

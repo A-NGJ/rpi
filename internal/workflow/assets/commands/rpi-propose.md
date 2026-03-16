@@ -9,8 +9,7 @@ Investigate the codebase, analyze trade-offs, and produce a proposal with a beha
 
 This is part of the pipeline: **research → propose → plan → implement**. Propose is where the hard choices happen — understanding the terrain, weighing options, and committing to an approach. The spec is the culminating deliverable — a behavioral contract with test cases that defines what success looks like before any code is written. The proposal captures *why* (reasoning, trade-offs); the spec captures *what* (behavioral contract).
 
-**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or `make install`.
-Run `rpi --help` to discover available commands and `rpi <command> --help` for detailed usage with examples.
+**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or `make install`. See `.rpi/cli-reference.md` for available commands.
 
 ## Initial Response
 

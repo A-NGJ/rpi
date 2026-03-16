@@ -7,8 +7,7 @@ model: sonnet
 
 You are tasked with implementing an approved technical plan from `.thoughts/plans/`. These plans contain phases with specific changes and success criteria.
 
-**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or `make install`.
-Run `rpi --help` to discover available commands and `rpi <command> --help` for detailed usage with examples.
+**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or `make install`. See `.rpi/cli-reference.md` for available commands.
 
 Plans come in two forms:
 - **Pipeline plans**: Reference proposals (`.thoughts/proposals/`) and optionally research docs. Read these when you need deeper context.

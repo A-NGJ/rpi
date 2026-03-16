@@ -18,6 +18,7 @@ var (
 	initNoClaudeMD    bool
 	initTrackThoughts bool
 	initTarget        string
+	initUpdate        bool
 )
 
 const (
@@ -58,7 +59,8 @@ Also creates:
   PIPELINE.md       Workflow guide in .thoughts/
   .rpi/index.json   Codebase symbol index
 
-Use --force to reinitialize an existing project. Use --no-claude-md to skip
+Use --force to reinitialize an existing project. Use --update to regenerate
+only dynamic artifacts (index, CLI reference). Use --no-claude-md to skip
 rules file generation. Use --track-thoughts to keep .thoughts/ tracked in git.`,
 	Example: `  # Initialize for Claude Code (default)
   rpi init
@@ -70,7 +72,10 @@ rules file generation. Use --track-thoughts to keep .thoughts/ tracked in git.`,
   rpi init --force
 
   # Initialize in a specific directory without rules file
-  rpi init ./my-project --no-claude-md`,
+  rpi init ./my-project --no-claude-md
+
+  # Regenerate index and CLI reference
+  rpi init --update`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runInit,
 }
@@ -80,6 +85,7 @@ func init() {
 	initCmd.Flags().BoolVar(&initNoClaudeMD, "no-claude-md", false, "Skip rules file generation (CLAUDE.md or AGENTS.md)")
 	initCmd.Flags().BoolVar(&initTrackThoughts, "track-thoughts", false, "Do not add .thoughts/ to .gitignore")
 	initCmd.Flags().StringVar(&initTarget, "target", "claude", `AI coding tool to initialize for: "claude" or "opencode"`)
+	initCmd.Flags().BoolVar(&initUpdate, "update", false, "Regenerate dynamic artifacts (index, CLI reference) without full init")
 	rootCmd.AddCommand(initCmd)
 }
 
@@ -115,6 +121,10 @@ func runInit(cmd *cobra.Command, args []string) error {
 	targetDir := "."
 	if len(args) > 0 {
 		targetDir = args[0]
+	}
+
+	if initUpdate {
+		return runInitUpdate(cmd, targetDir)
 	}
 
 	cfg, err := resolveTargetConfig(initTarget)
@@ -224,10 +234,51 @@ func runInit(cmd *cobra.Command, args []string) error {
 			} else {
 				logSuccess(w, fmt.Sprintf("Built codebase index (%d files, %d symbols)", idx.Metadata.FileCount, idx.Metadata.SymbolCount))
 			}
+
+			// Generate CLI reference
+			writeCLIReference(w, rpiDir)
 		}
 	}
 
 	return nil
+}
+
+func runInitUpdate(cmd *cobra.Command, targetDir string) error {
+	w := cmd.OutOrStdout()
+	rpiDir := filepath.Join(targetDir, ".rpi")
+
+	if _, err := os.Stat(rpiDir); err != nil {
+		return fmt.Errorf("not initialized; run rpi init first")
+	}
+
+	// Rebuild codebase index
+	logInfo(w, "Rebuilding codebase index...")
+	idx, err := index.Build(targetDir, index.BuildOptions{})
+	if err != nil {
+		logWarning(w, fmt.Sprintf("Index build failed: %v", err))
+	} else {
+		indexPath := filepath.Join(rpiDir, "index.json")
+		if saveErr := index.Save(idx, indexPath); saveErr != nil {
+			logWarning(w, fmt.Sprintf("Index save failed: %v", saveErr))
+		} else {
+			logSuccess(w, fmt.Sprintf("Rebuilt codebase index (%d files, %d symbols)", idx.Metadata.FileCount, idx.Metadata.SymbolCount))
+		}
+	}
+
+	// Generate CLI reference
+	writeCLIReference(w, rpiDir)
+
+	return nil
+}
+
+func writeCLIReference(w io.Writer, rpiDir string) {
+	cliRef := generateCLIReference(rootCmd)
+	cliRefPath := filepath.Join(rpiDir, "cli-reference.md")
+	if err := os.WriteFile(cliRefPath, []byte(cliRef), 0644); err != nil {
+		logWarning(w, fmt.Sprintf("CLI reference write failed: %v", err))
+	} else {
+		logSuccess(w, "Generated CLI reference")
+	}
 }
 
 func ensureGitignoreEntry(w io.Writer, targetDir, entry string) error {

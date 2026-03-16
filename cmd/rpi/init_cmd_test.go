@@ -13,6 +13,7 @@ func resetInitFlags() {
 	initNoClaudeMD = false
 	initTrackThoughts = false
 	initTarget = "claude"
+	initUpdate = false
 }
 
 func runInitInDir(t *testing.T, dir string) (*bytes.Buffer, error) {
@@ -611,5 +612,86 @@ func TestInitInvalidTarget(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "unknown target") {
 		t.Errorf("expected 'unknown target' error, got: %v", err)
+	}
+}
+
+func TestInitGeneratesCLIReference(t *testing.T) {
+	dir := t.TempDir()
+	_, err := runInitInDir(t, dir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	cliRefPath := filepath.Join(dir, ".rpi", "cli-reference.md")
+	data, err := os.ReadFile(cliRefPath)
+	if err != nil {
+		t.Fatalf("CLI reference not created: %v", err)
+	}
+	if !strings.Contains(string(data), "# RPI CLI Reference") {
+		t.Error("CLI reference missing expected header")
+	}
+	if !strings.Contains(string(data), "rpi scan") {
+		t.Error("CLI reference missing rpi scan command")
+	}
+}
+
+func TestInitUpdateRegeneratesArtifacts(t *testing.T) {
+	dir := t.TempDir()
+
+	// First: normal init
+	_, err := runInitInDir(t, dir)
+	if err != nil {
+		t.Fatalf("init error: %v", err)
+	}
+
+	// Delete CLI reference
+	cliRefPath := filepath.Join(dir, ".rpi", "cli-reference.md")
+	os.Remove(cliRefPath)
+
+	// Record a command file's content to verify it's NOT touched
+	cmdFile := filepath.Join(dir, ".claude", "commands", "rpi-plan.md")
+	originalCmd, _ := os.ReadFile(cmdFile)
+
+	// Run with --update
+	resetInitFlags()
+	initUpdate = true
+	buf := new(bytes.Buffer)
+	cmd := initCmd
+	cmd.SetOut(buf)
+	err = cmd.RunE(cmd, []string{dir})
+	if err != nil {
+		t.Fatalf("--update error: %v", err)
+	}
+
+	// CLI reference should be recreated
+	data, err := os.ReadFile(cliRefPath)
+	if err != nil {
+		t.Fatalf("CLI reference not recreated: %v", err)
+	}
+	if !strings.Contains(string(data), "# RPI CLI Reference") {
+		t.Error("CLI reference missing expected header")
+	}
+
+	// Command files should be untouched
+	currentCmd, _ := os.ReadFile(cmdFile)
+	if string(currentCmd) != string(originalCmd) {
+		t.Error("--update should not modify workflow files")
+	}
+}
+
+func TestInitUpdateRequiresExistingProject(t *testing.T) {
+	dir := t.TempDir()
+
+	resetInitFlags()
+	initUpdate = true
+	buf := new(bytes.Buffer)
+	cmd := initCmd
+	cmd.SetOut(buf)
+	err := cmd.RunE(cmd, []string{dir})
+	if err == nil {
+		t.Fatal("--update should error without prior init")
+	}
+	if !strings.Contains(err.Error(), "not initialized") {
+		t.Errorf("expected 'not initialized' error, got: %v", err)
 	}
 }

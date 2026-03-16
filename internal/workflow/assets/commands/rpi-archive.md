@@ -7,8 +7,7 @@ model: sonnet
 
 Move completed or superseded artifacts from `.thoughts/` to `.thoughts/archive/` to keep the active directory clean while preserving full history.
 
-**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or `make install`.
-Run `rpi --help` to discover available commands and `rpi <command> --help` for detailed usage with examples.
+**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or `make install`. See `.rpi/cli-reference.md` for available commands.
 
 ## Input
 
