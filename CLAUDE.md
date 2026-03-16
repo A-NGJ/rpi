@@ -14,12 +14,12 @@ It consists of the following key components:
 
 When committing changes, always ask the user which files/directories to include before proposing commits. Never assume all unstaged/staged changes should be committed.
 
-## Thoughts Directory
+## RPI Artifacts Directory
 
-This project uses a `.thoughts/` directory for persistent context:
+This project uses a `.rpi/` directory for persistent context:
 
 ```
-.thoughts/
+.rpi/
 ├── research/      # Codebase research notes (optional, from /rpi-research)
 ├── proposals/     # Solution proposals (created by /rpi-propose)
 ├── plans/         # Implementation plans (created by /rpi-plan)
@@ -32,28 +32,28 @@ This project uses a `.thoughts/` directory for persistent context:
 
 ### Usage
 
-- **Research**: Save exploration findings in `.thoughts/research/`
-- **Proposals**: Record investigation findings and design decisions in `.thoughts/proposals/`
-- **Plans**: Store implementation plans in `.thoughts/plans/`
-- **Specs**: Maintain behavioral specs in `.thoughts/specs/`
+- **Research**: Save exploration findings in `.rpi/research/`
+- **Proposals**: Record investigation findings and design decisions in `.rpi/proposals/`
+- **Plans**: Store implementation plans in `.rpi/plans/`
+- **Specs**: Maintain behavioral specs in `.rpi/specs/`
 
 ### Conventions
 
-- The `.thoughts/` directory is gitignored
+- The `.rpi/` directory is gitignored
 - Use descriptive filenames: `YYYY-MM-DD-feature-name.md`
-- Proposals go in `.thoughts/proposals/`. Implementation plans go in `.thoughts/plans/`. Never save planning artifacts in the project root or other directories unless explicitly told otherwise.
+- Proposals go in `.rpi/proposals/`. Implementation plans go in `.rpi/plans/`. Never save planning artifacts in the project root or other directories unless explicitly told otherwise.
 
 ### Development Pipeline
 
-See `.thoughts/PIPELINE.md` for the full workflow guide covering: Research → Propose → Plan → Implement.
+See `.rpi/PIPELINE.md` for the full workflow guide covering: Research → Propose → Plan → Implement.
 
 ### RPI CLI
 
-The `rpi` binary manages `.thoughts/` artifacts. See `.rpi/cli-reference.md` for all available commands and flags. Run `rpi init --update` to regenerate after CLI changes.
+The `rpi` binary manages `.rpi/` artifacts. See `.rpi/cli-reference.md` for all available commands and flags. Run `rpi init --update` to regenerate after CLI changes.
 
 ## Implementing Plans
 
-- When implementing a plan from `.thoughts/plans/`, present intended changes for each phase before writing code. Pause between phases for manual verification. Update checkboxes in the plan file as items complete, and resume from the first unchecked item if checkboxes already exist.
+- When implementing a plan from `.rpi/plans/`, present intended changes for each phase before writing code. Pause between phases for manual verification. Update checkboxes in the plan file as items complete, and resume from the first unchecked item if checkboxes already exist.
 - After implementing changes, always run the full test suite before commiting. If tests fail, fix them before presenting the commit plan.
 Tests commonly break due to: outdated fixture values, incorrect mock setup, and missing edge cases.
 

@@ -1,9 +1,11 @@
-# The `.thoughts/` Directory
+# The `.rpi/` Directory
 
-All pipeline artifacts live in `.thoughts/`, which is **gitignored by default**:
+All pipeline artifacts live in `.rpi/`, which is **gitignored by default**. The `.rpi/` directory also contains the codebase index and CLI reference alongside the artifacts:
 
 ```
-.thoughts/
+.rpi/
+├── index.json           # Codebase symbol index
+├── cli-reference.md     # Auto-generated CLI reference
 ├── PIPELINE.md          # This workflow reference guide
 ├── research/            # Codebase research documents
 ├── proposals/           # Solution proposals with trade-off analysis
@@ -30,7 +32,7 @@ draft -> active -> complete
 
 `/rpi-implement` manages plan status automatically. `/rpi-archive` warns before archiving documents that aren't yet `complete`.
 
-## Specs (`/.thoughts/specs/`)
+## Specs (`.rpi/specs/`)
 
 Specs are living documents that describe the **current behavior** of a module or domain -- not planned changes. They're created and updated as a byproduct of research and implementation:
 
@@ -40,21 +42,21 @@ Specs are living documents that describe the **current behavior** of a module or
 
 This directory serves as persistent context across sessions. You can read, edit, or delete any document. Claude will check for existing documents before creating new ones to avoid duplication.
 
-## Sharing `.thoughts/` with Your Team
+## Sharing `.rpi/` with Your Team
 
-By default, `.thoughts/` is added to `.gitignore` -- useful when you want pipeline artifacts to stay local. But these documents can be valuable to the whole team: research captures institutional knowledge about the codebase, designs document *why* decisions were made, and plans provide a record of what was implemented and how.
+By default, `.rpi/` is added to `.gitignore` -- useful when you want pipeline artifacts to stay local. But these documents can be valuable to the whole team: research captures institutional knowledge about the codebase, designs document *why* decisions were made, and plans provide a record of what was implemented and how.
 
-To track `.thoughts/` in git, use the `--track-thoughts` flag during initialization:
+To track `.rpi/` in git, use the `--track-rpi` flag during initialization:
 
 ```bash
-rpi init --track-thoughts
+rpi init --track-rpi
 ```
 
-This skips adding `.thoughts/` to `.gitignore`, so all pipeline artifacts get committed alongside your code.
+This skips adding `.rpi/` to `.gitignore`, so all pipeline artifacts get committed alongside your code.
 
 **Why share with the team:**
 - **Research documents** become searchable codebase documentation that stays current -- new team members can read them to understand how systems work instead of spelunking through code.
-- **Proposal documents** preserve decision rationale. When someone asks "why did we use Redis instead of Memcached?", the answer is in `.thoughts/proposals/`, not lost in a Slack thread.
+- **Proposal documents** preserve decision rationale. When someone asks "why did we use Redis instead of Memcached?", the answer is in `.rpi/proposals/`, not lost in a Slack thread.
 - **Plans** give visibility into how features were decomposed and implemented, making code review easier and providing a template for similar future work.
 - **Any team member can pick up where another left off** -- if one person does the research and design, another can run `/rpi-plan` and `/rpi-implement` using those same documents.
 
@@ -63,4 +65,4 @@ This skips adding `.thoughts/` to `.gitignore`, so all pipeline artifacts get co
 - Plans for personal refactors or experiments
 - When your team prefers to keep this context in other tools (Notion, Linear, etc.)
 
-You can also take a hybrid approach: gitignore `.thoughts/` by default but selectively commit specific documents that have lasting value.
+You can also take a hybrid approach: gitignore `.rpi/` by default but selectively commit specific documents that have lasting value.

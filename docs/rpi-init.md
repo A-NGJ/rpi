@@ -18,7 +18,7 @@ rpi init ~/projects/my-app --target opencode
 # Options
 rpi init --force            # Overwrite existing files and directories
 rpi init --no-claude-md     # Skip rules file generation (CLAUDE.md or AGENTS.md)
-rpi init --track-thoughts   # Don't gitignore .thoughts/ (track in git)
+rpi init --track-rpi        # Don't gitignore .rpi/ (track in git)
 ```
 
 ## What it creates
@@ -43,8 +43,8 @@ rpi init --track-thoughts   # Don't gitignore .thoughts/ (track in git)
 
 ### Shared (both targets)
 
-- `.thoughts/` -- Directory structure for pipeline artifacts (gitignored by default)
-- `.thoughts/PIPELINE.md` -- Pipeline reference guide
+- `.rpi/` -- Directory structure for pipeline artifacts (gitignored by default)
+- `.rpi/PIPELINE.md` -- Pipeline reference guide
 - `.rpi/index.json` -- Codebase symbol index
 
 ## Installation

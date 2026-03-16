@@ -9,7 +9,7 @@ The binary handles operations that are **deterministic and error-prone for LLMs*
 - **Template scaffolding** -- `rpi scaffold` generates documents with correct frontmatter, dates, and file paths. An LLM asked to do this will occasionally hallucinate fields or misformat dates.
 - **Artifact chain resolution** -- `rpi chain` follows frontmatter links recursively (plan → proposal → research) and returns a flat list of files to load. This is a mechanical graph traversal, not a creative task.
 - **Frontmatter manipulation** -- `rpi frontmatter` reads, writes, and validates status transitions. YAML parsing in natural language is fragile; a CLI does it reliably every time.
-- **Directory scanning and filtering** -- `rpi scan` walks `.thoughts/`, parses metadata, and filters by status/type. Fast and deterministic vs. asking the LLM to shell out and parse results.
+- **Directory scanning and filtering** -- `rpi scan` walks `.rpi/`, parses metadata, and filters by status/type. Fast and deterministic vs. asking the LLM to shell out and parse results.
 - **Verification checks** -- `rpi verify` counts checkboxes, checks file coverage against git changes, and scans for TODO markers. Mechanical validation that should never consume context tokens.
 - **Section extraction** -- `rpi extract` pulls a single heading's content from a markdown file, so the LLM can load exactly the section it needs instead of reading an entire document.
 - **Codebase indexing** -- `rpi index` builds a regex-based symbol index (functions, classes, structs, interfaces) for Go, Python, JavaScript/TypeScript, and Rust. The LLM queries the index to locate relevant code without grepping the entire codebase.
@@ -27,7 +27,7 @@ Everything is embedded in a single binary via Go's `embed` package -- no externa
 │   ├── git/                              # Git context gathering
 │   ├── index/                            # Codebase symbol indexing
 │   ├── plan/                             # Plan progress parsing
-│   ├── scanner/                          # .thoughts/ directory scanning
+│   ├── scanner/                          # .rpi/ directory scanning
 │   ├── template/                         # Template resolution with user-override support
 │   ├── templates/                        # Go template rendering
 │   └── workflow/
@@ -40,6 +40,6 @@ Everything is embedded in a single binary via Go's `embed` package -- no externa
 │   ├── architecture.md                   # This file
 │   ├── workflow-guide.md                 # Choosing Your Path (detailed examples)
 │   ├── stages.md                         # How Each Stage Works (detailed)
-│   ├── thoughts-directory.md             # .thoughts/ directory documentation
+│   ├── thoughts-directory.md             # .rpi/ directory documentation
 │   └── rpi-init.md                       # rpi init command documentation
 ```

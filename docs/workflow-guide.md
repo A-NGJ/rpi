@@ -13,10 +13,10 @@ Skip exploration and proposals entirely. `/rpi-plan` has a standalone mode that 
 You:  /rpi-plan Fix the date formatter in utils/dates.ts that returns "NaN" for ISO strings without timezone
 ```
 
-Claude researches the file, writes a 1-phase plan with the fix and test, saves it to `.thoughts/plans/`.
+Claude researches the file, writes a 1-phase plan with the fix and test, saves it to `.rpi/plans/`.
 
 ```
-You:  /rpi-implement .thoughts/plans/2026-03-04-fix-date-formatter.md
+You:  /rpi-implement .rpi/plans/2026-03-04-fix-date-formatter.md
 ```
 
 Claude shows you the intended changes, you approve, it implements, runs tests, and proposes a commit.
@@ -40,17 +40,17 @@ Use when the feature touches multiple files, involves a choice between approache
 ```
 You:  /rpi-research How does the API middleware chain work? Where are requests authenticated and validated?
 ```
-Claude explores your codebase conversationally. You discuss findings interactively -- no artifact is created by default. If the exploration is thorough enough, you can ask it to save findings to `.thoughts/research/`.
+Claude explores your codebase conversationally. You discuss findings interactively -- no artifact is created by default. If the exploration is thorough enough, you can ask it to save findings to `.rpi/research/`.
 
 **Step 2: Propose**
 ```
 You:  /rpi-propose I want to add per-endpoint rate limiting. Should handle both authenticated and anonymous users.
 ```
-Claude investigates the codebase, presents 2-3 options (e.g., in-memory vs Redis, middleware vs decorator pattern), with pros/cons tied to your actual codebase. You pick an approach. It writes the proposal with the decision rationale and risk assessment to `.thoughts/proposals/`.
+Claude investigates the codebase, presents 2-3 options (e.g., in-memory vs Redis, middleware vs decorator pattern), with pros/cons tied to your actual codebase. You pick an approach. It writes the proposal with the decision rationale and risk assessment to `.rpi/proposals/`.
 
 **Step 3: Plan**
 ```
-You:  /rpi-plan .thoughts/proposals/2026-03-04-api-rate-limiting.md
+You:  /rpi-plan .rpi/proposals/2026-03-04-api-rate-limiting.md
 ```
 Claude reads the proposal, spot-checks the codebase against the docs, and breaks the work into phases:
 - Phase 1: Rate limiter core module + unit tests
@@ -61,7 +61,7 @@ Each phase has specific file changes, code snippets, automated verification comm
 
 **Step 4: Implement**
 ```
-You:  /rpi-implement .thoughts/plans/2026-03-04-api-rate-limiting.md
+You:  /rpi-implement .rpi/plans/2026-03-04-api-rate-limiting.md
 ```
 Claude implements Phase 1, shows you a preview of all changes before writing code, runs the test suite, updates checkboxes in the plan, and proposes a commit. Then it pauses for your manual verification before starting Phase 2.
 
@@ -85,11 +85,11 @@ Conversational research to build understanding before proposing.
 ```
 You:  /rpi-propose Build a notification system supporting email, push, and in-app channels. Users should be able to set per-channel preferences.
 ```
-Claude goes into Full mode -- investigates the codebase deeply, identifies key design dimensions (channel abstraction, delivery strategy, preference storage, template system), presents options with trade-offs for each, validates that the chosen options compose well together, and writes the full proposal to `.thoughts/proposals/`.
+Claude goes into Full mode -- investigates the codebase deeply, identifies key design dimensions (channel abstraction, delivery strategy, preference storage, template system), presents options with trade-offs for each, validates that the chosen options compose well together, and writes the full proposal to `.rpi/proposals/`.
 
 **Step 3: Plan (with decomposition)**
 ```
-You:  /rpi-plan .thoughts/proposals/2026-03-04-notification-system.md
+You:  /rpi-plan .rpi/proposals/2026-03-04-notification-system.md
 ```
 Claude reads the proposal and decomposes it into independently plannable units:
 ```
@@ -104,10 +104,10 @@ Each unit has its own phases, file changes, and verification steps within the pl
 
 **Step 4: Implement (per unit)**
 ```
-You:  /rpi-implement .thoughts/plans/2026-03-04-notification-system.md
+You:  /rpi-implement .rpi/plans/2026-03-04-notification-system.md
 ```
 
-Claude implements unit by unit. You can stop between units, come back the next day, and pick up where you left off -- the `.thoughts/` directory preserves all context and checkboxes track progress.
+Claude implements unit by unit. You can stop between units, come back the next day, and pick up where you left off -- the `.rpi/` directory preserves all context and checkboxes track progress.
 
 ## Not Sure Where to Start?
 
@@ -122,12 +122,12 @@ You:  /rpi-research What could we improve about error handling?
 Two optional commands help close the loop:
 
 - **`/rpi-verify`** -- Validates that your implementation matches the proposal artifacts. Checks completeness, correctness, and coherence. Run it after `/rpi-implement` or anytime you want a second opinion on whether the code matches the plan.
-- **`/rpi-archive`** -- Moves completed artifacts to `.thoughts/archive/` to keep the active directory clean. Run it when a feature is fully shipped and you no longer need the research/proposals/plan documents in the active directories.
+- **`/rpi-archive`** -- Moves completed artifacts to `.rpi/archive/` to keep the active directory clean. Run it when a feature is fully shipped and you no longer need the research/proposals/plan documents in the active directories.
 
 ## Tips
 
 - **Start small.** Try `/rpi-plan` on a bug fix to see how the plan -> implement cycle feels before using the full pipeline.
-- **Edit the artifacts.** The `.thoughts/` documents are yours. If a proposal decision is wrong, edit it before planning. If a plan phase is unnecessary, delete it.
+- **Edit the artifacts.** The `.rpi/` documents are yours. If a proposal decision is wrong, edit it before planning. If a plan phase is unnecessary, delete it.
 - **Use CLAUDE.md.** Add your project's test commands, linting setup, and conventions to `CLAUDE.md`. The pipeline stages pull verification commands from there.
 - **Redirect during research.** When `/rpi-research` shows initial findings, tell it to focus on specific areas rather than researching everything.
 - **Skip stages when they don't add value.** The full pipeline exists for complex work. Most daily tasks only need Plan -> Implement.

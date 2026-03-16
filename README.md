@@ -8,9 +8,9 @@ Instead of asking an AI to "just implement it" and hoping for the best, this wor
 Research -> Propose -> Plan -> Implement
    |          |        |        |
    v          v        v        v
-.thoughts/  .thoughts/ .thoughts/ code +
-research/   proposals/ plans/     tests +
-                                  commits
+.rpi/       .rpi/    .rpi/    code +
+research/   proposals/ plans/  tests +
+                               commits
 ```
 
 ## Why This Exists
@@ -19,9 +19,9 @@ AI coding assistants are powerful but unpredictable when given large tasks. They
 
 - **Separating thinking from doing** -- Research gathers facts. Propose makes decisions with trade-offs. Plan specifies exact changes. Implement executes them.
 - **Creating review checkpoints** -- You approve each stage before the next one starts. Bad decisions get caught early, not after 500 lines of wrong code.
-- **Building persistent context** -- All artifacts live in `.thoughts/`, so you and your team (or the AI) can pick up where you left off across sessions.
+- **Building persistent context** -- All artifacts live in `.rpi/`, so you and your team (or the AI) can pick up where you left off across sessions.
 - **Scaling to complexity** -- Simple bug fix? Skip straight to Plan -> Implement. Complex feature? Use Propose -> Plan -> Implement.
-- **Keeping the context window small** -- LLMs produce better output when focused. By breaking work into stages, each conversation stays scoped to one job. The `.thoughts/` documents carry knowledge between stages, so the AI starts each stage with exactly the context it needs -- no more, no less.
+- **Keeping the context window small** -- LLMs produce better output when focused. By breaking work into stages, each conversation stays scoped to one job. The `.rpi/` documents carry knowledge between stages, so the AI starts each stage with exactly the context it needs -- no more, no less.
 
 ## Quick Start
 
@@ -52,7 +52,7 @@ AI coding assistants are powerful but unpredictable when given large tasks. They
 
    This creates:
    - `.claude/` (or `.opencode/`) -- Agents, commands, skills, and templates
-   - `.thoughts/` -- Directory for all pipeline artifacts (gitignored by default)
+   - `.rpi/` -- Directory for all pipeline artifacts (gitignored by default)
    - `.rpi/index.json` -- Codebase symbol index
    - `CLAUDE.md` (or `AGENTS.md`) -- Project-level instructions for the AI
 
@@ -62,13 +62,13 @@ AI coding assistants are powerful but unpredictable when given large tasks. They
 
 | Command | What It Does | Output |
 |---------|-------------|--------|
-| `/rpi-research` | Investigates the codebase -- conversational fact-finding | Conversation (optionally `.thoughts/research/YYYY-MM-DD-topic.md`) |
-| `/rpi-propose` | Investigates, analyzes, and proposes solutions with trade-offs | `.thoughts/proposals/YYYY-MM-DD-topic.md` |
-| `/rpi-plan` | Creates phased implementation plan with success criteria | `.thoughts/plans/YYYY-MM-DD-topic.md` |
+| `/rpi-research` | Investigates the codebase -- conversational fact-finding | Conversation (optionally `.rpi/research/YYYY-MM-DD-topic.md`) |
+| `/rpi-propose` | Investigates, analyzes, and proposes solutions with trade-offs | `.rpi/proposals/YYYY-MM-DD-topic.md` |
+| `/rpi-plan` | Creates phased implementation plan with success criteria | `.rpi/plans/YYYY-MM-DD-topic.md` |
 | `/rpi-implement` | Executes a plan phase-by-phase with verification | Code, tests, and commits |
 | `/rpi-commit` | Creates focused git commits with smart grouping | Git commits |
 | `/rpi-verify` | Validates implementation matches proposal artifacts | Verification report |
-| `/rpi-archive` | Archives completed artifacts to keep `.thoughts/` clean | Moves files to `.thoughts/archive/` |
+| `/rpi-archive` | Archives completed artifacts to keep `.rpi/` clean | Moves files to `.rpi/archive/` |
 
 ## Choosing Your Path
 
@@ -86,7 +86,7 @@ See the [full workflow guide](docs/workflow-guide.md) for detailed examples of e
 
 - [Workflow Guide](docs/workflow-guide.md) -- Detailed examples of each path with tips
 - [Stage Descriptions](docs/stages.md) -- How each command works, its modes, and output
-- [`.thoughts/` Directory](docs/thoughts-directory.md) -- Artifact structure, naming, status lifecycle, and team sharing
+- [`.rpi/` Directory](docs/thoughts-directory.md) -- Artifact structure, naming, status lifecycle, and team sharing
 - [`rpi init`](docs/rpi-init.md) -- CLI bootstrapping, flags, shell completion, and OpenCode support
 - [Architecture](docs/architecture.md) -- Why a Go binary, CLI commands, and project structure
 
