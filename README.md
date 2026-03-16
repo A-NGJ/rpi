@@ -10,7 +10,7 @@ Research -> Propose -> Plan -> Implement
    v          v        v        v
 .rpi/       .rpi/    .rpi/    code +
 research/   proposals/ plans/  tests +
-                               commits
+              specs/            commits
 ```
 
 ## Why This Exists
@@ -19,7 +19,7 @@ AI coding assistants are powerful but unpredictable when given large tasks. They
 
 - **Separating thinking from doing** -- Research gathers facts. Propose makes decisions with trade-offs. Plan specifies exact changes. Implement executes them.
 - **Creating review checkpoints** -- You approve each stage before the next one starts. Bad decisions get caught early, not after 500 lines of wrong code.
-- **Building persistent context** -- All artifacts live in `.rpi/`, so you and your team (or the AI) can pick up where you left off across sessions.
+- **Building persistent context** -- All artifacts live in `.rpi/`, so you and your team (or the AI) can pick up where you left off across sessions. Living specs in `.rpi/specs/` capture current module behavior and stay updated as the codebase evolves.
 - **Scaling to complexity** -- Simple bug fix? Skip straight to Plan -> Implement. Complex feature? Use Propose -> Plan -> Implement.
 - **Keeping the context window small** -- LLMs produce better output when focused. By breaking work into stages, each conversation stays scoped to one job. The `.rpi/` documents carry knowledge between stages, so the AI starts each stage with exactly the context it needs -- no more, no less.
 
@@ -54,7 +54,13 @@ AI coding assistants are powerful but unpredictable when given large tasks. They
    - `.claude/` (or `.opencode/`) -- Agents, commands, skills, and templates
    - `.rpi/` -- Directory for all pipeline artifacts (gitignored by default)
    - `.rpi/index.json` -- Codebase symbol index
+   - `.rpi/cli-reference.md` -- Auto-generated CLI reference
    - `CLAUDE.md` (or `AGENTS.md`) -- Project-level instructions for the AI
+
+   To regenerate the index and CLI reference after updating the `rpi` binary:
+   ```bash
+   rpi init --update
+   ```
 
 4. Start your AI coding tool in the project and use the slash commands.
 
