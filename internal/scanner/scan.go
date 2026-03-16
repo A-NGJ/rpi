@@ -120,7 +120,7 @@ func matches(doc *frontmatter.Document, info ArtifactInfo, f Filters) bool {
 			return false
 		}
 		s := *info.Status
-		if s != "complete" && s != "superseded" {
+		if s != "complete" && s != "superseded" && s != "implemented" {
 			return false
 		}
 	}
@@ -247,6 +247,8 @@ func InferType(path string) string {
 			return "pr"
 		case "reviews":
 			return "review"
+		case "specs":
+			return "spec"
 		}
 	}
 	return "unknown"

@@ -14,6 +14,7 @@ var (
 	ticketFlag   string
 	researchFlag string
 	proposalFlag string
+	specFlag     string
 	tagsFlag     string
 	writeFlag    bool
 	forceFlag    bool
@@ -90,6 +91,7 @@ func init() {
 	scaffoldCmd.Flags().StringVar(&ticketFlag, "ticket", "", "Ticket ID (e.g., cli-002)")
 	scaffoldCmd.Flags().StringVar(&researchFlag, "research", "", "Path to research document")
 	scaffoldCmd.Flags().StringVar(&proposalFlag, "proposal", "", "Path to proposal document")
+	scaffoldCmd.Flags().StringVar(&specFlag, "spec", "", "Path to spec document")
 	scaffoldCmd.Flags().StringVar(&tagsFlag, "tags", "", "Comma-separated tags")
 	scaffoldCmd.Flags().BoolVar(&writeFlag, "write", false, "Write to file instead of stdout")
 	scaffoldCmd.Flags().BoolVar(&forceFlag, "force", false, "Allow overwriting existing files")
@@ -119,6 +121,7 @@ func runScaffold(cmd *cobra.Command, args []string) error {
 		Ticket:   ticketFlag,
 		Research: researchFlag,
 		Proposal: proposalFlag,
+		Spec:     specFlag,
 		Tags:     tagsFlag,
 	}
 

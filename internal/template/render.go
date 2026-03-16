@@ -27,6 +27,7 @@ type RenderContext struct {
 	Ticket   string
 	Research string
 	Proposal string
+	Spec     string
 	Tags     string
 }
 

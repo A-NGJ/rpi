@@ -33,6 +33,8 @@ func setupTestDir(t *testing.T) string {
 		"# Plan Two\n\n## Source Documents\n- Proposal: `proposals/prop1.md`\n")
 	writeFile(t, dir, "research/r1.md",
 		"---\ntopic: \"Research One\"\nstatus: superseded\n---\n# R1\nReferences proposals/prop1.md in body.\n")
+	writeFile(t, dir, "specs/s1.md",
+		"---\ntopic: \"Spec One\"\nstatus: implemented\n---\n# S1\n")
 	writeFile(t, dir, "archive/proposals/old.md",
 		"---\ntopic: \"Archived\"\nstatus: archived\n---\n# Old\n")
 
@@ -47,9 +49,9 @@ func TestScanNoFilters(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	// 5 non-archive files: prop1, prop2, p1, p2, r1 (archive/ is skipped)
-	if len(results) != 5 {
-		t.Errorf("got %d results, want 5", len(results))
+	// 6 non-archive files: prop1, prop2, p1, p2, r1, s1 (archive/ is skipped)
+	if len(results) != 6 {
+		t.Errorf("got %d results, want 6", len(results))
 		for _, r := range results {
 			t.Logf("  %s", r.Path)
 		}
@@ -146,10 +148,10 @@ func TestScanArchivable(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	// prop2 (complete), r1 (superseded) = 2
+	// prop2 (complete), r1 (superseded), s1 (implemented) = 3
 	// archive/ is skipped, so the archived file doesn't count
-	if len(results) != 2 {
-		t.Errorf("got %d results, want 2", len(results))
+	if len(results) != 3 {
+		t.Errorf("got %d results, want 3", len(results))
 		for _, r := range results {
 			t.Logf("  %s (%v)", r.Path, r.Status)
 		}
@@ -298,6 +300,22 @@ func TestFindReferencesBodyLine(t *testing.T) {
 	}
 	if !foundBody {
 		t.Error("expected a body line reference from r1.md")
+	}
+}
+
+func TestScanTypeFilterSpec(t *testing.T) {
+	dir := setupTestDir(t)
+
+	results, err := Scan(dir, Filters{Type: "spec"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(results) != 1 {
+		t.Errorf("got %d results, want 1", len(results))
+	}
+	if len(results) > 0 && results[0].Type != "spec" {
+		t.Errorf("got type %s, want spec", results[0].Type)
 	}
 }
 

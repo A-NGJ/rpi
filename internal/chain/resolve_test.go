@@ -255,6 +255,7 @@ func TestInferType(t *testing.T) {
 		{".thoughts/research/foo.md", "research"},
 		{".thoughts/prs/foo.md", "pr"},
 		{".thoughts/reviews/foo.md", "review"},
+		{".thoughts/specs/foo.md", "spec"},
 		{".thoughts/archive/plans/foo.md", "archive"},
 		{"random/path.md", "unknown"},
 	}
@@ -266,5 +267,32 @@ func TestInferType(t *testing.T) {
 				t.Errorf("inferType(%q) = %q, want %q", tc.path, got, tc.want)
 			}
 		})
+	}
+}
+
+func TestResolveSpecLink(t *testing.T) {
+	dir := t.TempDir()
+
+	specPath := writeFile(t, dir, ".thoughts/specs/test-spec.md",
+		"---\ndomain: \"Test Spec\"\nstatus: approved\n---\n# Test Spec\n")
+
+	planPath := writeFile(t, dir, ".thoughts/plans/test-plan.md",
+		"---\ntopic: \"Test Plan\"\nstatus: draft\nspec: "+specPath+"\n---\n# Plan\n")
+
+	result, err := Resolve(planPath, ResolveOptions{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(result.Artifacts) != 2 {
+		t.Fatalf("got %d artifacts, want 2", len(result.Artifacts))
+	}
+
+	// Second artifact should be the spec
+	if result.Artifacts[1].Path != specPath {
+		t.Errorf("second artifact path = %s, want %s", result.Artifacts[1].Path, specPath)
+	}
+	if result.Artifacts[1].Type != "spec" {
+		t.Errorf("second artifact type = %s, want spec", result.Artifacts[1].Type)
 	}
 }

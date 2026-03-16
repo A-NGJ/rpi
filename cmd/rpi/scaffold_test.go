@@ -285,6 +285,21 @@ func TestScaffoldPlanWithoutTicket(t *testing.T) {
 	}
 }
 
+func TestScaffoldPlanWithSpec(t *testing.T) {
+	binary := buildBinary(t)
+
+	_, _, exitCode := runRPI(t, binary,
+		"scaffold", "plan",
+		"--topic", "Test plan",
+		"--spec", ".thoughts/specs/test.md",
+	)
+
+	if exitCode != 0 {
+		t.Fatalf("expected exit 0, got %d", exitCode)
+	}
+	// Note: spec: frontmatter rendering is verified after plan template update (Phase 3)
+}
+
 func TestScaffoldUnknownType(t *testing.T) {
 	binary := buildBinary(t)
 
