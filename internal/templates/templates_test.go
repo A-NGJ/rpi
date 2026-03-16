@@ -18,8 +18,8 @@ func TestGet_AGENTS(t *testing.T) {
 	if !strings.Contains(content, "# AGENTS.md") {
 		t.Error("AGENTS.md template missing expected '# AGENTS.md' header")
 	}
-	if !strings.Contains(content, ".thoughts/") {
-		t.Error("AGENTS.md template missing .thoughts/ directory reference")
+	if !strings.Contains(content, ".rpi/") {
+		t.Error("AGENTS.md template missing .rpi/ directory reference")
 	}
 }
 

@@ -6,8 +6,8 @@ Standard workflow for taking features from idea to implementation.
 [Research] → Propose → [spec + proposal] → Plan → Implement → Verify
     │           │              │               │        │          │
     ▼           ▼              ▼               ▼        ▼          ▼
-(optional)  .thoughts/    Approve/Edit     .thoughts/  code +   .thoughts/
-.thoughts/  proposals/ +  (gate 1:         plans/      tests +  reviews/
+(optional)  .rpi/    Approve/Edit     .rpi/  code +   .rpi/
+.rpi/  proposals/ +  (gate 1:         plans/      tests +  reviews/
 research/   specs/         contract                    commits
                            agreed?)
 ```
@@ -31,10 +31,10 @@ Research is conversational by default — no artifact unless you ask. Everything
 2. Scale investigation to the question (1-2 sub-agents for focused, full parallel for broad)
 3. Checkpoint after initial findings (broad questions only)
 4. Present findings with file:line references
-5. Optionally save summary to `.thoughts/research/` on request
+5. Optionally save summary to `.rpi/research/` on request
 
 **Output**: Conversational findings (no artifact by default)
-- On user request: `.thoughts/research/YYYY-MM-DD-description.md`
+- On user request: `.rpi/research/YYYY-MM-DD-description.md`
 
 **When to use**:
 - "How does X work?" — understanding before proposing
@@ -71,7 +71,7 @@ Research is conversational by default — no artifact unless you ask. Everything
 6. Create/update spec (behavioral contract with test cases)
 7. Review spec contract & iterate → **approval gate**
 
-**Output**: `.thoughts/proposals/YYYY-MM-DD-description.md` + `.thoughts/specs/<module>.md`
+**Output**: `.rpi/proposals/YYYY-MM-DD-description.md` + `.rpi/specs/<module>.md`
 - Proposal: summary, investigation findings, constraints, design decisions, rationale
 - Spec: purpose, behaviors (prefixed IDs), constraints (Must/Must Not/Out of Scope), test cases (Given/When/Then)
 
@@ -83,7 +83,7 @@ Research is conversational by default — no artifact unless you ask. Everything
 **Example**:
 ```
 /rpi-propose should we use Redis or Memcached for session caching?
-/rpi-propose .thoughts/research/2026-03-10-notifications.md
+/rpi-propose .rpi/research/2026-03-10-notifications.md
 ```
 
 ---
@@ -104,7 +104,7 @@ Research is conversational by default — no artifact unless you ask. Everything
 3. Define phases (each maps to spec behaviors), success criteria, commit strategy
 4. Write plan file(s) with `spec:` frontmatter linking the approved spec
 
-**Output**: `.thoughts/plans/YYYY-MM-DD-description.md`
+**Output**: `.rpi/plans/YYYY-MM-DD-description.md`
 - Phased implementation with file changes and code snippets
 - Success criteria split into automated and manual verification
 - Commit step per phase
@@ -117,7 +117,7 @@ Research is conversational by default — no artifact unless you ask. Everything
 **Example**:
 ```
 /rpi-plan Add a retry mechanism to the webhook handler
-/rpi-plan .thoughts/proposals/2026-03-10-feature-name.md
+/rpi-plan .rpi/proposals/2026-03-10-feature-name.md
 ```
 
 ---
@@ -129,7 +129,7 @@ Research is conversational by default — no artifact unless you ask. Everything
 **Purpose**: Execute an approved plan phase by phase, with verification at each step.
 
 **Inputs**:
-- Plan document (path to `.thoughts/plans/` file)
+- Plan document (path to `.rpi/plans/` file)
 
 **Process**:
 1. Read the plan, resolve artifact chain (proposal, specs)
@@ -149,7 +149,7 @@ Research is conversational by default — no artifact unless you ask. Everything
 
 **Example**:
 ```
-/rpi-implement .thoughts/plans/2026-03-10-feature-name.md
+/rpi-implement .rpi/plans/2026-03-10-feature-name.md
 ```
 
 ---
@@ -158,13 +158,13 @@ Research is conversational by default — no artifact unless you ask. Everything
 
 | Command | Input | Output |
 |---------|-------|--------|
-| `/rpi-research` | Question or topic | Conversational (optional `.thoughts/research/`) |
-| `/rpi-propose` | Description, research doc, or existing proposal | `.thoughts/proposals/` |
-| `/rpi-plan` | Proposal doc or task description | `.thoughts/plans/` |
+| `/rpi-research` | Question or topic | Conversational (optional `.rpi/research/`) |
+| `/rpi-propose` | Description, research doc, or existing proposal | `.rpi/proposals/` |
+| `/rpi-plan` | Proposal doc or task description | `.rpi/plans/` |
 | `/rpi-implement` | Plan doc | Code + tests + commits |
 | `/rpi-commit` | Working tree changes | Git commits |
-| `/rpi-verify` | Proposal/plan doc or auto-detect | `.thoughts/reviews/` |
-| `/rpi-archive` | Completed artifact paths or scan | `.thoughts/archive/` |
+| `/rpi-verify` | Proposal/plan doc or auto-detect | `.rpi/reviews/` |
+| `/rpi-archive` | Completed artifact paths or scan | `.rpi/archive/` |
 
 ## Choosing Your Path
 
@@ -195,7 +195,7 @@ Propose → Plan (decomposes) → Implement (per unit)
 
 ## Spec Lifecycle
 
-Specs in `.thoughts/specs/` are behavioral contracts that drive the pipeline:
+Specs in `.rpi/specs/` are behavioral contracts that drive the pipeline:
 
 Status: `draft` → `approved` → `implemented` → `archived`
 

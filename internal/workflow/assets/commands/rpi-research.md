@@ -35,7 +35,7 @@ To investigate (adapt to scope — parallelize when possible):
 1. Use `rpi` to query the codebase index for files related to the topic, then read them
 2. Understand how the key code works — read the implementation and trace the logic
 3. Find existing patterns related to the topic — look for similar code with file:line refs
-4. Use `rpi` to scan for existing documents about this topic in `.thoughts/`
+4. Use `rpi` to scan for existing documents about this topic in `.rpi/`
 
 For focused questions, skip tasks that aren't relevant.
 
@@ -58,7 +58,7 @@ Ask if they have follow-up questions.
 
 If the user asks to save findings ("save this", "summarize what we found"), or if the investigation is substantial enough that cross-session handoff is clearly valuable:
 
-Offer to save to `.thoughts/research/`. If they agree:
+Offer to save to `.rpi/research/`. If they agree:
 1. Use `rpi` to scaffold and save a research artifact for this topic
 2. Fill in key findings, file references, and assessment
 3. Use `rpi` to transition the research artifact to active status
@@ -67,7 +67,7 @@ Offer to save to `.thoughts/research/`. If they agree:
 
 ## Step 7: Transition out
 
-When insights crystallize into something actionable, suggest continuing with `/rpi-propose`. If in the same session, the full context carries over. If in a new session, they can pass the saved summary: `/rpi-propose .thoughts/research/YYYY-MM-DD-topic.md`.
+When insights crystallize into something actionable, suggest continuing with `/rpi-propose`. If in the same session, the full context carries over. If in a new session, they can pass the saved summary: `/rpi-propose .rpi/research/YYYY-MM-DD-topic.md`.
 
 ## Guidelines
 

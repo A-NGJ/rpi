@@ -1,16 +1,16 @@
 ---
-description: Implement technical plans from .thoughts/plans with verification
+description: Implement technical plans from .rpi/plans with verification
 model: sonnet
 ---
 
 # Implement Plan
 
-You are tasked with implementing an approved technical plan from `.thoughts/plans/`. These plans contain phases with specific changes and success criteria.
+You are tasked with implementing an approved technical plan from `.rpi/plans/`. These plans contain phases with specific changes and success criteria.
 
 **Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or `make install`. See `.rpi/cli-reference.md` for available commands.
 
 Plans come in two forms:
-- **Pipeline plans**: Reference proposals (`.thoughts/proposals/`) and optionally research docs. Read these when you need deeper context.
+- **Pipeline plans**: Reference proposals (`.rpi/proposals/`) and optionally research docs. Read these when you need deeper context.
 - **Standalone plans**: Self-contained with all context inline (no proposals). These are typically for simpler tasks.
 
 ## Getting Started
@@ -151,7 +151,7 @@ Remember: You're implementing a solution, not just checking boxes. Keep the end 
 
 When all phases are done and verified:
 
-1. **Verify spec conformance** — check `.thoughts/specs/` for specs linked to this plan or covering affected modules:
+1. **Verify spec conformance** — check `.rpi/specs/` for specs linked to this plan or covering affected modules:
    - For each spec behavior (XX-N), verify the implementation satisfies it
    - Check that test files contain `// spec:XX-N` comments for traceability
    - If a mismatch is found: STOP. Present the divergence clearly. The spec must be amended first (get user approval on the spec change), then continue.

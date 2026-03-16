@@ -1,6 +1,6 @@
 ---
 name: analyze-thoughts
-description: Extract high-value insights from thoughts documents by filtering aggressively for decisions, constraints, technical specs, and actionable information. Use when you need to deeply analyze a specific document from the .thoughts/ directory.
+description: Extract high-value insights from thoughts documents by filtering aggressively for decisions, constraints, technical specs, and actionable information. Use when you need to deeply analyze a specific document from the .rpi/ directory.
 ---
 
 ## What I Do

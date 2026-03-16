@@ -1,11 +1,11 @@
 ---
-description: Archive completed artifacts to keep .thoughts/ directory clean
+description: Archive completed artifacts to keep .rpi/ directory clean
 model: sonnet
 ---
 
 # Archive Artifacts
 
-Move completed or superseded artifacts from `.thoughts/` to `.thoughts/archive/` to keep the active directory clean while preserving full history.
+Move completed or superseded artifacts from `.rpi/` to `.rpi/archive/` to keep the active directory clean while preserving full history.
 
 **Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or `make install`. See `.rpi/cli-reference.md` for available commands.
 
@@ -13,7 +13,7 @@ Move completed or superseded artifacts from `.thoughts/` to `.thoughts/archive/`
 
 This command accepts two modes:
 
-- **Specific paths**: `/rpi-archive .thoughts/research/2026-01-15-auth-flow.md` — archive specific artifacts
+- **Specific paths**: `/rpi-archive .rpi/research/2026-01-15-auth-flow.md` — archive specific artifacts
 - **Scan mode**: `/rpi-archive` (no arguments) — scan for archive candidates
 
 ## Step 1: Identify Candidates
@@ -24,7 +24,7 @@ This command accepts two modes:
 2. If status is `draft` or `active`, warn immediately:
    ```
    Warning: This artifact is still [draft/active]:
-   - .thoughts/research/2026-01-15-auth-flow.md (draft)
+   - .rpi/research/2026-01-15-auth-flow.md (draft)
 
    Are you sure you want to archive it? This is unusual — draft/active artifacts are typically still in use.
    Please confirm explicitly: yes / no
@@ -41,14 +41,14 @@ This command accepts two modes:
 Archive candidates:
 
 Research (2):
-- .thoughts/research/2026-01-15-auth-flow.md (complete)
-- .thoughts/research/2026-02-01-api-patterns.md (complete)
+- .rpi/research/2026-01-15-auth-flow.md (complete)
+- .rpi/research/2026-02-01-api-patterns.md (complete)
 
 Plans (1):
-- .thoughts/plans/2026-02-10-add-rate-limiting.md (complete, all phases done)
+- .rpi/plans/2026-02-10-add-rate-limiting.md (complete, all phases done)
 
 Proposals (1):
-- .thoughts/proposals/2026-01-20-caching-strategy.md (superseded by .thoughts/proposals/2026-03-01-caching-v2.md)
+- .rpi/proposals/2026-01-20-caching-strategy.md (superseded by .rpi/proposals/2026-03-01-caching-v2.md)
 
 Which would you like to archive? (all / specific items / none)
 ```
@@ -81,9 +81,9 @@ For each artifact about to be archived:
    ```
    Cross-reference warning:
 
-   .thoughts/research/2026-01-15-auth-flow.md is referenced by:
-   - .thoughts/proposals/2026-02-15-auth-redesign.md (line 12)
-   - .thoughts/plans/2026-02-20-auth-plan.md (line 8)
+   .rpi/research/2026-01-15-auth-flow.md is referenced by:
+   - .rpi/proposals/2026-02-15-auth-redesign.md (line 12)
+   - .rpi/plans/2026-02-20-auth-plan.md (line 8)
 
    These references will become stale after archiving.
    Proceed anyway? (yes / no)
@@ -95,7 +95,7 @@ If any selected artifacts have `status: draft` or `status: active` (only possibl
 
 ```
 Safety check: The following artifacts are still [draft/active]:
-- .thoughts/plans/2026-03-01-wip-feature.md (draft)
+- .rpi/plans/2026-03-01-wip-feature.md (draft)
 
 Archiving draft/active artifacts is unusual. Are you absolutely sure? (yes / no)
 ```
@@ -109,12 +109,12 @@ For each confirmed artifact:
 1. Use `rpi` to archive the artifact (updates frontmatter and moves to archive/). Use the force option to skip the ref check warning if the user has already confirmed.
    This handles everything automatically:
    - Updates frontmatter (`status: archived`, `archived_date: YYYY-MM-DD`)
-   - Creates the destination directory (`.thoughts/archive/YYYY-MM/[type]/`)
+   - Creates the destination directory (`.rpi/archive/YYYY-MM/[type]/`)
    - Moves the file
 
 2. **Report results**:
    ```
-   Archived 3 artifacts to .thoughts/archive/2026-03/:
+   Archived 3 artifacts to .rpi/archive/2026-03/:
 
    - research/2026-01-15-auth-flow.md
    - research/2026-02-01-api-patterns.md
@@ -123,14 +123,14 @@ For each confirmed artifact:
 
 ## Step 5: Specs Check (Optional)
 
-After archiving, if `.thoughts/specs/` exists and contains spec files:
+After archiving, if `.rpi/specs/` exists and contains spec files:
 
-1. Check if any of the archived artifacts referenced spec files (search archived content for `.thoughts/specs/` paths)
+1. Check if any of the archived artifacts referenced spec files (search archived content for `.rpi/specs/` paths)
 2. If references found, prompt:
    ```
    The archived artifacts referenced these specs:
-   - .thoughts/specs/auth.md
-   - .thoughts/specs/api-endpoints.md
+   - .rpi/specs/auth.md
+   - .rpi/specs/api-endpoints.md
 
    Want me to verify these specs are still current?
    ```

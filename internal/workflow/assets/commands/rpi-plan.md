@@ -29,7 +29,7 @@ For tasks that don't need the full propose → plan pipeline: bug fixes, small f
    - **Obvious** (specific file/function named): read those files directly
    - **Moderate** (area known, pattern unclear): use `rpi` to query the codebase index for related files, then read them
    - **Cross-cutting** (multiple systems): investigate in parallel — use `rpi` to query the codebase index for relevant files, understand how similar things are done in the codebase, read the key implementation files
-4. Check `.thoughts/specs/` for specs covering the affected area. Bug fix: spec defines correct behavior — the bug deviates from it. Feature: spec shows existing behaviors — ensure they aren't broken. Refactor: all spec behaviors must remain unchanged. No spec exists: note it; if the change is significant, include "create spec" as a plan task.
+4. Check `.rpi/specs/` for specs covering the affected area. Bug fix: spec defines correct behavior — the bug deviates from it. Feature: spec shows existing behaviors — ensure they aren't broken. Refactor: all spec behaviors must remain unchanged. No spec exists: note it; if the change is significant, include "create spec" as a plan task.
 5. If the task is ambiguous or you have questions, present findings and open questions before writing the plan. If everything is clear, write the plan directly.
 
 ### Step 2: Write the plan

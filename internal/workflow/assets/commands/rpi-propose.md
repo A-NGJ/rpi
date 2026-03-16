@@ -50,7 +50,7 @@ If this proposal was created from a research doc, use `rpi` to check whether the
 
 Present the spec to the user for approval or editing. Once accepted, use `rpi` to transition the spec from `draft` to `approved`.
 
-Then suggest: `→ /rpi-plan .thoughts/proposals/YYYY-MM-DD-description.md`
+Then suggest: `→ /rpi-plan .rpi/proposals/YYYY-MM-DD-description.md`
 
 ---
 
@@ -65,7 +65,7 @@ Build a thorough understanding of the terrain before proposing solutions.
 1. **Read all mentioned files fully** before investigating further
 2. **Check upstream context** — if a research doc was provided, use `rpi` to check its status and resolve the full artifact chain. Read all files it identifies. Warn if the research is still in draft or already complete. Also check for existing proposals on the same topic.
 3. **Investigate the relevant areas** (parallelize when possible):
-   - Use `rpi` to scan for existing documents about this topic in `.thoughts/`
+   - Use `rpi` to scan for existing documents about this topic in `.rpi/`
    - Use `rpi` to query the codebase index for files related to the feature, then read them
    - Understand the current architecture and patterns in the affected areas
    - Find how similar problems are solved in the codebase — concrete examples with file:line refs
@@ -105,7 +105,7 @@ Focus on the spec as the contract that drives all downstream work. Iterate based
 
 Once accepted, use `rpi` to transition the spec from `draft` to `approved`.
 
-Then suggest: `→ /rpi-plan .thoughts/proposals/YYYY-MM-DD-description.md`
+Then suggest: `→ /rpi-plan .rpi/proposals/YYYY-MM-DD-description.md`
 
 ---
 

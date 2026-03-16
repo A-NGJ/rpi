@@ -1,16 +1,16 @@
 ---
 name: locate-thoughts
-description: Search the .thoughts/ directory to discover relevant documents (tickets, research, plans, PRs, notes). Returns organized file listings grouped by type. Use when you need to find historical context or documentation.
+description: Search the .rpi/ directory to discover relevant documents (tickets, research, plans, PRs, notes). Returns organized file listings grouped by type. Use when you need to find historical context or documentation.
 ---
 
 ## What I Do
 
-Search the .thoughts/ directory structure to find relevant documents and categorize them by type. This is a discovery tool — find where documents live, don't analyze their contents.
+Search the .rpi/ directory structure to find relevant documents and categorize them by type. This is a discovery tool — find where documents live, don't analyze their contents.
 
 ## Directory Structure
 
 ```
-.thoughts/
+.rpi/
 ├── specs/         # Living behavioral specs
 ├── research/      # Research documents
 ├── plans/         # Implementation plans
@@ -24,8 +24,8 @@ Search the .thoughts/ directory structure to find relevant documents and categor
 ## Search Strategy
 
 1. **Think about search terms first** — consider synonyms, technical terms, component names, and related concepts
-2. **Use grep** for content searching across .thoughts/
-3. **Use glob** for filename patterns (e.g., `.thoughts/**/*rate-limit*`)
+2. **Use grep** for content searching across .rpi/
+3. **Use glob** for filename patterns (e.g., `.rpi/**/*rate-limit*`)
 4. **Check all subdirectories**
 
 ## Search Patterns
@@ -44,22 +44,22 @@ Search the .thoughts/ directory structure to find relevant documents and categor
 ## Thought Documents about [Topic]
 
 ### Specs
-- `.thoughts/specs/domain-name.md` - Brief description from title
+- `.rpi/specs/domain-name.md` - Brief description from title
 
 ### Tickets
-- `.thoughts/tickets/eng_1234.md` - Brief description from title
+- `.rpi/tickets/eng_1234.md` - Brief description from title
 
 ### Research Documents
-- `.thoughts/research/2024-01-15-topic.md` - Brief description
+- `.rpi/research/2024-01-15-topic.md` - Brief description
 
 ### Implementation Plans
-- `.thoughts/plans/2024-01-15-topic.md` - Brief description
+- `.rpi/plans/2024-01-15-topic.md` - Brief description
 
 ### Designs
-- `.thoughts/designs/2024-01-15-topic.md` - Brief description
+- `.rpi/designs/2024-01-15-topic.md` - Brief description
 
 ### Reviews
-- `.thoughts/reviews/2024-01-15-branch-review.md` - Brief description
+- `.rpi/reviews/2024-01-15-branch-review.md` - Brief description
 
 Total: N relevant documents found
 ```

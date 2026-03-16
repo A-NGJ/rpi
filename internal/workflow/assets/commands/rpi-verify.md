@@ -29,7 +29,7 @@ When no path is provided, detect from recent git changes:
 
 Read the provided or detected artifact(s) fully. Use `rpi` to resolve the artifact chain — this returns the full chain (plan → proposal → research) with metadata. Read all linked files.
 
-Also check `.thoughts/specs/` for relevant specs, and use `rpi` to get the list of changed files.
+Also check `.rpi/specs/` for relevant specs, and use `rpi` to get the list of changed files.
 
 Present a brief summary of what you're verifying before proceeding.
 
@@ -76,7 +76,7 @@ For each finding, classify as: blocker (must fix), warning (should fix), or note
 After all three dimensions are verified:
 
 1. **Determine overall status**: Pass / Pass with warnings / Issues found
-2. **Write the report**: Use `rpi` to scaffold a verification report in `.thoughts/reviews/`. Fill in findings grouped by dimension and severity.
+2. **Write the report**: Use `rpi` to scaffold a verification report in `.rpi/reviews/`. Fill in findings grouped by dimension and severity.
 3. **Present the summary** — overall status, counts by severity, report path. If blockers exist, list them directly so the user sees them immediately.
 
 ## Guidelines
@@ -86,5 +86,5 @@ After all three dimensions are verified:
 - **Read actual code** — don't trust checkboxes or summaries
 - **Be specific** — every finding should include a file:line reference
 - **Severity matters** — distinguish genuine blockers from style nits
-- **Check specs** — if `.thoughts/specs/` contains relevant specs, verify behavioral consistency
+- **Check specs** — if `.rpi/specs/` contains relevant specs, verify behavioral consistency
 - **Scale effort** — small implementations get lighter verification; large ones get thorough checks
