@@ -187,6 +187,7 @@ func TestRenderAllTemplates(t *testing.T) {
 		Ticket:     "cli-007",
 		Research:   ".thoughts/research/2026-03-08-test.md",
 		Proposal:   ".thoughts/proposals/2026-03-08-test.md",
+		Spec:       ".thoughts/specs/test.md",
 		Tags:       "go, cli",
 		TypeLabel:  "Plan",
 	}
@@ -196,7 +197,7 @@ func TestRenderAllTemplates(t *testing.T) {
 		wantInOutput []string
 	}{
 		{"research", []string{"# Research: Test Topic", "researcher: Claude", "git_commit: abc1234"}},
-		{"plan", []string{"# cli-007: Test Topic", "ticket: \"cli-007\""}},
+		{"plan", []string{"# cli-007: Test Topic", "ticket: \"cli-007\"", `spec: ".thoughts/specs/test.md"`}},
 		{"propose", []string{"# Proposal: Test Topic"}},
 		{"verify-report", []string{"# Verification Report: Test Topic", "## Completeness"}},
 		{"spec", []string{"domain: Test Topic", "## Purpose", "## Behavior", "## Constraints", "## Test Cases", "id:", "status: draft"}},
@@ -242,7 +243,7 @@ func TestRenderTemplatesWithoutOptionalVars(t *testing.T) {
 		name        string
 		notInOutput []string
 	}{
-		{"plan", []string{"- **Research**:"}},
+		{"plan", []string{"- **Research**:", "- **Spec**:"}},
 	}
 
 	for _, tt := range tests {

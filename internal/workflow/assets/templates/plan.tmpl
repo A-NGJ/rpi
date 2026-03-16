@@ -9,6 +9,9 @@ ticket: "{{.Ticket}}"
 {{- if .Proposal}}
 proposal: "{{.Proposal}}"
 {{- end}}
+{{- if .Spec}}
+spec: "{{.Spec}}"
+{{- end}}
 ---
 
 # {{if .Ticket}}{{.Ticket}}: {{end}}{{.Topic}} — Implementation Plan
@@ -24,6 +27,9 @@ proposal: "{{.Proposal}}"
 {{- end}}
 {{- if .Proposal}}
 - **Proposal**: {{.Proposal}}
+{{- end}}
+{{- if .Spec}}
+- **Spec**: {{.Spec}}
 {{- end}}
 {{- if .Research}}
 - **Research**: {{.Research}}
@@ -66,6 +72,9 @@ proposal: "{{.Proposal}}"
 {{- end}}
 {{- if .Proposal}}
 - Proposal: {{.Proposal}}
+{{- end}}
+{{- if .Spec}}
+- Spec: {{.Spec}}
 {{- end}}
 {{- if .Research}}
 - Research: {{.Research}}
