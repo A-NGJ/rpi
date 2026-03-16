@@ -17,15 +17,15 @@ var linkFields = []string{"research", "ticket", "related_research", "proposal", 
 // listLinkFields are frontmatter fields that contain lists of paths.
 var listLinkFields = []string{"depends_on"}
 
-// thoughtsPathRe matches .thoughts/ paths in markdown content (relative or absolute).
-var thoughtsPathRe = regexp.MustCompile(`[^\s\(\[` + "`" + `"']*\.thoughts/[^\s\)\]` + "`" + `"']+\.md`)
+// rpiPathRe matches .rpi/ paths in markdown content (relative or absolute).
+var rpiPathRe = regexp.MustCompile(`[^\s\(\[` + "`" + `"']*\.rpi/[^\s\)\]` + "`" + `"']+\.md`)
 
 // ResolveOptions controls optional behavior during chain resolution.
 type ResolveOptions struct {
 	Sections []string
 }
 
-// Artifact represents metadata about a single .thoughts/ file in a chain.
+// Artifact represents metadata about a single .rpi/ file in a chain.
 type Artifact struct {
 	Path     string            `json:"path"`
 	Type     string            `json:"type"`
@@ -161,7 +161,7 @@ func extractSourceDocumentLinks(body string) []string {
 		section = section[:nextH2+3]
 	}
 
-	matches := thoughtsPathRe.FindAllString(section, -1)
+	matches := rpiPathRe.FindAllString(section, -1)
 	for _, m := range matches {
 		if !seen[m] {
 			seen[m] = true

@@ -22,13 +22,13 @@ func writeFile(t *testing.T, dir, relPath, content string) string {
 func TestResolveSimpleChain(t *testing.T) {
 	dir := t.TempDir()
 
-	proposalPath := writeFile(t, dir, ".thoughts/proposals/proposal.md",
-		"---\ntopic: \"My Proposal\"\nstatus: complete\nrelated_research: .thoughts/research/research.md\n---\n# Proposal\n")
+	proposalPath := writeFile(t, dir, ".rpi/proposals/proposal.md",
+		"---\ntopic: \"My Proposal\"\nstatus: complete\nrelated_research: .rpi/research/research.md\n---\n# Proposal\n")
 
-	writeFile(t, dir, ".thoughts/research/research.md",
+	writeFile(t, dir, ".rpi/research/research.md",
 		"---\ntopic: \"My Research\"\nstatus: complete\n---\n# Research\n")
 
-	planPath := writeFile(t, dir, ".thoughts/plans/test-plan.md",
+	planPath := writeFile(t, dir, ".rpi/plans/test-plan.md",
 		"---\ntopic: \"Test Plan\"\nstatus: draft\nproposal: "+proposalPath+"\n---\n# Plan\n")
 
 	result, err := Resolve(planPath, ResolveOptions{})
@@ -57,12 +57,12 @@ func TestResolveSimpleChain(t *testing.T) {
 func TestResolveCycleDetection(t *testing.T) {
 	dir := t.TempDir()
 
-	aPath := filepath.Join(dir, ".thoughts/proposals/a.md")
-	bPath := filepath.Join(dir, ".thoughts/proposals/b.md")
+	aPath := filepath.Join(dir, ".rpi/proposals/a.md")
+	bPath := filepath.Join(dir, ".rpi/proposals/b.md")
 
-	writeFile(t, dir, ".thoughts/proposals/a.md",
+	writeFile(t, dir, ".rpi/proposals/a.md",
 		"---\ntopic: A\nstatus: draft\nproposal: "+bPath+"\n---\n# A\n")
-	writeFile(t, dir, ".thoughts/proposals/b.md",
+	writeFile(t, dir, ".rpi/proposals/b.md",
 		"---\ntopic: B\nstatus: draft\nproposal: "+aPath+"\n---\n# B\n")
 
 	result, err := Resolve(aPath, ResolveOptions{})
@@ -78,7 +78,7 @@ func TestResolveCycleDetection(t *testing.T) {
 func TestResolveMissingFile(t *testing.T) {
 	dir := t.TempDir()
 
-	planPath := writeFile(t, dir, ".thoughts/plans/p.md",
+	planPath := writeFile(t, dir, ".rpi/plans/p.md",
 		"---\ntopic: P\nstatus: draft\nproposal: /nonexistent/proposal.md\n---\n# P\n")
 
 	result, err := Resolve(planPath, ResolveOptions{})
@@ -97,11 +97,11 @@ func TestResolveMissingFile(t *testing.T) {
 func TestResolveNoFrontmatterFallback(t *testing.T) {
 	dir := t.TempDir()
 
-	proposalPath := writeFile(t, dir, ".thoughts/proposals/proposal.md",
+	proposalPath := writeFile(t, dir, ".rpi/proposals/proposal.md",
 		"---\ntopic: Proposal\nstatus: complete\n---\n# Proposal\n")
 
-	planPath := writeFile(t, dir, ".thoughts/plans/plan.md",
-		"# Plan\n\n## Source Documents\n- Proposal: `"+proposalPath+"`\n- Research: `.thoughts/research/r.md`\n")
+	planPath := writeFile(t, dir, ".rpi/plans/plan.md",
+		"# Plan\n\n## Source Documents\n- Proposal: `"+proposalPath+"`\n- Research: `.rpi/research/r.md`\n")
 
 	result, err := Resolve(planPath, ResolveOptions{})
 	if err != nil {
@@ -124,7 +124,7 @@ func TestResolveNoFrontmatterFallback(t *testing.T) {
 func TestResolveSingleFile(t *testing.T) {
 	dir := t.TempDir()
 
-	path := writeFile(t, dir, ".thoughts/proposals/solo.md",
+	path := writeFile(t, dir, ".rpi/proposals/solo.md",
 		"---\ntopic: Solo\nstatus: draft\n---\n# Solo\n")
 
 	result, err := Resolve(path, ResolveOptions{})
@@ -143,12 +143,12 @@ func TestResolveSingleFile(t *testing.T) {
 func TestResolveDependsOnList(t *testing.T) {
 	dir := t.TempDir()
 
-	dep1 := writeFile(t, dir, ".thoughts/plans/dep1.md",
+	dep1 := writeFile(t, dir, ".rpi/plans/dep1.md",
 		"---\ntopic: Dep1\nstatus: complete\n---\n# Dep1\n")
-	dep2 := writeFile(t, dir, ".thoughts/plans/dep2.md",
+	dep2 := writeFile(t, dir, ".rpi/plans/dep2.md",
 		"---\ntopic: Dep2\nstatus: complete\n---\n# Dep2\n")
 
-	mainPath := writeFile(t, dir, ".thoughts/plans/main.md",
+	mainPath := writeFile(t, dir, ".rpi/plans/main.md",
 		"---\ntopic: Main\nstatus: draft\ndepends_on:\n  - "+dep1+"\n  - "+dep2+"\n---\n# Main\n")
 
 	result, err := Resolve(mainPath, ResolveOptions{})
@@ -171,7 +171,7 @@ func TestResolveMaxDepth(t *testing.T) {
 		if i < 14 {
 			link = "proposal: " + paths[i+1] + "\n"
 		}
-		paths[i] = writeFile(t, dir, filepath.Join(".thoughts/proposals", fmt.Sprintf("p%d.md", i)),
+		paths[i] = writeFile(t, dir, filepath.Join(".rpi/proposals", fmt.Sprintf("p%d.md", i)),
 			"---\ntopic: P"+fmt.Sprintf("%d", i)+"\nstatus: draft\n"+link+"---\n# P\n")
 	}
 
@@ -192,7 +192,7 @@ func TestResolveMaxDepth(t *testing.T) {
 func TestResolveSectionsExtraction(t *testing.T) {
 	dir := t.TempDir()
 
-	path := writeFile(t, dir, ".thoughts/proposals/proposal.md",
+	path := writeFile(t, dir, ".rpi/proposals/proposal.md",
 		"---\ntopic: My Proposal\nstatus: complete\n---\n# Proposal\n\n## Summary\n\nThis is the summary.\n\n## Architecture\n\nDiagram here.\n")
 
 	result, err := Resolve(path, ResolveOptions{Sections: []string{"Summary"}})
@@ -216,7 +216,7 @@ func TestResolveSectionsExtraction(t *testing.T) {
 func TestResolveSectionsEmptyOptions(t *testing.T) {
 	dir := t.TempDir()
 
-	path := writeFile(t, dir, ".thoughts/proposals/proposal.md",
+	path := writeFile(t, dir, ".rpi/proposals/proposal.md",
 		"---\ntopic: My Proposal\nstatus: complete\n---\n# Proposal\n\n## Summary\n\nContent.\n")
 
 	result, err := Resolve(path, ResolveOptions{})
@@ -232,7 +232,7 @@ func TestResolveSectionsEmptyOptions(t *testing.T) {
 func TestResolveSectionsNoMatch(t *testing.T) {
 	dir := t.TempDir()
 
-	path := writeFile(t, dir, ".thoughts/proposals/proposal.md",
+	path := writeFile(t, dir, ".rpi/proposals/proposal.md",
 		"---\ntopic: My Proposal\nstatus: complete\n---\n# Proposal\n\n## Summary\n\nContent.\n")
 
 	result, err := Resolve(path, ResolveOptions{Sections: []string{"Nonexistent"}})
@@ -250,13 +250,13 @@ func TestInferType(t *testing.T) {
 		path string
 		want string
 	}{
-		{".thoughts/plans/foo.md", "plan"},
-		{".thoughts/proposals/foo.md", "proposal"},
-		{".thoughts/research/foo.md", "research"},
-		{".thoughts/prs/foo.md", "pr"},
-		{".thoughts/reviews/foo.md", "review"},
-		{".thoughts/specs/foo.md", "spec"},
-		{".thoughts/archive/plans/foo.md", "archive"},
+		{".rpi/plans/foo.md", "plan"},
+		{".rpi/proposals/foo.md", "proposal"},
+		{".rpi/research/foo.md", "research"},
+		{".rpi/prs/foo.md", "pr"},
+		{".rpi/reviews/foo.md", "review"},
+		{".rpi/specs/foo.md", "spec"},
+		{".rpi/archive/plans/foo.md", "archive"},
 		{"random/path.md", "unknown"},
 	}
 
@@ -273,10 +273,10 @@ func TestInferType(t *testing.T) {
 func TestResolveSpecLink(t *testing.T) {
 	dir := t.TempDir()
 
-	specPath := writeFile(t, dir, ".thoughts/specs/test-spec.md",
+	specPath := writeFile(t, dir, ".rpi/specs/test-spec.md",
 		"---\ndomain: \"Test Spec\"\nstatus: approved\n---\n# Test Spec\n")
 
-	planPath := writeFile(t, dir, ".thoughts/plans/test-plan.md",
+	planPath := writeFile(t, dir, ".rpi/plans/test-plan.md",
 		"---\ntopic: \"Test Plan\"\nstatus: draft\nspec: "+specPath+"\n---\n# Plan\n")
 
 	result, err := Resolve(planPath, ResolveOptions{})

@@ -14,24 +14,24 @@ import (
 
 var archiveCmd = &cobra.Command{
 	Use:   "archive",
-	Short: "Archive operations for .thoughts/ artifacts",
-	Long: `Manage the archive lifecycle for .thoughts/ artifacts.
+	Short: "Archive operations for .rpi/ artifacts",
+	Long: `Manage the archive lifecycle for .rpi/ artifacts.
 
 An artifact is archivable when its status is "complete" or "superseded" and
 it is not already in the archive/ subdirectory. Archived files are moved to
-.thoughts/archive/YYYY-MM/<type>/ with their frontmatter updated (status set
+.rpi/archive/YYYY-MM/<type>/ with their frontmatter updated (status set
 to "archived", archived_date added).`,
 	Example: `  # Discover archivable artifacts
   rpi archive scan
 
   # Check if an artifact has active references
-  rpi archive check-refs .thoughts/proposals/2026-03-13-auth.md
+  rpi archive check-refs .rpi/proposals/2026-03-13-auth.md
 
   # Archive an artifact (fails with exit 3 if active refs exist)
-  rpi archive move .thoughts/plans/2026-03-13-auth.md
+  rpi archive move .rpi/plans/2026-03-13-auth.md
 
   # Force archive even with active references
-  rpi archive move --force .thoughts/plans/2026-03-13-auth.md`,
+  rpi archive move --force .rpi/plans/2026-03-13-auth.md`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cmd.Help()
 	},
@@ -44,17 +44,17 @@ var archiveScanCmd = &cobra.Command{
 in archive/. Returns each artifact's path, type, status, title, and the
 number of other artifacts that reference it.`,
 	Example: `  rpi archive scan
-  # → [{"path": ".thoughts/plans/...", "type": "plan", "status": "complete", "ref_count": 0}]`,
+  # → [{"path": ".rpi/plans/...", "type": "plan", "status": "complete", "ref_count": 0}]`,
 	RunE: runArchiveScan,
 }
 
 var archiveCheckRefsCmd = &cobra.Command{
 	Use:   "check-refs <path>",
 	Short: "Find all files referencing a given path",
-	Long: `Search frontmatter fields and body text of all .thoughts/ files for
+	Long: `Search frontmatter fields and body text of all .rpi/ files for
 references to the given path. Returns a list of files that reference it.`,
-	Example: `  rpi archive check-refs .thoughts/proposals/2026-03-13-auth.md
-  # → [".thoughts/plans/2026-03-13-auth.md"]`,
+	Example: `  rpi archive check-refs .rpi/proposals/2026-03-13-auth.md
+  # → [".rpi/plans/2026-03-13-auth.md"]`,
 	Args: cobra.ExactArgs(1),
 	RunE: runArchiveCheckRefs,
 }
@@ -63,14 +63,14 @@ var archiveMoveCmd = &cobra.Command{
 	Use:   "move <path>",
 	Short: "Archive an artifact: update frontmatter and move to archive/",
 	Long: `Update the artifact's frontmatter (status → "archived", adds archived_date)
-and move the file to .thoughts/archive/YYYY-MM/<type>/.
+and move the file to .rpi/archive/YYYY-MM/<type>/.
 
 Exits with code 3 if the file has active references. Use --force to override.`,
-	Example: `  rpi archive move .thoughts/plans/2026-03-13-auth.md
-  # → {"from": "...", "to": ".thoughts/archive/2026-03/plans/...", "frontmatter_updated": true}
+	Example: `  rpi archive move .rpi/plans/2026-03-13-auth.md
+  # → {"from": "...", "to": ".rpi/archive/2026-03/plans/...", "frontmatter_updated": true}
 
   # Override active reference check
-  rpi archive move --force .thoughts/plans/2026-03-13-auth.md`,
+  rpi archive move --force .rpi/plans/2026-03-13-auth.md`,
 	Args: cobra.ExactArgs(1),
 	RunE: runArchiveMove,
 }
@@ -95,7 +95,7 @@ type archiveScanResult struct {
 }
 
 func init() {
-	archiveCmd.PersistentFlags().StringVar(&thoughtsDirFlag, "thoughts-dir", ".thoughts", "Path to .thoughts/ directory")
+	archiveCmd.PersistentFlags().StringVar(&rpiDirFlag, "rpi-dir", ".rpi", "Path to .rpi/ artifacts directory")
 	archiveMoveCmd.Flags().BoolVar(&archiveMoveForce, "force", false, "Skip ref check warning")
 	archiveCmd.AddCommand(archiveScanCmd)
 	archiveCmd.AddCommand(archiveCheckRefsCmd)
@@ -104,7 +104,7 @@ func init() {
 }
 
 func runArchiveScan(cmd *cobra.Command, args []string) error {
-	results, err := scanner.Scan(thoughtsDirFlag, scanner.Filters{Archivable: true})
+	results, err := scanner.Scan(rpiDirFlag, scanner.Filters{Archivable: true})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
@@ -114,10 +114,10 @@ func runArchiveScan(cmd *cobra.Command, args []string) error {
 	for _, r := range results {
 		// Use relative path for ref counting since references are stored as relative paths
 		refPath := r.Path
-		if rel, err := filepath.Rel(thoughtsDirFlag, r.Path); err == nil {
+		if rel, err := filepath.Rel(rpiDirFlag, r.Path); err == nil {
 			refPath = rel
 		}
-		refCount, err := scanner.CountReferences(thoughtsDirFlag, refPath)
+		refCount, err := scanner.CountReferences(rpiDirFlag, refPath)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "warning: counting refs for %s: %v\n", r.Path, err)
 			refCount = 0
@@ -141,7 +141,7 @@ func runArchiveScan(cmd *cobra.Command, args []string) error {
 }
 
 func runArchiveCheckRefs(cmd *cobra.Command, args []string) error {
-	refs, err := scanner.FindReferences(thoughtsDirFlag, args[0])
+	refs, err := scanner.FindReferences(rpiDirFlag, args[0])
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
@@ -153,7 +153,7 @@ func runArchiveCheckRefs(cmd *cobra.Command, args []string) error {
 }
 
 func runArchiveMove(cmd *cobra.Command, args []string) error {
-	result, err := doArchiveMove(args[0], thoughtsDirFlag, archiveMoveForce, time.Now())
+	result, err := doArchiveMove(args[0], rpiDirFlag, archiveMoveForce, time.Now())
 	if err == errHasReferences {
 		fmt.Fprintln(os.Stderr, "error: file has active references (use --force to override)")
 		os.Exit(3)
@@ -167,7 +167,7 @@ func runArchiveMove(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func doArchiveMove(targetPath, thoughtsDir string, force bool, now time.Time) (*archiveMoveResult, error) {
+func doArchiveMove(targetPath, rpiDir string, force bool, now time.Time) (*archiveMoveResult, error) {
 	doc, err := frontmatter.Parse(targetPath)
 	if err != nil {
 		return nil, fmt.Errorf("parse %s: %w", targetPath, err)
@@ -175,10 +175,10 @@ func doArchiveMove(targetPath, thoughtsDir string, force bool, now time.Time) (*
 
 	// Check references
 	refPath := targetPath
-	if rel, relErr := filepath.Rel(thoughtsDir, targetPath); relErr == nil {
+	if rel, relErr := filepath.Rel(rpiDir, targetPath); relErr == nil {
 		refPath = rel
 	}
-	refCount, err := scanner.CountReferences(thoughtsDir, refPath)
+	refCount, err := scanner.CountReferences(rpiDir, refPath)
 	if err != nil {
 		return nil, fmt.Errorf("count references: %w", err)
 	}
@@ -197,7 +197,7 @@ func doArchiveMove(targetPath, thoughtsDir string, force bool, now time.Time) (*
 	artifactType := scanner.InferType(targetPath)
 	yearMonth := now.Format("2006-01")
 	filename := filepath.Base(targetPath)
-	destDir := filepath.Join(thoughtsDir, "archive", yearMonth, artifactType)
+	destDir := filepath.Join(rpiDir, "archive", yearMonth, artifactType)
 	destPath := filepath.Join(destDir, filename)
 
 	if err := os.MkdirAll(destDir, 0755); err != nil {

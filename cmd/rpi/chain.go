@@ -20,23 +20,23 @@ the full dependency chain as a flat metadata list.
 
 Link fields followed: research, proposal, ticket, depends_on, related_research.
 Recurses up to depth 10 and detects cycles. Falls back to scanning
-"## Source Documents" / "## References" sections for .thoughts/ paths.
+"## Source Documents" / "## References" sections for .rpi/ paths.
 
 Use --sections to extract specific ## headings from each artifact body,
 avoiding separate file reads. Output is JSON by default; use --format md
 for a markdown table.`,
 	Example: `  # Resolve a plan's full dependency chain
-  rpi chain .thoughts/plans/2026-03-13-auth.md
+  rpi chain .rpi/plans/2026-03-13-auth.md
 
   # Resolve and extract Summary + Assessment sections from each linked artifact
-  rpi chain .thoughts/plans/2026-03-13-auth.md --sections "Summary,Assessment"
+  rpi chain .rpi/plans/2026-03-13-auth.md --sections "Summary,Assessment"
 
   # Sample JSON output:
   # {
-  #   "root": ".thoughts/plans/2026-03-13-auth.md",
+  #   "root": ".rpi/plans/2026-03-13-auth.md",
   #   "artifacts": [
-  #     {"path": ".thoughts/plans/2026-03-13-auth.md", "type": "plan", "status": "draft", ...},
-  #     {"path": ".thoughts/proposals/2026-03-12-auth.md", "type": "proposal", ...}
+  #     {"path": ".rpi/plans/2026-03-13-auth.md", "type": "plan", "status": "draft", ...},
+  #     {"path": ".rpi/proposals/2026-03-12-auth.md", "type": "proposal", ...}
   #   ]
   # }`,
 	Args: cobra.ExactArgs(1),

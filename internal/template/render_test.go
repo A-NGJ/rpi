@@ -185,9 +185,9 @@ func TestRenderAllTemplates(t *testing.T) {
 		Repository: "test-repo",
 		Topic:      "Test Topic",
 		Ticket:     "cli-007",
-		Research:   ".thoughts/research/2026-03-08-test.md",
-		Proposal:   ".thoughts/proposals/2026-03-08-test.md",
-		Spec:       ".thoughts/specs/test.md",
+		Research:   ".rpi/research/2026-03-08-test.md",
+		Proposal:   ".rpi/proposals/2026-03-08-test.md",
+		Spec:       ".rpi/specs/test.md",
 		Tags:       "go, cli",
 		TypeLabel:  "Plan",
 	}
@@ -197,7 +197,7 @@ func TestRenderAllTemplates(t *testing.T) {
 		wantInOutput []string
 	}{
 		{"research", []string{"# Research: Test Topic", "researcher: Claude", "git_commit: abc1234"}},
-		{"plan", []string{"# cli-007: Test Topic", "ticket: \"cli-007\"", `spec: ".thoughts/specs/test.md"`}},
+		{"plan", []string{"# cli-007: Test Topic", "ticket: \"cli-007\"", `spec: ".rpi/specs/test.md"`}},
 		{"propose", []string{"# Proposal: Test Topic"}},
 		{"verify-report", []string{"# Verification Report: Test Topic", "## Completeness"}},
 		{"spec", []string{"domain: Test Topic", "## Purpose", "## Behavior", "## Constraints", "## Test Cases", "id:", "status: draft"}},

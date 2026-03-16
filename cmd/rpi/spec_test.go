@@ -14,7 +14,7 @@ func TestSpecCoverageBasic(t *testing.T) {
 	dir := t.TempDir()
 
 	// Create a spec file
-	specDir := filepath.Join(dir, ".thoughts", "specs")
+	specDir := filepath.Join(dir, ".rpi", "specs")
 	if err := os.MkdirAll(specDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -70,7 +70,7 @@ func TestSpecCoverageMissing(t *testing.T) {
 	binary := buildBinary(t)
 	dir := t.TempDir()
 
-	specDir := filepath.Join(dir, ".thoughts", "specs")
+	specDir := filepath.Join(dir, ".rpi", "specs")
 	if err := os.MkdirAll(specDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -105,7 +105,7 @@ func TestSpecCoverageJSON(t *testing.T) {
 	binary := buildBinary(t)
 	dir := t.TempDir()
 
-	specDir := filepath.Join(dir, ".thoughts", "specs")
+	specDir := filepath.Join(dir, ".rpi", "specs")
 	if err := os.MkdirAll(specDir, 0755); err != nil {
 		t.Fatal(err)
 	}

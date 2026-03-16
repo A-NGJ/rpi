@@ -20,8 +20,8 @@ var (
 
 var scanCmd = &cobra.Command{
 	Use:   "scan",
-	Short: "Discover and filter artifacts in .thoughts/",
-	Long: `Walk .thoughts/ directory (excludes archive/), parse YAML frontmatter from
+	Short: "Discover and filter artifacts in .rpi/",
+	Long: `Walk .rpi/ directory (excludes archive/), parse YAML frontmatter from
 each .md file, and return artifacts matching filter criteria.
 
 Filters can be combined; all filters must match (AND logic).
@@ -36,12 +36,12 @@ Output is JSON by default; use --format md for a markdown table.`,
   rpi scan --archivable
 
   # Find artifacts that reference a specific file
-  rpi scan --references .thoughts/proposals/2026-03-13-auth.md
+  rpi scan --references .rpi/proposals/2026-03-13-auth.md
 
   # Sample JSON output:
   # [
   #   {
-  #     "path": ".thoughts/research/2026-03-13-auth.md",
+  #     "path": ".rpi/research/2026-03-13-auth.md",
   #     "type": "research",
   #     "status": "draft",
   #     "title": "auth flow investigation"
@@ -52,7 +52,7 @@ Output is JSON by default; use --format md for a markdown table.`,
 
 func init() {
 	addFormatFlag(scanCmd)
-	addThoughtsDirFlag(scanCmd)
+	addRpiDirFlag(scanCmd)
 	scanCmd.Flags().StringVar(&scanStatus, "status", "", "Filter by frontmatter status")
 	scanCmd.Flags().StringVar(&scanType, "type", "", "Filter by artifact type (plan, proposal, research, etc.)")
 	scanCmd.Flags().StringVar(&scanProposal, "proposal", "", "Filter by frontmatter proposal field")
@@ -70,7 +70,7 @@ func runScan(cmd *cobra.Command, args []string) error {
 		Archivable: scanArchivable,
 	}
 
-	results, err := scanner.Scan(thoughtsDirFlag, filters)
+	results, err := scanner.Scan(rpiDirFlag, filters)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)

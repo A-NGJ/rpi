@@ -20,7 +20,7 @@ var (
 	forceFlag    bool
 )
 
-// typeDirs maps artifact type to its subdirectory under thoughts-dir.
+// typeDirs maps artifact type to its subdirectory under rpi-dir.
 var typeDirs = map[string]string{
 	"research":      "research",
 	"plan":          "plans",
@@ -40,14 +40,14 @@ var scaffoldCmd = &cobra.Command{
 	Long: `Generate pre-filled artifact files from .tmpl templates.
 
 Types and their subdirectories:
-  research      → .thoughts/research/
-  propose       → .thoughts/proposals/
-  plan          → .thoughts/plans/
-  verify-report → .thoughts/reviews/
-  spec          → .thoughts/specs/
+  research      → .rpi/research/
+  propose       → .rpi/proposals/
+  plan          → .rpi/plans/
+  verify-report → .rpi/reviews/
+  spec          → .rpi/specs/
 
 By default, outputs rendered markdown to stdout. Use --write to create the file
-at .thoughts/<subdir>/YYYY-MM-DD-<slugified-topic>.md.
+at .rpi/<subdir>/YYYY-MM-DD-<slugified-topic>.md.
 
 Frontmatter is auto-populated with current date, git commit, branch, and repo name.
 
@@ -68,15 +68,15 @@ The rendered file contains YAML frontmatter and section headings from the templa
   ...`,
 	Example: `  # Create a research artifact
   rpi scaffold research --topic "auth flow" --write
-    → .thoughts/research/2026-03-13-auth-flow.md
+    → .rpi/research/2026-03-13-auth-flow.md
 
   # Create a plan linked to a proposal
-  rpi scaffold plan --proposal .thoughts/proposals/2026-03-13-auth.md --topic "auth refactor" --write
-    → .thoughts/plans/2026-03-13-auth-refactor.md
+  rpi scaffold plan --proposal .rpi/proposals/2026-03-13-auth.md --topic "auth refactor" --write
+    → .rpi/plans/2026-03-13-auth-refactor.md
 
   # Create a proposal linked to research
-  rpi scaffold propose --topic "caching strategy" --research .thoughts/research/2026-03-13-caching.md --write
-    → .thoughts/proposals/2026-03-13-caching-strategy.md
+  rpi scaffold propose --topic "caching strategy" --research .rpi/research/2026-03-13-caching.md --write
+    → .rpi/proposals/2026-03-13-caching-strategy.md
 
   # Preview to stdout without creating a file
   rpi scaffold spec --topic "user permissions"`,
@@ -85,7 +85,7 @@ The rendered file contains YAML frontmatter and section headings from the templa
 }
 
 func init() {
-	addThoughtsDirFlag(scaffoldCmd)
+	addRpiDirFlag(scaffoldCmd)
 	addTemplatesDirFlag(scaffoldCmd)
 	scaffoldCmd.Flags().StringVar(&topicFlag, "topic", "", "Topic/title for the artifact")
 	scaffoldCmd.Flags().StringVar(&ticketFlag, "ticket", "", "Ticket ID (e.g., cli-002)")
@@ -171,7 +171,7 @@ func validateRequiredFlags(artifactType string) error {
 
 func writeOutput(artifactType, filename, output string) error {
 	subdir := typeDirs[artifactType]
-	dir := filepath.Join(thoughtsDirFlag, subdir)
+	dir := filepath.Join(rpiDirFlag, subdir)
 
 	// Create parent dirs if needed
 	if err := os.MkdirAll(dir, 0755); err != nil {

@@ -12,8 +12,8 @@ import (
 
 var frontmatterCmd = &cobra.Command{
 	Use:   "frontmatter <action> <file> [args...]",
-	Short: "Read, modify, and validate YAML frontmatter in .thoughts/ files",
-	Long: `Read, modify, and validate YAML frontmatter in .thoughts/ artifact files.
+	Short: "Read, modify, and validate YAML frontmatter in .rpi/ files",
+	Long: `Read, modify, and validate YAML frontmatter in .rpi/ artifact files.
 
 Actions:
   get <file> [field]         Read a single field value, or all frontmatter as JSON
@@ -26,19 +26,19 @@ The transition action enforces allowed status changes:
   complete   → archived, superseded
 Invalid transitions exit with code 2.`,
 	Example: `  # Read all frontmatter as JSON
-  rpi frontmatter get .thoughts/plans/2026-03-13-auth.md
+  rpi frontmatter get .rpi/plans/2026-03-13-auth.md
 
   # Read a single field
-  rpi frontmatter get .thoughts/plans/2026-03-13-auth.md status
+  rpi frontmatter get .rpi/plans/2026-03-13-auth.md status
   # → "draft"
 
   # Set a field value
-  rpi frontmatter set .thoughts/plans/2026-03-13-auth.md status active
+  rpi frontmatter set .rpi/plans/2026-03-13-auth.md status active
 
   # Validated status transition (enforces allowed transitions)
-  rpi frontmatter transition .thoughts/plans/2026-03-13-auth.md active
+  rpi frontmatter transition .rpi/plans/2026-03-13-auth.md active
   # Invalid transition exits with code 2:
-  # rpi frontmatter transition .thoughts/plans/2026-03-13-auth.md draft
+  # rpi frontmatter transition .rpi/plans/2026-03-13-auth.md draft
   # → error: invalid transition: active → draft`,
 	Args: cobra.MinimumNArgs(2),
 	RunE: runFrontmatter,

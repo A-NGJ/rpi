@@ -27,11 +27,11 @@ type Filters struct {
 	Archivable bool
 }
 
-// Scan walks the thoughts directory and returns artifacts matching filters.
-func Scan(thoughtsDir string, filters Filters) ([]ArtifactInfo, error) {
+// Scan walks the artifacts directory and returns artifacts matching filters.
+func Scan(rpiDir string, filters Filters) ([]ArtifactInfo, error) {
 	var results []ArtifactInfo
 
-	err := filepath.Walk(thoughtsDir, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(rpiDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return nil // skip unreadable entries
 		}
@@ -163,10 +163,10 @@ type ReferenceDetail struct {
 }
 
 // FindReferences returns detailed info about all files referencing targetPath.
-func FindReferences(thoughtsDir, targetPath string) ([]ReferenceDetail, error) {
+func FindReferences(rpiDir, targetPath string) ([]ReferenceDetail, error) {
 	var results []ReferenceDetail
 
-	err := filepath.Walk(thoughtsDir, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(rpiDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return nil
 		}
@@ -226,9 +226,9 @@ func FindReferences(thoughtsDir, targetPath string) ([]ReferenceDetail, error) {
 	return results, nil
 }
 
-// CountReferences returns how many artifacts in thoughtsDir reference targetPath.
-func CountReferences(thoughtsDir, targetPath string) (int, error) {
-	refs, err := FindReferences(thoughtsDir, targetPath)
+// CountReferences returns how many artifacts in rpiDir reference targetPath.
+func CountReferences(rpiDir, targetPath string) (int, error) {
+	refs, err := FindReferences(rpiDir, targetPath)
 	return len(refs), err
 }
 

@@ -247,7 +247,7 @@ func TestTransitionFromArchived(t *testing.T) {
 }
 
 func TestSpecialCharactersInYAML(t *testing.T) {
-	input := "---\ntitle: \"Colons: everywhere\"\ndescription: \"Quotes \\\"inside\\\" here\"\npath: \".thoughts/designs/test.md\"\n---\n# Body\n"
+	input := "---\ntitle: \"Colons: everywhere\"\ndescription: \"Quotes \\\"inside\\\" here\"\npath: \".rpi/designs/test.md\"\n---\n# Body\n"
 	doc, err := ParseBytes([]byte(input), "test.md")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -256,8 +256,8 @@ func TestSpecialCharactersInYAML(t *testing.T) {
 	if doc.Frontmatter["title"] != "Colons: everywhere" {
 		t.Errorf("title = %v, want %q", doc.Frontmatter["title"], "Colons: everywhere")
 	}
-	if doc.Frontmatter["path"] != ".thoughts/designs/test.md" {
-		t.Errorf("path = %v, want %q", doc.Frontmatter["path"], ".thoughts/designs/test.md")
+	if doc.Frontmatter["path"] != ".rpi/designs/test.md" {
+		t.Errorf("path = %v, want %q", doc.Frontmatter["path"], ".rpi/designs/test.md")
 	}
 }
 

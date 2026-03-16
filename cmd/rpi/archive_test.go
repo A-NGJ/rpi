@@ -42,9 +42,9 @@ func writeArchiveFile(t *testing.T, dir, relPath, content string) {
 
 func TestArchiveScanReturnsRefCount(t *testing.T) {
 	dir := setupArchiveTestDir(t)
-	oldFlag := thoughtsDirFlag
-	thoughtsDirFlag = dir
-	defer func() { thoughtsDirFlag = oldFlag }()
+	oldFlag := rpiDirFlag
+	rpiDirFlag = dir
+	defer func() { rpiDirFlag = oldFlag }()
 
 	buf := new(bytes.Buffer)
 	cmd := archiveScanCmd
@@ -76,9 +76,9 @@ func TestArchiveScanReturnsRefCount(t *testing.T) {
 
 func TestArchiveCheckRefsReturnsDetails(t *testing.T) {
 	dir := setupArchiveTestDir(t)
-	oldFlag := thoughtsDirFlag
-	thoughtsDirFlag = dir
-	defer func() { thoughtsDirFlag = oldFlag }()
+	oldFlag := rpiDirFlag
+	rpiDirFlag = dir
+	defer func() { rpiDirFlag = oldFlag }()
 
 	buf := new(bytes.Buffer)
 	cmd := archiveCheckRefsCmd
@@ -101,9 +101,9 @@ func TestArchiveCheckRefsReturnsDetails(t *testing.T) {
 
 func TestArchiveCheckRefsEmpty(t *testing.T) {
 	dir := setupArchiveTestDir(t)
-	oldFlag := thoughtsDirFlag
-	thoughtsDirFlag = dir
-	defer func() { thoughtsDirFlag = oldFlag }()
+	oldFlag := rpiDirFlag
+	rpiDirFlag = dir
+	defer func() { rpiDirFlag = oldFlag }()
 
 	buf := new(bytes.Buffer)
 	cmd := archiveCheckRefsCmd

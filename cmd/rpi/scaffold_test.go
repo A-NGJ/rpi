@@ -89,12 +89,12 @@ func TestScaffoldPlanStdout(t *testing.T) {
 func TestScaffoldPlanWrite(t *testing.T) {
 	binary := buildBinary(t)
 	tmpDir := t.TempDir()
-	thoughtsDir := filepath.Join(tmpDir, ".thoughts")
+	rpiDir := filepath.Join(tmpDir, ".rpi")
 
 	stdout, _, exitCode := runRPI(t, binary,
 		"scaffold", "plan",
 		"--topic", "Test plan",
-		"--thoughts-dir", thoughtsDir,
+		"--rpi-dir", rpiDir,
 		"--write",
 	)
 
@@ -126,13 +126,13 @@ func TestScaffoldPlanWrite(t *testing.T) {
 func TestScaffoldPlanWriteOverwriteProtection(t *testing.T) {
 	binary := buildBinary(t)
 	tmpDir := t.TempDir()
-	thoughtsDir := filepath.Join(tmpDir, ".thoughts")
+	rpiDir := filepath.Join(tmpDir, ".rpi")
 
 	// First write
 	_, _, exitCode := runRPI(t, binary,
 		"scaffold", "plan",
 		"--topic", "Test plan",
-		"--thoughts-dir", thoughtsDir,
+		"--rpi-dir", rpiDir,
 		"--write",
 	)
 	if exitCode != 0 {
@@ -143,7 +143,7 @@ func TestScaffoldPlanWriteOverwriteProtection(t *testing.T) {
 	_, stderr, exitCode := runRPI(t, binary,
 		"scaffold", "plan",
 		"--topic", "Test plan",
-		"--thoughts-dir", thoughtsDir,
+		"--rpi-dir", rpiDir,
 		"--write",
 	)
 	if exitCode != 3 {
@@ -157,13 +157,13 @@ func TestScaffoldPlanWriteOverwriteProtection(t *testing.T) {
 func TestScaffoldPlanWriteForce(t *testing.T) {
 	binary := buildBinary(t)
 	tmpDir := t.TempDir()
-	thoughtsDir := filepath.Join(tmpDir, ".thoughts")
+	rpiDir := filepath.Join(tmpDir, ".rpi")
 
 	// First write
 	_, _, _ = runRPI(t, binary,
 		"scaffold", "plan",
 		"--topic", "Test plan",
-		"--thoughts-dir", thoughtsDir,
+		"--rpi-dir", rpiDir,
 		"--write",
 	)
 
@@ -171,7 +171,7 @@ func TestScaffoldPlanWriteForce(t *testing.T) {
 	_, _, exitCode := runRPI(t, binary,
 		"scaffold", "plan",
 		"--topic", "Test plan",
-		"--thoughts-dir", thoughtsDir,
+		"--rpi-dir", rpiDir,
 		"--write", "--force",
 	)
 	if exitCode != 0 {
@@ -241,13 +241,13 @@ func TestScaffoldCustomTemplatesDir(t *testing.T) {
 func TestScaffoldPlanWithTicket(t *testing.T) {
 	binary := buildBinary(t)
 	tmpDir := t.TempDir()
-	thoughtsDir := filepath.Join(tmpDir, ".thoughts")
+	rpiDir := filepath.Join(tmpDir, ".rpi")
 
 	stdout, _, exitCode := runRPI(t, binary,
 		"scaffold", "plan",
 		"--topic", "Auth refactor",
 		"--ticket", "cli-007",
-		"--thoughts-dir", thoughtsDir,
+		"--rpi-dir", rpiDir,
 		"--write",
 	)
 	if exitCode != 0 {
@@ -262,12 +262,12 @@ func TestScaffoldPlanWithTicket(t *testing.T) {
 func TestScaffoldPlanWithoutTicket(t *testing.T) {
 	binary := buildBinary(t)
 	tmpDir := t.TempDir()
-	thoughtsDir := filepath.Join(tmpDir, ".thoughts")
+	rpiDir := filepath.Join(tmpDir, ".rpi")
 
 	stdout, _, exitCode := runRPI(t, binary,
 		"scaffold", "plan",
 		"--topic", "Auth refactor",
-		"--thoughts-dir", thoughtsDir,
+		"--rpi-dir", rpiDir,
 		"--write",
 	)
 	if exitCode != 0 {
@@ -291,13 +291,13 @@ func TestScaffoldPlanWithSpec(t *testing.T) {
 	stdout, _, exitCode := runRPI(t, binary,
 		"scaffold", "plan",
 		"--topic", "Test plan",
-		"--spec", ".thoughts/specs/test.md",
+		"--spec", ".rpi/specs/test.md",
 	)
 
 	if exitCode != 0 {
 		t.Fatalf("expected exit 0, got %d", exitCode)
 	}
-	if !strings.Contains(stdout, `spec: ".thoughts/specs/test.md"`) {
+	if !strings.Contains(stdout, `spec: ".rpi/specs/test.md"`) {
 		t.Error("stdout should contain spec in frontmatter")
 	}
 }

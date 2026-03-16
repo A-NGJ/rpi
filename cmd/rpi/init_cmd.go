@@ -14,11 +14,11 @@ import (
 )
 
 var (
-	initForce         bool
-	initNoClaudeMD    bool
-	initTrackThoughts bool
-	initTarget        string
-	initUpdate        bool
+	initForce      bool
+	initNoClaudeMD bool
+	initTrackRpi   bool
+	initTarget     string
+	initUpdate     bool
 )
 
 const (
@@ -55,13 +55,13 @@ Targets:
   opencode  Creates .opencode/ with the same structure and an AGENTS.md rules file
 
 Also creates:
-  .thoughts/        Artifact directory hierarchy (research, proposals, plans, etc.)
-  PIPELINE.md       Workflow guide in .thoughts/
+  .rpi/             Artifact directory hierarchy (research, proposals, plans, etc.)
+  PIPELINE.md       Workflow guide in .rpi/
   .rpi/index.json   Codebase symbol index
 
 Use --force to reinitialize an existing project. Use --update to regenerate
 only dynamic artifacts (index, CLI reference). Use --no-claude-md to skip
-rules file generation. Use --track-thoughts to keep .thoughts/ tracked in git.`,
+rules file generation. Use --track-rpi to keep .rpi/ tracked in git.`,
 	Example: `  # Initialize for Claude Code (default)
   rpi init
 
@@ -83,7 +83,7 @@ rules file generation. Use --track-thoughts to keep .thoughts/ tracked in git.`,
 func init() {
 	initCmd.Flags().BoolVar(&initForce, "force", false, "Overwrite existing files and directories")
 	initCmd.Flags().BoolVar(&initNoClaudeMD, "no-claude-md", false, "Skip rules file generation (CLAUDE.md or AGENTS.md)")
-	initCmd.Flags().BoolVar(&initTrackThoughts, "track-thoughts", false, "Do not add .thoughts/ to .gitignore")
+	initCmd.Flags().BoolVar(&initTrackRpi, "track-rpi", false, "Do not add .rpi/ to .gitignore")
 	initCmd.Flags().StringVar(&initTarget, "target", "claude", `AI coding tool to initialize for: "claude" or "opencode"`)
 	initCmd.Flags().BoolVar(&initUpdate, "update", false, "Regenerate dynamic artifacts (index, CLI reference) without full init")
 	rootCmd.AddCommand(initCmd)
@@ -150,18 +150,18 @@ func runInit(cmd *cobra.Command, args []string) error {
 		logSuccess(w, fmt.Sprintf("Created %s/%s/", cfg.toolDir, d))
 	}
 
-	// Create .thoughts/ subdirs
-	thoughtsDir := filepath.Join(targetDir, ".thoughts")
-	thoughtsSubdirs := []string{
+	// Create .rpi/ artifact subdirs
+	rpiDir := filepath.Join(targetDir, ".rpi")
+	rpiSubdirs := []string{
 		"research", "proposals",
 		"plans", "specs", "reviews", "archive", "prs",
 	}
-	for _, d := range thoughtsSubdirs {
-		path := filepath.Join(thoughtsDir, d)
+	for _, d := range rpiSubdirs {
+		path := filepath.Join(rpiDir, d)
 		if err := os.MkdirAll(path, 0755); err != nil {
 			return fmt.Errorf("create %s: %w", path, err)
 		}
-		logSuccess(w, fmt.Sprintf("Created .thoughts/%s/", d))
+		logSuccess(w, fmt.Sprintf("Created .rpi/%s/", d))
 	}
 
 	// Generate rules file (CLAUDE.md or AGENTS.md)
@@ -181,10 +181,10 @@ func runInit(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Generate .thoughts/PIPELINE.md
-	pipelinePath := filepath.Join(thoughtsDir, "PIPELINE.md")
+	// Generate .rpi/PIPELINE.md
+	pipelinePath := filepath.Join(rpiDir, "PIPELINE.md")
 	if _, err := os.Stat(pipelinePath); err == nil && !initForce {
-		logWarning(w, ".thoughts/PIPELINE.md already exists (use --force to overwrite)")
+		logWarning(w, ".rpi/PIPELINE.md already exists (use --force to overwrite)")
 	} else {
 		content, err := templates.Get("PIPELINE.md")
 		if err != nil {
@@ -193,17 +193,12 @@ func runInit(cmd *cobra.Command, args []string) error {
 		if err := os.WriteFile(pipelinePath, []byte(content), 0644); err != nil {
 			return fmt.Errorf("write PIPELINE.md: %w", err)
 		}
-		logSuccess(w, "Created .thoughts/PIPELINE.md")
+		logSuccess(w, "Created .rpi/PIPELINE.md")
 	}
 
 	// Manage .gitignore
 	if err := ensureGitignoreEntry(w, targetDir, cfg.toolDir+"/"); err != nil {
 		logWarning(w, fmt.Sprintf("Failed to update .gitignore: %v", err))
-	}
-	if !initTrackThoughts {
-		if err := ensureGitignoreEntry(w, targetDir, ".thoughts/"); err != nil {
-			logWarning(w, fmt.Sprintf("Failed to update .gitignore: %v", err))
-		}
 	}
 
 	// Install embedded workflow files (agents, commands, skills)
@@ -213,9 +208,11 @@ func runInit(cmd *cobra.Command, args []string) error {
 	}
 	logSuccess(w, fmt.Sprintf("Installed %d workflow files to %s/ (agents, commands, skills)", n, cfg.toolDir))
 
-	// Add .rpi/ to .gitignore
-	if err := ensureGitignoreEntry(w, targetDir, ".rpi/"); err != nil {
-		logWarning(w, fmt.Sprintf("Failed to update .gitignore: %v", err))
+	// Add .rpi/ to .gitignore (unless --track-rpi)
+	if !initTrackRpi {
+		if err := ensureGitignoreEntry(w, targetDir, ".rpi/"); err != nil {
+			logWarning(w, fmt.Sprintf("Failed to update .gitignore: %v", err))
+		}
 	}
 
 	// Build codebase index
@@ -224,7 +221,6 @@ func runInit(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		logWarning(w, fmt.Sprintf("Index build failed: %v", err))
 	} else {
-		rpiDir := filepath.Join(targetDir, ".rpi")
 		if mkErr := os.MkdirAll(rpiDir, 0755); mkErr != nil {
 			logWarning(w, fmt.Sprintf("Create .rpi/ failed: %v", mkErr))
 		} else {

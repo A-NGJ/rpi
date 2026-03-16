@@ -28,7 +28,7 @@ Actions:
 
 Output is JSON by default.`,
 	Example: `  # Check plan progress and file coverage
-  rpi verify completeness .thoughts/plans/2026-03-13-auth.md
+  rpi verify completeness .rpi/plans/2026-03-13-auth.md
   # → {"total_checkboxes": 12, "checked": 8, "unchecked": 4, ...}
 
   # Scan for TODO/FIXME/HACK in changed files

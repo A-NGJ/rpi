@@ -11,7 +11,7 @@ import (
 func resetInitFlags() {
 	initForce = false
 	initNoClaudeMD = false
-	initTrackThoughts = false
+	initTrackRpi = false
 	initTarget = "claude"
 	initUpdate = false
 }
@@ -47,20 +47,20 @@ func TestInitCreatesAllDirs(t *testing.T) {
 		}
 	}
 
-	// Verify .thoughts/ subdirs
-	thoughtsSubdirs := []string{
+	// Verify .rpi/ subdirs
+	rpiSubdirs := []string{
 		"research", "proposals",
 		"plans", "specs", "reviews", "archive", "prs",
 	}
-	for _, d := range thoughtsSubdirs {
-		path := filepath.Join(dir, ".thoughts", d)
+	for _, d := range rpiSubdirs {
+		path := filepath.Join(dir, ".rpi", d)
 		info, err := os.Stat(path)
 		if err != nil {
-			t.Errorf(".thoughts/%s not created: %v", d, err)
+			t.Errorf(".rpi/%s not created: %v", d, err)
 			continue
 		}
 		if !info.IsDir() {
-			t.Errorf(".thoughts/%s is not a directory", d)
+			t.Errorf(".rpi/%s is not a directory", d)
 		}
 	}
 
@@ -68,8 +68,8 @@ func TestInitCreatesAllDirs(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(dir, "CLAUDE.md")); err != nil {
 		t.Error("CLAUDE.md not created")
 	}
-	if _, err := os.Stat(filepath.Join(dir, ".thoughts", "PIPELINE.md")); err != nil {
-		t.Error(".thoughts/PIPELINE.md not created")
+	if _, err := os.Stat(filepath.Join(dir, ".rpi", "PIPELINE.md")); err != nil {
+		t.Error(".rpi/PIPELINE.md not created")
 	}
 
 	// Verify .gitignore entries
@@ -80,16 +80,16 @@ func TestInitCreatesAllDirs(t *testing.T) {
 	if !strings.Contains(string(gitignore), ".claude/") {
 		t.Error(".gitignore missing .claude/ entry")
 	}
-	if !strings.Contains(string(gitignore), ".thoughts/") {
-		t.Error(".gitignore missing .thoughts/ entry")
+	if !strings.Contains(string(gitignore), ".rpi/") {
+		t.Error(".gitignore missing .rpi/ entry")
 	}
 
 	output := buf.String()
 	if !strings.Contains(output, "Created .claude/agents/") {
 		t.Error("output missing .claude/agents/ creation message")
 	}
-	if !strings.Contains(output, "Created .thoughts/research/") {
-		t.Error("output missing .thoughts/research/ creation message")
+	if !strings.Contains(output, "Created .rpi/research/") {
+		t.Error("output missing .rpi/research/ creation message")
 	}
 }
 
@@ -115,9 +115,9 @@ func TestInitIdempotent(t *testing.T) {
 func TestInitPartial(t *testing.T) {
 	dir := t.TempDir()
 
-	// Pre-create some .thoughts/ dirs but not .claude/
-	os.MkdirAll(filepath.Join(dir, ".thoughts", "research"), 0755)
-	os.MkdirAll(filepath.Join(dir, ".thoughts", "plans"), 0755)
+	// Pre-create some .rpi/ dirs but not .claude/
+	os.MkdirAll(filepath.Join(dir, ".rpi", "research"), 0755)
+	os.MkdirAll(filepath.Join(dir, ".rpi", "plans"), 0755)
 
 	_, err := runInitInDir(t, dir)
 	if err != nil {
@@ -126,9 +126,9 @@ func TestInitPartial(t *testing.T) {
 
 	// All dirs should exist
 	for _, d := range []string{"proposals", "specs", "reviews", "archive", "prs"} {
-		path := filepath.Join(dir, ".thoughts", d)
+		path := filepath.Join(dir, ".rpi", d)
 		if _, err := os.Stat(path); err != nil {
-			t.Errorf(".thoughts/%s not created: %v", d, err)
+			t.Errorf(".rpi/%s not created: %v", d, err)
 		}
 	}
 }
@@ -190,16 +190,16 @@ func TestInitNoClaudeMD(t *testing.T) {
 	}
 
 	// PIPELINE.md should still exist
-	if _, err := os.Stat(filepath.Join(dir, ".thoughts", "PIPELINE.md")); err != nil {
-		t.Error(".thoughts/PIPELINE.md should still be created")
+	if _, err := os.Stat(filepath.Join(dir, ".rpi", "PIPELINE.md")); err != nil {
+		t.Error(".rpi/PIPELINE.md should still be created")
 	}
 }
 
-func TestInitTrackThoughts(t *testing.T) {
+func TestInitTrackRpi(t *testing.T) {
 	dir := t.TempDir()
 
 	resetInitFlags()
-	initTrackThoughts = true
+	initTrackRpi = true
 	buf := new(bytes.Buffer)
 	cmd := initCmd
 	cmd.SetOut(buf)
@@ -213,8 +213,8 @@ func TestInitTrackThoughts(t *testing.T) {
 		t.Fatalf("failed to read .gitignore: %v", err)
 	}
 
-	if strings.Contains(string(gitignore), ".thoughts/") {
-		t.Error(".thoughts/ should not be in .gitignore with --track-thoughts")
+	if strings.Contains(string(gitignore), ".rpi/") {
+		t.Error(".rpi/ should not be in .gitignore with --track-rpi")
 	}
 	if !strings.Contains(string(gitignore), ".claude/") {
 		t.Error(".claude/ should still be in .gitignore")
@@ -234,8 +234,8 @@ func TestInitTargetDir(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(target, ".claude", "commands")); err != nil {
 		t.Error(".claude/commands not created in target dir")
 	}
-	if _, err := os.Stat(filepath.Join(target, ".thoughts", "plans")); err != nil {
-		t.Error(".thoughts/plans not created in target dir")
+	if _, err := os.Stat(filepath.Join(target, ".rpi", "plans")); err != nil {
+		t.Error(".rpi/plans not created in target dir")
 	}
 	if _, err := os.Stat(filepath.Join(target, "CLAUDE.md")); err != nil {
 		t.Error("CLAUDE.md not created in target dir")
@@ -274,8 +274,8 @@ func TestInitGitignore(t *testing.T) {
 	if !strings.Contains(content, ".claude/") {
 		t.Error("missing .claude/ entry")
 	}
-	if !strings.Contains(content, ".thoughts/") {
-		t.Error("missing .thoughts/ entry")
+	if !strings.Contains(content, ".rpi/") {
+		t.Error("missing .rpi/ entry")
 	}
 }
 
@@ -308,8 +308,8 @@ func TestInitGitignoreIdempotent(t *testing.T) {
 	if strings.Count(content, ".claude/") != 1 {
 		t.Errorf(".claude/ appears %d times, want 1", strings.Count(content, ".claude/"))
 	}
-	if strings.Count(content, ".thoughts/") != 1 {
-		t.Errorf(".thoughts/ appears %d times, want 1", strings.Count(content, ".thoughts/"))
+	if strings.Count(content, ".rpi/") != 1 {
+		t.Errorf(".rpi/ appears %d times, want 1", strings.Count(content, ".rpi/"))
 	}
 }
 
@@ -331,7 +331,7 @@ func TestInitTemplateContent(t *testing.T) {
 	}
 
 	// Verify PIPELINE.md has template content
-	pipelineData, err := os.ReadFile(filepath.Join(dir, ".thoughts", "PIPELINE.md"))
+	pipelineData, err := os.ReadFile(filepath.Join(dir, ".rpi", "PIPELINE.md"))
 	if err != nil {
 		t.Fatalf("read PIPELINE.md: %v", err)
 	}
