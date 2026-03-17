@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/frontmatter"
@@ -369,6 +370,78 @@ func TestHandleExtractListSections(t *testing.T) {
 	}
 	if len(sections) != 2 {
 		t.Errorf("expected 2 sections, got %d", len(sections))
+	}
+}
+
+// --- Phase 3: Integration test ---
+
+func TestIntegration_AllToolsRegistered(t *testing.T) {
+	ctx := context.Background()
+	server := newRPIServer()
+	client := mcp.NewClient(&mcp.Implementation{Name: "test-client", Version: "v0.0.1"}, nil)
+
+	serverTransport, clientTransport := mcp.NewInMemoryTransports()
+	serverSession, err := server.Connect(ctx, serverTransport, nil)
+	if err != nil {
+		t.Fatalf("server connect: %v", err)
+	}
+	defer serverSession.Close()
+	clientSession, err := client.Connect(ctx, clientTransport, nil)
+	if err != nil {
+		t.Fatalf("client connect: %v", err)
+	}
+	defer clientSession.Close()
+
+	res, err := clientSession.ListTools(ctx, nil)
+	if err != nil {
+		t.Fatalf("ListTools: %v", err)
+	}
+
+	expectedTools := []string{
+		"rpi_git_context",
+		"rpi_git_changed_files",
+		"rpi_git_sensitive_check",
+		"rpi_index_status",
+		"rpi_archive_scan",
+		"rpi_scan",
+		"rpi_scaffold",
+		"rpi_frontmatter_get",
+		"rpi_frontmatter_set",
+		"rpi_frontmatter_transition",
+		"rpi_chain",
+		"rpi_extract",
+		"rpi_extract_list_sections",
+		"rpi_verify_completeness",
+		"rpi_verify_markers",
+		"rpi_index_build",
+		"rpi_index_query",
+		"rpi_index_files",
+		"rpi_archive_check_refs",
+		"rpi_archive_move",
+		"rpi_spec_coverage",
+	}
+
+	if len(res.Tools) != len(expectedTools) {
+		t.Fatalf("expected %d tools, got %d", len(expectedTools), len(res.Tools))
+	}
+
+	got := make(map[string]string) // name -> description
+	for _, tool := range res.Tools {
+		got[tool.Name] = tool.Description
+	}
+
+	for _, name := range expectedTools {
+		desc, ok := got[name]
+		if !ok {
+			t.Errorf("missing tool: %s", name)
+			continue
+		}
+		if desc == "" {
+			t.Errorf("tool %s has empty description", name)
+		}
+		if !strings.HasPrefix(name, "rpi_") {
+			t.Errorf("tool %s missing rpi_ prefix", name)
+		}
 	}
 }
 
