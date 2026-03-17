@@ -3,8 +3,12 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"testing"
 
+	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/frontmatter"
+	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/scanner"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -29,6 +33,8 @@ func extractText(t *testing.T, result *mcp.CallToolResult) string {
 	}
 	return tc.Text
 }
+
+// --- Phase 1: No-param tool tests ---
 
 func TestHandleGitContext_ReturnsJSON(t *testing.T) {
 	result, _, err := handleGitContext(context.Background(), nil, emptyInput{})
@@ -118,5 +124,275 @@ func TestHandleArchiveScan_WithArchivable(t *testing.T) {
 	}
 	if len(results) != 2 {
 		t.Errorf("expected 2 archivable artifacts, got %d", len(results))
+	}
+}
+
+// --- Phase 2: Parameterized tool tests ---
+
+func TestHandleScan_WithTypeFilter(t *testing.T) {
+	dir := setupArchiveTestDir(t)
+	oldFlag := rpiDirFlag
+	rpiDirFlag = dir
+	defer func() { rpiDirFlag = oldFlag }()
+
+	result, _, err := handleScan(context.Background(), nil, scanInput{Type: "plan"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	text := extractText(t, result)
+	var results []scanner.ArtifactInfo
+	if err := json.Unmarshal([]byte(text), &results); err != nil {
+		t.Fatalf("invalid JSON: %v\ntext: %s", err, text)
+	}
+	for _, r := range results {
+		if r.Type != "plan" {
+			t.Errorf("expected type 'plan', got %q", r.Type)
+		}
+	}
+}
+
+func TestHandleFrontmatterGet_AllFields(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "test.md")
+	os.WriteFile(path, []byte("---\nstatus: draft\ntopic: test\n---\n# Test\n"), 0644)
+
+	result, _, err := handleFrontmatterGet(context.Background(), nil, frontmatterGetInput{File: path})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	text := extractText(t, result)
+	var m map[string]any
+	if err := json.Unmarshal([]byte(text), &m); err != nil {
+		t.Fatalf("invalid JSON: %v\ntext: %s", err, text)
+	}
+	if m["status"] != "draft" {
+		t.Errorf("expected status 'draft', got %v", m["status"])
+	}
+	if m["topic"] != "test" {
+		t.Errorf("expected topic 'test', got %v", m["topic"])
+	}
+}
+
+func TestHandleFrontmatterGet_SingleField(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "test.md")
+	os.WriteFile(path, []byte("---\nstatus: active\ntopic: foo\n---\n# Test\n"), 0644)
+
+	result, _, err := handleFrontmatterGet(context.Background(), nil, frontmatterGetInput{File: path, Field: "status"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	text := extractText(t, result)
+	var val string
+	if err := json.Unmarshal([]byte(text), &val); err != nil {
+		t.Fatalf("invalid JSON: %v\ntext: %s", err, text)
+	}
+	if val != "active" {
+		t.Errorf("expected 'active', got %q", val)
+	}
+}
+
+func TestHandleFrontmatterTransition_Invalid(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "test.md")
+	os.WriteFile(path, []byte("---\nstatus: draft\n---\n# Test\n"), 0644)
+
+	_, _, err := handleFrontmatterTransition(context.Background(), nil, frontmatterTransitionInput{
+		File:   path,
+		Status: "complete",
+	})
+	if err == nil {
+		t.Fatal("expected error for invalid transition draft→complete")
+	}
+}
+
+func TestHandleFrontmatterTransition_Valid(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "test.md")
+	os.WriteFile(path, []byte("---\nstatus: draft\n---\n# Test\n"), 0644)
+
+	result, _, err := handleFrontmatterTransition(context.Background(), nil, frontmatterTransitionInput{
+		File:   path,
+		Status: "active",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	text := extractText(t, result)
+	var m map[string]string
+	if err := json.Unmarshal([]byte(text), &m); err != nil {
+		t.Fatalf("invalid JSON: %v", err)
+	}
+	if m["new_status"] != "active" {
+		t.Errorf("expected new_status 'active', got %q", m["new_status"])
+	}
+
+	// Verify file was actually updated
+	doc, _ := frontmatter.Parse(path)
+	if doc.Frontmatter["status"] != "active" {
+		t.Errorf("file not updated: status is %v", doc.Frontmatter["status"])
+	}
+}
+
+// setupTestTemplates creates a minimal template directory for scaffold tests.
+func setupTestTemplates(t *testing.T) func() {
+	t.Helper()
+	dir := t.TempDir()
+	os.WriteFile(filepath.Join(dir, "research.tmpl"), []byte(`---
+date: {{.Date}}
+topic: "{{.Topic}}"
+status: draft
+---
+
+# Research: {{.Topic}}
+
+## Summary
+`), 0644)
+	old := templatesDirFlag
+	templatesDirFlag = dir
+	return func() { templatesDirFlag = old }
+}
+
+func TestHandleScaffold_Preview(t *testing.T) {
+	defer setupTestTemplates(t)()
+
+	result, _, err := handleScaffold(context.Background(), nil, scaffoldInput{
+		Type:  "research",
+		Topic: "test topic",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	text := extractText(t, result)
+	var m map[string]string
+	if err := json.Unmarshal([]byte(text), &m); err != nil {
+		t.Fatalf("invalid JSON: %v\ntext: %s", err, text)
+	}
+	if m["content"] == "" {
+		t.Error("expected non-empty content")
+	}
+	if m["filename"] == "" {
+		t.Error("expected non-empty filename")
+	}
+}
+
+func TestHandleScaffold_Write(t *testing.T) {
+	defer setupTestTemplates(t)()
+
+	dir := t.TempDir()
+	oldRpi := rpiDirFlag
+	rpiDirFlag = dir
+	defer func() { rpiDirFlag = oldRpi }()
+
+	result, _, err := handleScaffold(context.Background(), nil, scaffoldInput{
+		Type:  "research",
+		Topic: "test write",
+		Write: true,
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	text := extractText(t, result)
+	var m map[string]string
+	if err := json.Unmarshal([]byte(text), &m); err != nil {
+		t.Fatalf("invalid JSON: %v\ntext: %s", err, text)
+	}
+	path := m["path"]
+	if path == "" {
+		t.Fatal("expected non-empty path")
+	}
+	if _, err := os.Stat(path); err != nil {
+		t.Errorf("file not created at %s: %v", path, err)
+	}
+}
+
+func TestHandleScaffold_InvalidType(t *testing.T) {
+	_, _, err := handleScaffold(context.Background(), nil, scaffoldInput{
+		Type:  "invalid",
+		Topic: "test",
+	})
+	if err == nil {
+		t.Fatal("expected error for invalid type")
+	}
+}
+
+func TestHandleExtract_Section(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "test.md")
+	os.WriteFile(path, []byte("---\nstatus: draft\n---\n# Doc\n\n## Summary\nThis is the summary.\n\n## Details\nMore info.\n"), 0644)
+
+	result, _, err := handleExtract(context.Background(), nil, extractInput{Path: path, Section: "Summary"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	text := extractText(t, result)
+	var m map[string]string
+	if err := json.Unmarshal([]byte(text), &m); err != nil {
+		t.Fatalf("invalid JSON: %v\ntext: %s", err, text)
+	}
+	if m["content"] == "" {
+		t.Error("expected non-empty content")
+	}
+	if m["section"] != "Summary" {
+		t.Errorf("expected section 'Summary', got %q", m["section"])
+	}
+}
+
+func TestHandleExtract_NotFound(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "test.md")
+	os.WriteFile(path, []byte("---\nstatus: draft\n---\n# Doc\n\n## Summary\nContent.\n"), 0644)
+
+	_, _, err := handleExtract(context.Background(), nil, extractInput{Path: path, Section: "Nonexistent"})
+	if err == nil {
+		t.Fatal("expected error for missing section")
+	}
+}
+
+func TestHandleExtractListSections(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "test.md")
+	os.WriteFile(path, []byte("---\nstatus: draft\n---\n# Doc\n\n## Summary\nContent.\n\n## Details\nMore.\n"), 0644)
+
+	result, _, err := handleExtractListSections(context.Background(), nil, extractListSectionsInput{Path: path})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	text := extractText(t, result)
+	var m map[string]any
+	if err := json.Unmarshal([]byte(text), &m); err != nil {
+		t.Fatalf("invalid JSON: %v\ntext: %s", err, text)
+	}
+	sections, ok := m["sections"].([]any)
+	if !ok {
+		t.Fatal("expected sections array")
+	}
+	if len(sections) != 2 {
+		t.Errorf("expected 2 sections, got %d", len(sections))
+	}
+}
+
+func TestHandleVerifyCompleteness(t *testing.T) {
+	dir := t.TempDir()
+	plan := filepath.Join(dir, "plan.md")
+	os.WriteFile(plan, []byte("## Phase 1\n- [x] Do A\n- [ ] Do B\n- [x] Do C\n- [ ] Do D\n"), 0644)
+
+	result, _, err := handleVerifyCompleteness(context.Background(), nil, verifyCompletenessInput{PlanPath: plan})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	text := extractText(t, result)
+	var m map[string]any
+	if err := json.Unmarshal([]byte(text), &m); err != nil {
+		t.Fatalf("invalid JSON: %v\ntext: %s", err, text)
+	}
+	if m["total_checkboxes"] != float64(4) {
+		t.Errorf("expected 4 total, got %v", m["total_checkboxes"])
+	}
+	if m["checked"] != float64(2) {
+		t.Errorf("expected 2 checked, got %v", m["checked"])
+	}
+	if m["unchecked"] != float64(2) {
+		t.Errorf("expected 2 unchecked, got %v", m["unchecked"])
 	}
 }
