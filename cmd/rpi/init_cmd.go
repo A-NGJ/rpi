@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -19,6 +21,7 @@ var (
 	initTrackRpi   bool
 	initTarget     string
 	initUpdate     bool
+	initNoMCP      bool
 )
 
 const (
@@ -86,6 +89,7 @@ func init() {
 	initCmd.Flags().BoolVar(&initTrackRpi, "track-rpi", false, "Do not add .rpi/ to .gitignore")
 	initCmd.Flags().StringVar(&initTarget, "target", "claude", `AI coding tool to initialize for: "claude" or "opencode"`)
 	initCmd.Flags().BoolVar(&initUpdate, "update", false, "Regenerate dynamic artifacts (index, CLI reference) without full init")
+	initCmd.Flags().BoolVar(&initNoMCP, "no-mcp", false, "Skip MCP server configuration")
 	rootCmd.AddCommand(initCmd)
 }
 
@@ -208,6 +212,11 @@ func runInit(cmd *cobra.Command, args []string) error {
 	}
 	logSuccess(w, fmt.Sprintf("Installed %d workflow files to %s/ (agents, commands, skills)", n, cfg.toolDir))
 
+	// Configure MCP server (Claude only)
+	if !initNoMCP && cfg.target == workflow.TargetClaude {
+		configureMCP(w, targetDir)
+	}
+
 	// Add .rpi/ to .gitignore (unless --track-rpi)
 	if !initTrackRpi {
 		if err := ensureGitignoreEntry(w, targetDir, ".rpi/"); err != nil {
@@ -300,6 +309,55 @@ func ensureGitignoreEntry(w io.Writer, targetDir, entry string) error {
 	}
 	logSuccess(w, fmt.Sprintf("Added %s to .gitignore", entry))
 	return nil
+}
+
+func configureMCP(w io.Writer, targetDir string) {
+	if _, err := exec.LookPath("rpi"); err != nil {
+		logWarning(w, "rpi not found in PATH — skipping MCP server configuration")
+		return
+	}
+
+	settingsDir := filepath.Join(targetDir, ".claude")
+	settingsPath := filepath.Join(settingsDir, "settings.local.json")
+
+	var settings map[string]interface{}
+	if data, err := os.ReadFile(settingsPath); err == nil {
+		if err := json.Unmarshal(data, &settings); err != nil {
+			logWarning(w, fmt.Sprintf("Failed to parse %s: %v — skipping MCP configuration", settingsPath, err))
+			return
+		}
+	} else {
+		settings = make(map[string]interface{})
+	}
+
+	if mcpServers, ok := settings["mcpServers"].(map[string]interface{}); ok {
+		if _, exists := mcpServers["rpi"]; exists {
+			logWarning(w, "MCP server 'rpi' already configured in settings.local.json")
+			return
+		}
+	}
+
+	mcpServers, ok := settings["mcpServers"].(map[string]interface{})
+	if !ok {
+		mcpServers = make(map[string]interface{})
+	}
+	mcpServers["rpi"] = map[string]interface{}{
+		"command": "rpi",
+		"args":    []interface{}{"serve"},
+	}
+	settings["mcpServers"] = mcpServers
+
+	data, err := json.MarshalIndent(settings, "", "  ")
+	if err != nil {
+		logWarning(w, fmt.Sprintf("Failed to marshal settings: %v", err))
+		return
+	}
+	os.MkdirAll(settingsDir, 0755)
+	if err := os.WriteFile(settingsPath, append(data, '\n'), 0644); err != nil {
+		logWarning(w, fmt.Sprintf("Failed to write %s: %v", settingsPath, err))
+		return
+	}
+	logSuccess(w, "Configured MCP server in .claude/settings.local.json")
 }
 
 // copyDirectory copies all files and subdirectories from src to dest.

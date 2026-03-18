@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,6 +15,7 @@ func resetInitFlags() {
 	initTrackRpi = false
 	initTarget = "claude"
 	initUpdate = false
+	initNoMCP = false
 }
 
 func runInitInDir(t *testing.T, dir string) (*bytes.Buffer, error) {
@@ -693,5 +695,182 @@ func TestInitUpdateRequiresExistingProject(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "not initialized") {
 		t.Errorf("expected 'not initialized' error, got: %v", err)
+	}
+}
+
+// MC-12: --no-mcp flag exists
+func TestInitNoMCPFlag(t *testing.T) {
+	flag := initCmd.Flags().Lookup("no-mcp")
+	if flag == nil {
+		t.Fatal("--no-mcp flag not registered")
+	}
+	if flag.DefValue != "false" {
+		t.Errorf("--no-mcp default = %q, want %q", flag.DefValue, "false")
+	}
+}
+
+// MC-1, MC-6: Init writes MCP config with correct shape
+func TestInitWritesMCPConfig(t *testing.T) {
+	dir := t.TempDir()
+	_, err := runInitInDir(t, dir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	settingsPath := filepath.Join(dir, ".claude", "settings.local.json")
+	data, err := os.ReadFile(settingsPath)
+	if err != nil {
+		t.Fatalf("settings.local.json not created: %v", err)
+	}
+
+	var settings map[string]interface{}
+	if err := json.Unmarshal(data, &settings); err != nil {
+		t.Fatalf("invalid JSON: %v", err)
+	}
+
+	mcpServers, ok := settings["mcpServers"].(map[string]interface{})
+	if !ok {
+		t.Fatal("mcpServers key missing or wrong type")
+	}
+	rpi, ok := mcpServers["rpi"].(map[string]interface{})
+	if !ok {
+		t.Fatal("mcpServers.rpi key missing or wrong type")
+	}
+	if rpi["command"] != "rpi" {
+		t.Errorf("command = %v, want %q", rpi["command"], "rpi")
+	}
+	args, ok := rpi["args"].([]interface{})
+	if !ok || len(args) != 1 || args[0] != "serve" {
+		t.Errorf("args = %v, want [\"serve\"]", rpi["args"])
+	}
+}
+
+// MC-3: Init merges with existing settings
+func TestInitMergesMCPConfig(t *testing.T) {
+	dir := t.TempDir()
+
+	// Pre-create settings.local.json with existing content
+	settingsDir := filepath.Join(dir, ".claude")
+	os.MkdirAll(settingsDir, 0755)
+	existing := []byte(`{"permissions": {"allow": ["bash"]}}`)
+	os.WriteFile(filepath.Join(settingsDir, "settings.local.json"), existing, 0644)
+
+	resetInitFlags()
+	initForce = true
+	buf := new(bytes.Buffer)
+	cmd := initCmd
+	cmd.SetOut(buf)
+	err := cmd.RunE(cmd, []string{dir})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(settingsDir, "settings.local.json"))
+	if err != nil {
+		t.Fatalf("read settings: %v", err)
+	}
+
+	var settings map[string]interface{}
+	if err := json.Unmarshal(data, &settings); err != nil {
+		t.Fatalf("invalid JSON: %v", err)
+	}
+
+	// Existing key preserved
+	if _, ok := settings["permissions"]; !ok {
+		t.Error("existing 'permissions' key was lost during merge")
+	}
+	// MCP config added
+	if _, ok := settings["mcpServers"]; !ok {
+		t.Error("mcpServers key not added")
+	}
+}
+
+// MC-4: Init warns on existing rpi MCP entry
+func TestInitWarnsExistingMCPEntry(t *testing.T) {
+	dir := t.TempDir()
+
+	// Pre-create settings.local.json with custom rpi entry
+	settingsDir := filepath.Join(dir, ".claude")
+	os.MkdirAll(settingsDir, 0755)
+	existing := []byte(`{"mcpServers": {"rpi": {"command": "/custom/rpi", "args": ["serve"]}}}`)
+	os.WriteFile(filepath.Join(settingsDir, "settings.local.json"), existing, 0644)
+
+	resetInitFlags()
+	initForce = true
+	buf := new(bytes.Buffer)
+	cmd := initCmd
+	cmd.SetOut(buf)
+	err := cmd.RunE(cmd, []string{dir})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Warning should be printed
+	output := buf.String()
+	if !strings.Contains(output, "already configured") {
+		t.Error("expected warning about existing MCP entry")
+	}
+
+	// Existing entry should be preserved (not overwritten)
+	data, _ := os.ReadFile(filepath.Join(settingsDir, "settings.local.json"))
+	var settings map[string]interface{}
+	json.Unmarshal(data, &settings)
+	mcpServers := settings["mcpServers"].(map[string]interface{})
+	rpi := mcpServers["rpi"].(map[string]interface{})
+	if rpi["command"] != "/custom/rpi" {
+		t.Errorf("existing entry was overwritten: command = %v", rpi["command"])
+	}
+}
+
+// MC-5: Init skips MCP with --no-mcp
+func TestInitSkipsMCPWithFlag(t *testing.T) {
+	dir := t.TempDir()
+
+	resetInitFlags()
+	initNoMCP = true
+	buf := new(bytes.Buffer)
+	cmd := initCmd
+	cmd.SetOut(buf)
+	err := cmd.RunE(cmd, []string{dir})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	settingsPath := filepath.Join(dir, ".claude", "settings.local.json")
+	if _, err := os.Stat(settingsPath); err == nil {
+		t.Error("settings.local.json should not be created with --no-mcp")
+	}
+}
+
+// MC-6: Exact config shape
+func TestInitMCPConfigShape(t *testing.T) {
+	dir := t.TempDir()
+	_, err := runInitInDir(t, dir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	data, _ := os.ReadFile(filepath.Join(dir, ".claude", "settings.local.json"))
+	var settings map[string]interface{}
+	json.Unmarshal(data, &settings)
+
+	// Re-marshal just the mcpServers part and compare shape
+	mcpBytes, _ := json.Marshal(settings["mcpServers"])
+	var mcpServers map[string]map[string]interface{}
+	json.Unmarshal(mcpBytes, &mcpServers)
+
+	if len(mcpServers) != 1 {
+		t.Errorf("expected 1 MCP server, got %d", len(mcpServers))
+	}
+	rpi, ok := mcpServers["rpi"]
+	if !ok {
+		t.Fatal("missing 'rpi' server entry")
+	}
+	if rpi["command"] != "rpi" {
+		t.Errorf("command = %v, want 'rpi'", rpi["command"])
+	}
+	args, ok := rpi["args"].([]interface{})
+	if !ok || len(args) != 1 || args[0] != "serve" {
+		t.Errorf("args = %v, want [\"serve\"]", rpi["args"])
 	}
 }
