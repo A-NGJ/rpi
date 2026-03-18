@@ -93,13 +93,14 @@ Present the plan summary and ask if anything needs adjusting. Keep iterating unt
 
 ## Guidelines
 
-1. **Be interactive** — get buy-in on phases before writing the full plan
-2. **Be practical** — incremental, testable changes that keep the codebase working
-3. **Separate verification** — always split success criteria into automated and manual
-4. **Right-size the plan** — simple tasks get simple plans (1 phase, minimal ceremony); complex tasks get detailed phasing
-5. **Commit after each phase** — stage only that phase's files
-6. **Tests belong to their phase** — write tests alongside the code they cover, not in a separate section
-7. **Trust prior stages** (pipeline mode) — don't redo research or proposal work; reference those docs
-8. **Spot-check reality** (pipeline mode) — verify the codebase matches the proposal before planning
+1. **Do NOT use `EnterPlanMode`** — this command has its own structured flow; plan mode restricts tools and causes steps to be skipped
+2. **Be interactive** — get buy-in on phases before writing the full plan
+3. **Be practical** — incremental, testable changes that keep the codebase working
+4. **Separate verification** — always split success criteria into automated and manual
+5. **Right-size the plan** — simple tasks get simple plans (1 phase, minimal ceremony); complex tasks get detailed phasing
+6. **Commit after each phase** — stage only that phase's files
+7. **Tests belong to their phase** — write tests alongside the code they cover, not in a separate section
+8. **Trust prior stages** (pipeline mode) — don't redo research or proposal work; reference those docs
+9. **Spot-check reality** (pipeline mode) — verify the codebase matches the proposal before planning
 
 If the user confirms the plan looks good, proceed to `/rpi-implement` with the plan path.

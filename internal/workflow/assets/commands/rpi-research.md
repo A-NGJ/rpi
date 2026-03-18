@@ -96,6 +96,7 @@ When insights crystallize into something actionable, suggest continuing with `/r
 
 ## Guidelines
 
+- **Do NOT use `EnterPlanMode`** — this command has its own structured flow; plan mode restricts tools and causes steps to be skipped
 - **Interview proportionally** — a clear question needs no interview; a vague idea needs more discovery
 - **Don't over-interview** — stop when you have enough to investigate; you can always ask more later
 - **Scale to the question** — a simple question doesn't need broad parallel research

@@ -124,10 +124,11 @@ When the user provides a path to an existing proposal that needs updating:
 
 ## Guidelines
 
-1. **Be opinionated** — present recommendations with clear reasoning grounded in evidence
-2. **Be interactive** — get buy-in at each checkpoint; a proposal that surprises the user during review means the process failed
-3. **Be evidence-based** — ground decisions in codebase patterns, constraints, and concrete trade-offs with file:line refs
-4. **Be focused** — design at the right level of abstraction: architecture and key interfaces, not implementation details
-5. **Resolve open questions** — don't finalize with unresolved questions
-6. **Respect existing patterns** — prefer solutions that align with how the codebase already works
-7. **Specs are the contract** — every proposal culminates in a spec presented for approval. The spec captures *what*, the proposal captures *why*
+1. **Do NOT use `EnterPlanMode`** — this command has its own structured flow; plan mode restricts tools and causes steps to be skipped
+2. **Be opinionated** — present recommendations with clear reasoning grounded in evidence
+3. **Be interactive** — get buy-in at each checkpoint; a proposal that surprises the user during review means the process failed
+4. **Be evidence-based** — ground decisions in codebase patterns, constraints, and concrete trade-offs with file:line refs
+5. **Be focused** — design at the right level of abstraction: architecture and key interfaces, not implementation details
+6. **Resolve open questions** — don't finalize with unresolved questions
+7. **Respect existing patterns** — prefer solutions that align with how the codebase already works
+8. **Specs are the contract** — every proposal culminates in a spec presented for approval. The spec captures *what*, the proposal captures *why*

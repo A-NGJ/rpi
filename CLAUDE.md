@@ -69,6 +69,10 @@ After implementing changes, always run the full test suite before committing. If
 
 When the user says 'looks good' or similar short affirmations during planning, proceed immediately with implementation. Do not elaborate further on the plan or ask for additional confirmation.
 
+## Plan Mode
+
+Do NOT use `EnterPlanMode` during any `/rpi-*` command. The RPI workflow has its own structured phases with checkpoints and approval gates. Entering plan mode mid-flow restricts tool access, causes steps to be skipped, and can make Claude rush into planning the entire project — bypassing the research and proposal phases entirely. Follow the RPI command's steps as written instead.
+
 ## Debugging
 
 When the user reports a bug with a concrete example, reproduce the exact example first before proposing a fix. Do not assume you understand the issue until you've verified with the user's specific data.
