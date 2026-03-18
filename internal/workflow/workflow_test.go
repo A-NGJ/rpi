@@ -106,11 +106,11 @@ func TestInstallTo_OpenCode(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read rpi-research.md: %v", err)
 	}
-	if !strings.Contains(string(cmdData), "model: anthropic/claude-opus-4-6") {
+	if !strings.Contains(string(cmdData), "model: anthropic/claude-sonnet-4-6") {
 		t.Error("command model should be transformed to full ID")
 	}
-	if strings.Contains(string(cmdData), "model: opus") {
-		t.Error("original model: opus should be replaced")
+	if strings.Contains(string(cmdData), "model: sonnet") {
+		t.Error("original model: sonnet should be replaced")
 	}
 
 	// Verify command body is tool-agnostic (no Sub-task syntax)
@@ -157,8 +157,8 @@ func TestInstallTo_Claude_Unchanged(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read rpi-research.md: %v", err)
 	}
-	if !strings.Contains(string(cmdData), "model: opus") {
-		t.Error("Claude target should preserve original model: opus")
+	if !strings.Contains(string(cmdData), "model: sonnet") {
+		t.Error("Claude target should preserve original model: sonnet")
 	}
 
 	// Verify agent keeps original format
@@ -187,7 +187,7 @@ func TestInstall_BackwardCompatible(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read rpi-research.md: %v", err)
 	}
-	if !strings.Contains(string(cmdData), "model: opus") {
+	if !strings.Contains(string(cmdData), "model: sonnet") {
 		t.Error("Install() should preserve Claude Code format")
 	}
 }

@@ -1,5 +1,6 @@
 ---
 name: locate-thoughts
+model: haiku
 description: Search the .rpi/ directory to discover relevant documents (tickets, research, plans, PRs, notes). Returns organized file listings grouped by type. Use when you need to find historical context or documentation.
 ---
 

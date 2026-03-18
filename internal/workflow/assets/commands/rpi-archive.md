@@ -1,6 +1,6 @@
 ---
 description: Archive completed artifacts to keep .rpi/ directory clean
-model: sonnet
+model: haiku
 ---
 
 # Archive Artifacts

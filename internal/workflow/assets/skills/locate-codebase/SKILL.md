@@ -1,5 +1,6 @@
 ---
 name: locate-codebase
+model: haiku
 description: Find files, directories, and components relevant to a feature or task. Returns organized file listings grouped by purpose (implementation, tests, config, types, docs). Use when you need to discover where code lives in the codebase.
 ---
 

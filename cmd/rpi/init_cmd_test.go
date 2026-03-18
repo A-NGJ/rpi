@@ -2,7 +2,7 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -546,7 +546,7 @@ func TestInitOpenCode(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read rpi-research.md: %v", err)
 	}
-	if !strings.Contains(string(cmdData), "model: anthropic/claude-opus-4-6") {
+	if !strings.Contains(string(cmdData), "model: anthropic/claude-sonnet-4-6") {
 		t.Error("command model should be transformed to full provider ID")
 	}
 
@@ -712,76 +712,71 @@ func TestInitNoMCPFlag(t *testing.T) {
 // spec:MC-1 spec:MC-6
 func TestInitWritesMCPConfig(t *testing.T) {
 	dir := t.TempDir()
+
+	var calls [][]string
+	orig := mcpCommandRunner
+	mcpCommandRunner = func(name string, args ...string) ([]byte, error) {
+		calls = append(calls, append([]string{name}, args...))
+		// First call: "claude mcp get rpi" → not found
+		if len(calls) == 1 {
+			return []byte("No MCP server found"), fmt.Errorf("exit 1")
+		}
+		// Second call: "claude mcp add rpi -- rpi serve" → success
+		return []byte("Added"), nil
+	}
+	t.Cleanup(func() { mcpCommandRunner = orig })
+
+	buf, err := runInitInDir(t, dir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(calls) != 2 {
+		t.Fatalf("expected 2 claude mcp calls, got %d: %v", len(calls), calls)
+	}
+	// Verify the add command shape
+	addCall := calls[1]
+	expected := []string{"claude", "mcp", "add", "rpi", "--", "rpi", "serve"}
+	if len(addCall) != len(expected) {
+		t.Fatalf("add call = %v, want %v", addCall, expected)
+	}
+	for i, v := range expected {
+		if addCall[i] != v {
+			t.Errorf("add call[%d] = %q, want %q", i, addCall[i], v)
+		}
+	}
+
+	output := buf.String()
+	if !strings.Contains(output, "Configured MCP server via claude mcp add") {
+		t.Errorf("expected success message, got: %s", output)
+	}
+}
+
+// spec:MC-3
+func TestInitCallsClaudeMCPAdd(t *testing.T) {
+	dir := t.TempDir()
+
+	var addCalled bool
+	orig := mcpCommandRunner
+	mcpCommandRunner = func(name string, args ...string) ([]byte, error) {
+		if len(args) >= 2 && args[0] == "mcp" && args[1] == "get" {
+			return nil, fmt.Errorf("not found")
+		}
+		if len(args) >= 2 && args[0] == "mcp" && args[1] == "add" {
+			addCalled = true
+			return []byte("Added"), nil
+		}
+		return nil, fmt.Errorf("unexpected call")
+	}
+	t.Cleanup(func() { mcpCommandRunner = orig })
+
 	_, err := runInitInDir(t, dir)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	settingsPath := filepath.Join(dir, ".claude", "settings.local.json")
-	data, err := os.ReadFile(settingsPath)
-	if err != nil {
-		t.Fatalf("settings.local.json not created: %v", err)
-	}
-
-	var settings map[string]interface{}
-	if err := json.Unmarshal(data, &settings); err != nil {
-		t.Fatalf("invalid JSON: %v", err)
-	}
-
-	mcpServers, ok := settings["mcpServers"].(map[string]interface{})
-	if !ok {
-		t.Fatal("mcpServers key missing or wrong type")
-	}
-	rpi, ok := mcpServers["rpi"].(map[string]interface{})
-	if !ok {
-		t.Fatal("mcpServers.rpi key missing or wrong type")
-	}
-	if rpi["command"] != "rpi" {
-		t.Errorf("command = %v, want %q", rpi["command"], "rpi")
-	}
-	args, ok := rpi["args"].([]interface{})
-	if !ok || len(args) != 1 || args[0] != "serve" {
-		t.Errorf("args = %v, want [\"serve\"]", rpi["args"])
-	}
-}
-
-// spec:MC-3
-func TestInitMergesMCPConfig(t *testing.T) {
-	dir := t.TempDir()
-
-	// Pre-create settings.local.json with existing content
-	settingsDir := filepath.Join(dir, ".claude")
-	os.MkdirAll(settingsDir, 0755)
-	existing := []byte(`{"permissions": {"allow": ["bash"]}}`)
-	os.WriteFile(filepath.Join(settingsDir, "settings.local.json"), existing, 0644)
-
-	resetInitFlags()
-	initForce = true
-	buf := new(bytes.Buffer)
-	cmd := initCmd
-	cmd.SetOut(buf)
-	err := cmd.RunE(cmd, []string{dir})
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	data, err := os.ReadFile(filepath.Join(settingsDir, "settings.local.json"))
-	if err != nil {
-		t.Fatalf("read settings: %v", err)
-	}
-
-	var settings map[string]interface{}
-	if err := json.Unmarshal(data, &settings); err != nil {
-		t.Fatalf("invalid JSON: %v", err)
-	}
-
-	// Existing key preserved
-	if _, ok := settings["permissions"]; !ok {
-		t.Error("existing 'permissions' key was lost during merge")
-	}
-	// MCP config added
-	if _, ok := settings["mcpServers"]; !ok {
-		t.Error("mcpServers key not added")
+	if !addCalled {
+		t.Error("claude mcp add was not called")
 	}
 }
 
@@ -789,42 +784,46 @@ func TestInitMergesMCPConfig(t *testing.T) {
 func TestInitWarnsExistingMCPEntry(t *testing.T) {
 	dir := t.TempDir()
 
-	// Pre-create settings.local.json with custom rpi entry
-	settingsDir := filepath.Join(dir, ".claude")
-	os.MkdirAll(settingsDir, 0755)
-	existing := []byte(`{"mcpServers": {"rpi": {"command": "/custom/rpi", "args": ["serve"]}}}`)
-	os.WriteFile(filepath.Join(settingsDir, "settings.local.json"), existing, 0644)
+	var addCalled bool
+	orig := mcpCommandRunner
+	mcpCommandRunner = func(name string, args ...string) ([]byte, error) {
+		if len(args) >= 2 && args[0] == "mcp" && args[1] == "get" {
+			// Server already exists
+			return []byte("rpi: connected"), nil
+		}
+		if len(args) >= 2 && args[0] == "mcp" && args[1] == "add" {
+			addCalled = true
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unexpected call")
+	}
+	t.Cleanup(func() { mcpCommandRunner = orig })
 
-	resetInitFlags()
-	initForce = true
-	buf := new(bytes.Buffer)
-	cmd := initCmd
-	cmd.SetOut(buf)
-	err := cmd.RunE(cmd, []string{dir})
+	buf, err := runInitInDir(t, dir)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	// Warning should be printed
 	output := buf.String()
 	if !strings.Contains(output, "already configured") {
 		t.Error("expected warning about existing MCP entry")
 	}
-
-	// Existing entry should be preserved (not overwritten)
-	data, _ := os.ReadFile(filepath.Join(settingsDir, "settings.local.json"))
-	var settings map[string]interface{}
-	json.Unmarshal(data, &settings)
-	mcpServers := settings["mcpServers"].(map[string]interface{})
-	rpi := mcpServers["rpi"].(map[string]interface{})
-	if rpi["command"] != "/custom/rpi" {
-		t.Errorf("existing entry was overwritten: command = %v", rpi["command"])
+	if addCalled {
+		t.Error("claude mcp add should not be called when server already exists")
 	}
 }
 
 // spec:MC-5
 func TestInitSkipsMCPWithFlag(t *testing.T) {
 	dir := t.TempDir()
+
+	var called bool
+	orig := mcpCommandRunner
+	mcpCommandRunner = func(name string, args ...string) ([]byte, error) {
+		called = true
+		return nil, nil
+	}
+	t.Cleanup(func() { mcpCommandRunner = orig })
 
 	resetInitFlags()
 	initNoMCP = true
@@ -836,41 +835,42 @@ func TestInitSkipsMCPWithFlag(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	settingsPath := filepath.Join(dir, ".claude", "settings.local.json")
-	if _, err := os.Stat(settingsPath); err == nil {
-		t.Error("settings.local.json should not be created with --no-mcp")
+	if called {
+		t.Error("claude mcp should not be called with --no-mcp")
 	}
 }
 
 // spec:MC-6
-func TestInitMCPConfigShape(t *testing.T) {
+func TestInitMCPAddCommandShape(t *testing.T) {
 	dir := t.TempDir()
+
+	var addArgs []string
+	orig := mcpCommandRunner
+	mcpCommandRunner = func(name string, args ...string) ([]byte, error) {
+		if len(args) >= 2 && args[0] == "mcp" && args[1] == "get" {
+			return nil, fmt.Errorf("not found")
+		}
+		if len(args) >= 2 && args[0] == "mcp" && args[1] == "add" {
+			addArgs = append([]string{name}, args...)
+			return []byte("Added"), nil
+		}
+		return nil, fmt.Errorf("unexpected call")
+	}
+	t.Cleanup(func() { mcpCommandRunner = orig })
+
 	_, err := runInitInDir(t, dir)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	data, _ := os.ReadFile(filepath.Join(dir, ".claude", "settings.local.json"))
-	var settings map[string]interface{}
-	json.Unmarshal(data, &settings)
-
-	// Re-marshal just the mcpServers part and compare shape
-	mcpBytes, _ := json.Marshal(settings["mcpServers"])
-	var mcpServers map[string]map[string]interface{}
-	json.Unmarshal(mcpBytes, &mcpServers)
-
-	if len(mcpServers) != 1 {
-		t.Errorf("expected 1 MCP server, got %d", len(mcpServers))
+	// Verify exact command: claude mcp add rpi -- rpi serve
+	expected := []string{"claude", "mcp", "add", "rpi", "--", "rpi", "serve"}
+	if len(addArgs) != len(expected) {
+		t.Fatalf("add args = %v, want %v", addArgs, expected)
 	}
-	rpi, ok := mcpServers["rpi"]
-	if !ok {
-		t.Fatal("missing 'rpi' server entry")
-	}
-	if rpi["command"] != "rpi" {
-		t.Errorf("command = %v, want 'rpi'", rpi["command"])
-	}
-	args, ok := rpi["args"].([]interface{})
-	if !ok || len(args) != 1 || args[0] != "serve" {
-		t.Errorf("args = %v, want [\"serve\"]", rpi["args"])
+	for i, v := range expected {
+		if addArgs[i] != v {
+			t.Errorf("add args[%d] = %q, want %q", i, addArgs[i], v)
+		}
 	}
 }

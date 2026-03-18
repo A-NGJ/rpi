@@ -1,6 +1,6 @@
 ---
 description: Research the codebase to understand problems before proposing solutions
-model: opus
+model: sonnet
 ---
 
 # Research Codebase

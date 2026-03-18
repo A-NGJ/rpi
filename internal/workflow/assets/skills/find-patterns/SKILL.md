@@ -1,5 +1,6 @@
 ---
 name: find-patterns
+model: sonnet
 description: Find similar implementations, usage examples, or existing code patterns that can be modeled after. Returns concrete code snippets with file:line references. Use when you need to understand how something is currently done in the codebase before implementing something new, and especially when you want to follow established conventions. Use this skill proactively whenever a task involves adding something similar to what already exists — new endpoints, new sync classes, new test files, new factories, etc.
 ---
 

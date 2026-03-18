@@ -1,6 +1,6 @@
 ---
 description: Create git commits with user approval and no Claude attribution
-model: sonnet
+model: haiku
 ---
 
 # Commit Changes

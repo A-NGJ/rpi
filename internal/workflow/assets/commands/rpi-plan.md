@@ -1,6 +1,6 @@
 ---
 description: Create implementation plans — works standalone for simple tasks or with prior proposals for complex ones
-model: opus
+model: sonnet
 ---
 
 # Implementation Plan
