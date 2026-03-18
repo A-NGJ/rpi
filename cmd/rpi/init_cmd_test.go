@@ -698,7 +698,7 @@ func TestInitUpdateRequiresExistingProject(t *testing.T) {
 	}
 }
 
-// MC-12: --no-mcp flag exists
+// spec:MC-12
 func TestInitNoMCPFlag(t *testing.T) {
 	flag := initCmd.Flags().Lookup("no-mcp")
 	if flag == nil {
@@ -709,7 +709,7 @@ func TestInitNoMCPFlag(t *testing.T) {
 	}
 }
 
-// MC-1, MC-6: Init writes MCP config with correct shape
+// spec:MC-1 spec:MC-6
 func TestInitWritesMCPConfig(t *testing.T) {
 	dir := t.TempDir()
 	_, err := runInitInDir(t, dir)
@@ -745,7 +745,7 @@ func TestInitWritesMCPConfig(t *testing.T) {
 	}
 }
 
-// MC-3: Init merges with existing settings
+// spec:MC-3
 func TestInitMergesMCPConfig(t *testing.T) {
 	dir := t.TempDir()
 
@@ -785,7 +785,7 @@ func TestInitMergesMCPConfig(t *testing.T) {
 	}
 }
 
-// MC-4: Init warns on existing rpi MCP entry
+// spec:MC-4
 func TestInitWarnsExistingMCPEntry(t *testing.T) {
 	dir := t.TempDir()
 
@@ -822,7 +822,7 @@ func TestInitWarnsExistingMCPEntry(t *testing.T) {
 	}
 }
 
-// MC-5: Init skips MCP with --no-mcp
+// spec:MC-5
 func TestInitSkipsMCPWithFlag(t *testing.T) {
 	dir := t.TempDir()
 
@@ -842,7 +842,7 @@ func TestInitSkipsMCPWithFlag(t *testing.T) {
 	}
 }
 
-// MC-6: Exact config shape
+// spec:MC-6
 func TestInitMCPConfigShape(t *testing.T) {
 	dir := t.TempDir()
 	_, err := runInitInDir(t, dir)
