@@ -17,10 +17,7 @@ If no arguments were provided, ask what they'd like to research — this works f
 
 ## Step 2: Discovery interview
 
-Assess whether an interview is needed based on specificity:
-
-- **Specific/focused** (e.g., "how does the webhook handler work?", "what does function X do?"): Skip the interview — go directly to Step 4.
-- **Vague/open-ended** (e.g., "I want to improve error handling", "something feels off about the API", "we need better testing"): Conduct the interview below.
+Always conduct a brief interview to understand the user's needs before investigating. Even for seemingly specific questions, the interview surfaces context that improves research quality — what prompted the question, what they already know, what outcome they're looking for.
 
 ### Interview approach
 
@@ -97,7 +94,7 @@ When insights crystallize into something actionable, suggest continuing with `/r
 ## Guidelines
 
 - **Do NOT use `EnterPlanMode`** — this command has its own structured flow; plan mode restricts tools and causes steps to be skipped
-- **Interview proportionally** — a clear question needs no interview; a vague idea needs more discovery
+- **Always interview** — even focused questions benefit from understanding motivation and context before diving in
 - **Don't over-interview** — stop when you have enough to investigate; you can always ask more later
 - **Scale to the question** — a simple question doesn't need broad parallel research
 - **No forced artifacts** — this command is conversational by default
