@@ -7,13 +7,11 @@ model: sonnet
 
 Create git commits for changes in the working tree. This includes changes from the current session and any pre-existing staged or unstaged modifications.
 
-**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or `make install`. See `.rpi/cli-reference.md` for available commands.
-
 ## Process
 
 ### 1. Understand the changes
 
-Use `rpi` to gather consolidated git context (status, diff, recent commits, sensitive files).
+Use the rpi_git_context tool to gather consolidated git context (status, diff, recent commits, sensitive files).
 
 This returns branch, status (tracked/untracked/staged files), diff summary, and recent commits as JSON. Use this to get the full picture.
 
@@ -23,7 +21,7 @@ Review the conversation history to understand the intent behind changes. If ther
 
 Before planning commits, scan the changeset for issues:
 
-- **Sensitive files**: Use `rpi` to check staged files for sensitive content (`.env`, credentials, secrets, API keys, or large binaries). Warn the user and exclude them unless explicitly told otherwise.
+- **Sensitive files**: Use the rpi_git_sensitive_check tool to check staged files for sensitive content (`.env`, credentials, secrets, API keys, or large binaries). Warn the user and exclude them unless explicitly told otherwise.
 - **Nothing to commit**: If the working tree is clean (no staged, unstaged, or untracked changes), tell the user and stop — don't create an empty commit.
 
 ### 3. Plan your commit(s)

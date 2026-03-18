@@ -13,7 +13,7 @@ The key insight: effective pattern finding is iterative. Start broad, then narro
 
 ### Quick start: Check for a codebase index
 
-Run `rpi index status` — if the index is fresh, use `rpi index query "[pattern-topic]"` to skip the orientation phase and go directly to reading representative files. If no index exists, proceed with Phase 1.
+Use the rpi_index_status tool — if the index is fresh, use the rpi_index_query tool with your pattern topic to skip the orientation phase and go directly to reading representative files. If no index exists, proceed with Phase 1.
 
 ### Phase 1: Orientation
 

@@ -7,8 +7,6 @@ model: opus
 
 Create implementation plans with phased tasks, success criteria, and verification steps.
 
-**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or `make install`. See `.rpi/cli-reference.md` for available commands.
-
 **Two modes — auto-detected from input:**
 
 - **Standalone mode**: Plain task description → lightweight research, then plan directly
@@ -27,15 +25,15 @@ For tasks that don't need the full propose → plan pipeline: bug fixes, small f
 2. Read any provided files fully
 3. Research proportional to complexity:
    - **Obvious** (specific file/function named): read those files directly
-   - **Moderate** (area known, pattern unclear): use `rpi` to query the codebase index for related files, then read them
-   - **Cross-cutting** (multiple systems): investigate in parallel — use `rpi` to query the codebase index for relevant files, understand how similar things are done in the codebase, read the key implementation files
+   - **Moderate** (area known, pattern unclear): use the rpi_index_query tool to find related files, then read them
+   - **Cross-cutting** (multiple systems): investigate in parallel — use the rpi_index_query tool to find relevant files, understand how similar things are done in the codebase, read the key implementation files
 4. Check `.rpi/specs/` for specs covering the affected area. Bug fix: spec defines correct behavior — the bug deviates from it. Feature: spec shows existing behaviors — ensure they aren't broken. Refactor: all spec behaviors must remain unchanged. No spec exists: note it; if the change is significant, include "create spec" as a plan task.
 5. If the task is ambiguous or you have questions, present findings and open questions before writing the plan. If everything is clear, write the plan directly.
 
 ### Step 2: Write the plan
 
 1. Break the work into phases (often just 1-2 for simple tasks)
-2. Use `rpi` to scaffold and save a plan artifact for this topic
+2. Use the rpi_scaffold tool to scaffold and save a plan artifact for this topic
 3. Fill in phases with: tasks and file paths, key code snippets, success criteria (automated using the project's actual test/lint commands + manual), and commit steps. Include tests in the same phase as the code they test.
 
 ### Step 3: Review & iterate
@@ -51,8 +49,8 @@ For complex tasks that already went through the pipeline. Triggered by proposal 
 ### Step 1: Read inputs & validate
 
 1. Check the project's conventions for test/lint/build commands
-2. Use `rpi` to check the proposal's status — warn if it's still in draft or already marked complete
-3. Use `rpi` to resolve the full artifact chain from the proposal. Read all linked files fully.
+2. Use the rpi_frontmatter_get tool to check the proposal's status — warn if it's still in draft or already marked complete
+3. Use the rpi_chain tool to resolve the full artifact chain from the proposal. Read all linked files fully.
 4. Read specs covering modules affected by this proposal — these are the behavioral contracts the plan must satisfy
 5. Spot-check 3-5 key files from the proposal against the current codebase — flag any significant drift
 6. Present validation results and any scoping questions before proceeding
@@ -74,7 +72,7 @@ Present proposed phases for buy-in before writing the full plan.
 
 ### Step 4: Write the plan
 
-Use `rpi` to scaffold and save a plan artifact linked to the proposal (include `--spec` flag to link the approved spec). Fill in all phases with:
+Use the rpi_scaffold tool to scaffold and save a plan artifact linked to the proposal (include the spec parameter to link the approved spec). Fill in all phases with:
 - Overview of what the phase accomplishes and its dependencies
 - Tasks with file paths and change descriptions (include key code snippets)
 - Each phase maps to spec behaviors — note which behavior IDs (XX-N) each phase addresses
@@ -85,7 +83,7 @@ Use `rpi` to scaffold and save a plan artifact linked to the proposal (include `
 
 ### Step 5: Transition upstream artifacts
 
-After the plan is written, verify it covers all the proposal's design decisions — nothing silently dropped. Use `rpi` to transition the proposal to complete. If the proposal links to research still marked active, check it too and transition if covered. Note any gaps and ask.
+After the plan is written, verify it covers all the proposal's design decisions — nothing silently dropped. Use the rpi_frontmatter_transition tool to transition the proposal to complete. If the proposal links to research still marked active, check it too and transition if covered. Note any gaps and ask.
 
 ### Step 6: Review & iterate
 

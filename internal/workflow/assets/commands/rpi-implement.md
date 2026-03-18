@@ -7,8 +7,6 @@ model: sonnet
 
 You are tasked with implementing an approved technical plan from `.rpi/plans/`. These plans contain phases with specific changes and success criteria.
 
-**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or `make install`. See `.rpi/cli-reference.md` for available commands.
-
 Plans come in two forms:
 - **Pipeline plans**: Reference proposals (`.rpi/proposals/`) and optionally research docs. Read these when you need deeper context.
 - **Standalone plans**: Self-contained with all context inline (no proposals). These are typically for simpler tasks.
@@ -17,17 +15,17 @@ Plans come in two forms:
 
 When given a plan path:
 
-- **Validate plan status**: Use `rpi` to check the plan's current status.
+- **Validate plan status**: Use the rpi_frontmatter_get tool to check the plan's current status.
   - If `draft` or `active`: proceed (draft = fresh plan, active = resuming)
   - If `complete`: warn the user that proceeding may duplicate work
 - Read the plan completely and check for any existing checkmarks (- [x])
-- Resolve the artifact chain: use `rpi` to resolve the plan's artifact chain and read upstream context.
+- Resolve the artifact chain: use the rpi_chain tool to resolve the plan's artifact chain and read upstream context.
   This returns linked proposals, research docs. Read the files it identifies.
 - Read all files mentioned in the plan
 - **Read files fully** - never use limit/offset parameters, you need complete context
 - Think deeply about how the pieces fit together
-- Update the plan status: use `rpi` to transition the plan to active
-- Check current progress: use `rpi` to check the plan's completeness — completed vs remaining items
+- Update the plan status: use the rpi_frontmatter_transition tool to transition the plan to active
+- Check current progress: use the rpi_verify_completeness tool to check the plan's completeness — completed vs remaining items
 - Start implementing if you understand what needs to be done
 
 If no plan path provided, ask for one.
@@ -42,7 +40,7 @@ Plans are carefully designed, but reality can be messy. Your job is to:
 - Verify your work makes sense in the broader codebase context
 - Update checkboxes in the plan as you complete sections
 - Commit changes after each phase (after automated and manual testing have passed)
-  - **Before staging**: use `rpi` to check staged files for sensitive content — if it flags any files, warn the user and exclude them from the commit
+  - **Before staging**: use the rpi_git_sensitive_check tool to check staged files for sensitive content — if it flags any files, warn the user and exclude them from the commit
   - List the files you plan to add for each commit
   - Show the commit message(s) you'll use. Try to keep them concise yet descriptive.
   - Ask: "I plan to create [N] commit(s) with these changes. Shall I proceed?"
@@ -141,7 +139,7 @@ If you're stuck on unfamiliar code, research it before guessing.
 If the plan has existing checkmarks:
 
 - Trust that completed work is done
-- Use `rpi` to check the plan's completeness — what's done vs remaining
+- Use the rpi_verify_completeness tool to check the plan's completeness — what's done vs remaining
 - Pick up from the first unchecked item
 - Verify previous work only if something seems off
 
@@ -155,8 +153,8 @@ When all phases are done and verified:
    - For each spec behavior (XX-N), verify the implementation satisfies it
    - Check that test files contain `// spec:XX-N` comments for traceability
    - If a mismatch is found: STOP. Present the divergence clearly. The spec must be amended first (get user approval on the spec change), then continue.
-   - Once all behaviors are verified, use `rpi` to transition the spec to `implemented`
+   - Once all behaviors are verified, use the rpi_frontmatter_transition tool to transition the spec to `implemented`
    - Skip this step if no relevant specs exist
 
-2. **Update the plan status**: use `rpi` to mark the plan as complete
+2. **Update the plan status**: use the rpi_frontmatter_transition tool to mark the plan as complete
 3. **Announce**: "All phases complete. Plan status updated to `complete`."

@@ -7,8 +7,6 @@ model: sonnet
 
 Move completed or superseded artifacts from `.rpi/` to `.rpi/archive/` to keep the active directory clean while preserving full history.
 
-**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or `make install`. See `.rpi/cli-reference.md` for available commands.
-
 ## Input
 
 This command accepts two modes:
@@ -20,7 +18,7 @@ This command accepts two modes:
 
 ### If specific paths provided:
 
-1. Use `rpi` to read each artifact's current status from its frontmatter
+1. Use the rpi_frontmatter_get tool to read each artifact's current status from its frontmatter
 2. If status is `draft` or `active`, warn immediately:
    ```
    Warning: This artifact is still [draft/active]:
@@ -33,7 +31,7 @@ This command accepts two modes:
 
 ### If no paths provided (scan mode):
 
-1. Use `rpi` to discover archivable artifacts with reference counts
+1. Use the rpi_archive_scan tool to discover archivable artifacts with reference counts
 2. The output returns candidates with `status: complete` or `status: superseded`, grouped by type, with `ref_count` and `superseded_by` for each.
 3. Present the candidates:
 
@@ -76,7 +74,7 @@ Before moving any files, perform these safety checks:
 
 For each artifact about to be archived:
 
-1. Use `rpi` to check for active references to the artifact
+1. Use the rpi_archive_check_refs tool to check for active references to the artifact
 2. If references are found, warn:
    ```
    Cross-reference warning:
@@ -106,7 +104,7 @@ This is a double confirmation — the user was already warned in Step 1 and must
 
 For each confirmed artifact:
 
-1. Use `rpi` to archive the artifact (updates frontmatter and moves to archive/). Use the force option to skip the ref check warning if the user has already confirmed.
+1. Use the rpi_archive_move tool to archive the artifact (updates frontmatter and moves to archive/). Use the force option to skip the ref check warning if the user has already confirmed.
    This handles everything automatically:
    - Updates frontmatter (`status: archived`, `archived_date: YYYY-MM-DD`)
    - Creates the destination directory (`.rpi/archive/YYYY-MM/[type]/`)

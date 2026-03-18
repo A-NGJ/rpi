@@ -9,8 +9,6 @@ Validate that an implementation matches its proposal artifacts across three dime
 
 This command is purely advisory — it does not block anything. It can be re-run after fixes to confirm resolution.
 
-**Prerequisite**: The `rpi` binary must be available in PATH. If not found, run `go build -o bin/rpi ./cmd/rpi` or `make install`. See `.rpi/cli-reference.md` for available commands.
-
 ## Step 1: Receive the input
 
 If the user provided a path to a proposal, plan, or other artifact as command arguments, proceed to Step 3.
@@ -21,15 +19,15 @@ If no arguments were provided, proceed to Step 2 (auto-detection).
 
 When no path is provided, detect from recent git changes:
 
-1. Use `rpi` to get the list of changed files and find active plans/proposals
+1. Use the rpi_git_changed_files tool to get the list of changed files and the rpi_scan tool to find active plans/proposals
 2. If artifacts found, announce what you're verifying and proceed to Step 3
 3. If nothing found, ask for a path to a plan or proposal
 
 ## Step 3: Read referenced artifacts
 
-Read the provided or detected artifact(s) fully. Use `rpi` to resolve the artifact chain — this returns the full chain (plan → proposal → research) with metadata. Read all linked files.
+Read the provided or detected artifact(s) fully. Use the rpi_chain tool to resolve the artifact chain — this returns the full chain (plan → proposal → research) with metadata. Read all linked files.
 
-Also check `.rpi/specs/` for relevant specs, and use `rpi` to get the list of changed files.
+Also check `.rpi/specs/` for relevant specs, and use the rpi_git_changed_files tool to get the list of changed files.
 
 Present a brief summary of what you're verifying before proceeding.
 
@@ -40,7 +38,7 @@ Verify all three dimensions — parallelize when possible. Each dimension requir
 ### Completeness
 
 Check whether everything planned has been done:
-- Are all plan phases and tasks complete? Use `rpi` for mechanical checks (checkbox counts, file coverage, marker scans for TODO/FIXME/HACK).
+- Are all plan phases and tasks complete? Use the rpi_verify_completeness and rpi_verify_markers tools for mechanical checks (checkbox counts, file coverage, marker scans for TODO/FIXME/HACK).
 - If a ticket exists, are all acceptance criteria met?
 - Do tests exist for new functionality?
 - Were all planned files created or modified?
@@ -67,7 +65,7 @@ Check whether the implementation fits the existing codebase:
 If specs exist for the affected modules, assess behavioral test coverage:
 - Which spec behaviors (XX-N) have corresponding `// spec:XX-N` comments in test files?
 - Which behaviors are missing test coverage?
-- If `rpi spec coverage` is available, run it against the relevant spec(s) and include the results.
+- Use the rpi_spec_coverage tool against the relevant spec(s) and include the results.
 
 For each finding, classify as: blocker (must fix), warning (should fix), or note (consider fixing).
 
@@ -76,7 +74,7 @@ For each finding, classify as: blocker (must fix), warning (should fix), or note
 After all three dimensions are verified:
 
 1. **Determine overall status**: Pass / Pass with warnings / Issues found
-2. **Write the report**: Use `rpi` to scaffold a verification report in `.rpi/reviews/`. Fill in findings grouped by dimension and severity.
+2. **Write the report**: Use the rpi_scaffold tool to scaffold a verification report in `.rpi/reviews/`. Fill in findings grouped by dimension and severity.
 3. **Present the summary** — overall status, counts by severity, report path. If blockers exist, list them directly so the user sees them immediately.
 
 ## Guidelines
