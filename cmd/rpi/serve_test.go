@@ -418,7 +418,6 @@ func TestIntegration_AllToolsRegistered(t *testing.T) {
 		"rpi_index_files",
 		"rpi_archive_check_refs",
 		"rpi_archive_move",
-		"rpi_spec_coverage",
 	}
 
 	if len(res.Tools) != len(expectedTools) {

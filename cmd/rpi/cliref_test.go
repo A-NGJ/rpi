@@ -23,7 +23,6 @@ func TestGenerateCLIReferenceContainsAllCommands(t *testing.T) {
 		"rpi archive scan",
 		"rpi archive check-refs",
 		"rpi archive move",
-		"rpi spec coverage",
 		"rpi init",
 	}
 

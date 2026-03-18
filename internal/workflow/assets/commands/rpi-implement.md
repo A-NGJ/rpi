@@ -150,8 +150,7 @@ Remember: You're implementing a solution, not just checking boxes. Keep the end 
 When all phases are done and verified:
 
 1. **Verify spec conformance** — check `.rpi/specs/` for specs linked to this plan or covering affected modules:
-   - For each spec behavior (XX-N), verify the implementation satisfies it
-   - Check that test files contain `// spec:XX-N` comments for traceability
+   - For each spec behavior (XX-N), verify the implementation satisfies it by reading the actual code and tests
    - If a mismatch is found: STOP. Present the divergence clearly. The spec must be amended first (get user approval on the spec change), then continue.
    - Once all behaviors are verified, use the rpi_frontmatter_transition tool to transition the spec to `implemented`
    - Skip this step if no relevant specs exist

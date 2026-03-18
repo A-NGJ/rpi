@@ -144,7 +144,7 @@ Research is conversational by default — no artifact unless you ask. Everything
 
 **Output**: Code changes, tests, and commits
 - Working code conforming to the spec's behavioral contract
-- Passing test suite with `// spec:XX-N` traceability comments
+- Passing test suite covering spec behaviors
 - Updated plan file with checked-off items
 
 **Example**:

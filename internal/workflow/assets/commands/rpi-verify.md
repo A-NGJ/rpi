@@ -46,7 +46,7 @@ Check whether everything planned has been done:
 ### Correctness
 
 Check whether the implementation matches the design intent:
-- **Spec conformance** (primary check): For each spec behavior (XX-N), verify the implementation satisfies it. Check that test files contain `// spec:XX-N` comments for traceability. Report uncovered behaviors.
+- **Spec conformance**: If specs exist in `.rpi/specs/` for the affected modules, read each spec behavior (XX-N) and verify the implementation satisfies it by reading the actual code and tests — not by looking for comments or markers. Report behaviors that appear unimplemented or untested.
 - Does the implementation follow the approach chosen in the proposal?
 - Do API contracts, function signatures, and data shapes match what was specified?
 - Were edge cases identified in the proposal handled in code?
@@ -59,13 +59,6 @@ Check whether the implementation fits the existing codebase:
 - Does the new code reuse existing utilities rather than reinventing?
 - Were unnecessary dependencies introduced?
 - Do tests follow the project's existing test style?
-
-### Spec Coverage
-
-If specs exist for the affected modules, assess behavioral test coverage:
-- Which spec behaviors (XX-N) have corresponding `// spec:XX-N` comments in test files?
-- Which behaviors are missing test coverage?
-- Use the rpi_spec_coverage tool against the relevant spec(s) and include the results.
 
 For each finding, classify as: blocker (must fix), warning (should fix), or note (consider fixing).
 

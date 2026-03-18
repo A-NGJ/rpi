@@ -14,7 +14,6 @@ import (
 	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/git"
 	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/index"
 	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/scanner"
-	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/spec"
 	tmpl "github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/template"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/spf13/cobra"
@@ -160,7 +159,7 @@ func registerTools(s *mcp.Server) {
 		Description: "List all indexed files",
 	}, handleIndexFiles)
 
-	// Archive + spec tools
+	// Archive tools
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_archive_check_refs",
 		Description: "Find all files referencing a given path",
@@ -170,11 +169,6 @@ func registerTools(s *mcp.Server) {
 		Name:        "rpi_archive_move",
 		Description: "Archive an artifact: update frontmatter and move to archive/",
 	}, handleArchiveMove)
-
-	mcp.AddTool(s, &mcp.Tool{
-		Name:        "rpi_spec_coverage",
-		Description: "Check test coverage for spec behaviors",
-	}, handleSpecCoverage)
 }
 
 // --- No-param tool handlers ---
@@ -326,10 +320,6 @@ type archiveCheckRefsInput struct {
 type archiveMoveInput struct {
 	Path  string `json:"path" jsonschema:"path to the artifact to archive"`
 	Force bool   `json:"force,omitempty" jsonschema:"skip active reference check"`
-}
-
-type specCoverageInput struct {
-	SpecFile string `json:"spec_file" jsonschema:"path to the spec file"`
 }
 
 // --- Parameterized tool handlers ---
@@ -603,26 +593,4 @@ func handleArchiveMove(_ context.Context, _ *mcp.CallToolRequest, input archiveM
 		return nil, nil, err
 	}
 	return jsonResult(result)
-}
-
-func handleSpecCoverage(_ context.Context, _ *mcp.CallToolRequest, input specCoverageInput) (*mcp.CallToolResult, any, error) {
-	behaviors, prefix, err := spec.ParseBehaviors(input.SpecFile)
-	if err != nil {
-		return nil, nil, err
-	}
-	doc, err := frontmatter.Parse(input.SpecFile)
-	if err != nil {
-		return nil, nil, err
-	}
-	domain, _ := doc.Frontmatter["domain"].(string)
-	projectRoot, err := findProjectRoot()
-	if err != nil {
-		return nil, nil, err
-	}
-	refs, err := spec.ScanTestFiles(projectRoot, prefix)
-	if err != nil {
-		return nil, nil, err
-	}
-	report := spec.ComputeCoverage(behaviors, refs, domain, prefix)
-	return jsonResult(report)
 }
