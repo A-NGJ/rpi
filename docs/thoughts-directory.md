@@ -8,7 +8,7 @@ All pipeline artifacts live in `.rpi/`, which is **gitignored by default**. The 
 ├── cli-reference.md     # Auto-generated CLI reference
 ├── PIPELINE.md          # This workflow reference guide
 ├── research/            # Codebase research documents
-├── proposals/           # Solution proposals with trade-off analysis
+├── designs/             # Solution designs with trade-off analysis
 ├── plans/               # Implementation plans with checkboxes
 ├── specs/               # Living behavioral specs for modules/domains
 ├── prs/                 # PR descriptions
@@ -56,7 +56,7 @@ This skips adding `.rpi/` to `.gitignore`, so all pipeline artifacts get committ
 
 **Why share with the team:**
 - **Research documents** become searchable codebase documentation that stays current -- new team members can read them to understand how systems work instead of spelunking through code.
-- **Proposal documents** preserve decision rationale. When someone asks "why did we use Redis instead of Memcached?", the answer is in `.rpi/proposals/`, not lost in a Slack thread.
+- **Design documents** preserve decision rationale. When someone asks "why did we use Redis instead of Memcached?", the answer is in `.rpi/designs/`, not lost in a Slack thread.
 - **Plans** give visibility into how features were decomposed and implemented, making code review easier and providing a template for similar future work.
 - **Any team member can pick up where another left off** -- if one person does the research and design, another can run `/rpi-plan` and `/rpi-implement` using those same documents.
 

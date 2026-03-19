@@ -24,7 +24,7 @@ Three modes, auto-detected:
 - **Full** -- Multi-decision feature design with component diagrams, risk tables, and file structure
 - **Incremental** -- Update an existing proposal with new information
 
-The propose stage is interactive. Claude investigates the codebase, presents options with concrete trade-offs (grounded in your actual codebase, not generic advice), makes a recommendation, and waits for your direction. After you choose, it validates that your combined choices work together before documenting the proposal in `.rpi/proposals/`. If the proposal changes existing behavior documented in `.rpi/specs/`, it can flag those specs with `pending_changes` for update after implementation.
+The propose stage is interactive. Claude investigates the codebase, presents options with concrete trade-offs (grounded in your actual codebase, not generic advice), makes a recommendation, and waits for your direction. After you choose, it validates that your combined choices work together before documenting the design in `.rpi/designs/`. If the proposal changes existing behavior documented in `.rpi/specs/`, it can flag those specs with `pending_changes` for update after implementation.
 
 ## Plan (`/rpi-plan`)
 
@@ -89,4 +89,4 @@ Two modes:
 - **Specific paths** -- `/rpi-archive .rpi/research/2026-01-15-auth-flow.md`
 - **Scan mode** -- `/rpi-archive` with no arguments scans for completed artifacts
 
-Warns before archiving anything still in `draft` or `active` status. Preserves the full directory structure inside `archive/` (e.g., `archive/research/`, `archive/proposals/`).
+Warns before archiving anything still in `draft` or `active` status. Preserves the full directory structure inside `archive/` (e.g., `archive/research/`, `archive/designs/`).

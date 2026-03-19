@@ -46,11 +46,11 @@ Claude explores your codebase conversationally. You discuss findings interactive
 ```
 You:  /rpi-propose I want to add per-endpoint rate limiting. Should handle both authenticated and anonymous users.
 ```
-Claude investigates the codebase, presents 2-3 options (e.g., in-memory vs Redis, middleware vs decorator pattern), with pros/cons tied to your actual codebase. You pick an approach. It writes the proposal with the decision rationale and risk assessment to `.rpi/proposals/`.
+Claude investigates the codebase, presents 2-3 options (e.g., in-memory vs Redis, middleware vs decorator pattern), with pros/cons tied to your actual codebase. You pick an approach. It writes the design with the decision rationale and risk assessment to `.rpi/designs/`.
 
 **Step 3: Plan**
 ```
-You:  /rpi-plan .rpi/proposals/2026-03-04-api-rate-limiting.md
+You:  /rpi-plan .rpi/designs/2026-03-04-api-rate-limiting.md
 ```
 Claude reads the proposal, spot-checks the codebase against the docs, and breaks the work into phases:
 - Phase 1: Rate limiter core module + unit tests
@@ -85,11 +85,11 @@ Conversational research to build understanding before proposing.
 ```
 You:  /rpi-propose Build a notification system supporting email, push, and in-app channels. Users should be able to set per-channel preferences.
 ```
-Claude goes into Full mode -- investigates the codebase deeply, identifies key design dimensions (channel abstraction, delivery strategy, preference storage, template system), presents options with trade-offs for each, validates that the chosen options compose well together, and writes the full proposal to `.rpi/proposals/`.
+Claude goes into Full mode -- investigates the codebase deeply, identifies key design dimensions (channel abstraction, delivery strategy, preference storage, template system), presents options with trade-offs for each, validates that the chosen options compose well together, and writes the full design to `.rpi/designs/`.
 
 **Step 3: Plan (with decomposition)**
 ```
-You:  /rpi-plan .rpi/proposals/2026-03-04-notification-system.md
+You:  /rpi-plan .rpi/designs/2026-03-04-notification-system.md
 ```
 Claude reads the proposal and decomposes it into independently plannable units:
 ```
@@ -122,7 +122,7 @@ You:  /rpi-research What could we improve about error handling?
 Two optional commands help close the loop:
 
 - **`/rpi-verify`** -- Validates that your implementation matches the proposal artifacts. Checks completeness, correctness, and coherence. Run it after `/rpi-implement` or anytime you want a second opinion on whether the code matches the plan.
-- **`/rpi-archive`** -- Moves completed artifacts to `.rpi/archive/` to keep the active directory clean. Run it when a feature is fully shipped and you no longer need the research/proposals/plan documents in the active directories.
+- **`/rpi-archive`** -- Moves completed artifacts to `.rpi/archive/` to keep the active directory clean. Run it when a feature is fully shipped and you no longer need the research/designs/plan documents in the active directories.
 
 ## Tips
 

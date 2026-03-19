@@ -5,12 +5,12 @@ A structured development workflow for AI coding agents that turns vague feature 
 Instead of asking an AI to "just implement it" and hoping for the best, this workflow forces deliberate progression through **Research -> Propose -> Plan -> Implement**. Each stage produces a document you can review, edit, and approve before moving on.
 
 ```
-Research -> Propose -> Plan -> Implement
+Research -> Design -> Plan -> Implement
    |          |        |        |
    v          v        v        v
 .rpi/       .rpi/    .rpi/    code +
-research/   proposals/ plans/  tests +
-              specs/            commits
+research/   designs/ plans/   tests +
+            specs/            commits
 ```
 
 ## Why This Exists
@@ -69,7 +69,7 @@ AI coding assistants are powerful but unpredictable when given large tasks. They
 | Command | What It Does | Output |
 |---------|-------------|--------|
 | `/rpi-research` | Investigates the codebase -- conversational fact-finding | Conversation (optionally `.rpi/research/YYYY-MM-DD-topic.md`) |
-| `/rpi-propose` | Investigates, analyzes, and proposes solutions with trade-offs | `.rpi/proposals/YYYY-MM-DD-topic.md` |
+| `/rpi-propose` | Investigates, analyzes, and designs solutions with trade-offs | `.rpi/designs/YYYY-MM-DD-topic.md` |
 | `/rpi-plan` | Creates phased implementation plan with success criteria | `.rpi/plans/YYYY-MM-DD-topic.md` |
 | `/rpi-implement` | Executes a plan phase-by-phase with verification | Code, tests, and commits |
 | `/rpi-commit` | Creates focused git commits with smart grouping | Git commits |
