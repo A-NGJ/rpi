@@ -46,8 +46,8 @@ Research (2):
 Plans (1):
 - .rpi/plans/2026-02-10-add-rate-limiting.md (complete, all phases done)
 
-Proposals (1):
-- .rpi/proposals/2026-01-20-caching-strategy.md (superseded by .rpi/proposals/2026-03-01-caching-v2.md)
+Designs (1):
+- .rpi/designs/2026-01-20-caching-strategy.md (superseded by .rpi/designs/2026-03-01-caching-v2.md)
 
 Which would you like to archive? (all / specific items / none)
 ```
@@ -81,7 +81,7 @@ For each artifact about to be archived:
    Cross-reference warning:
 
    .rpi/research/2026-01-15-auth-flow.md is referenced by:
-   - .rpi/proposals/2026-02-15-auth-redesign.md (line 12)
+   - .rpi/designs/2026-02-15-auth-redesign.md (line 12)
    - .rpi/plans/2026-02-20-auth-plan.md (line 8)
 
    These references will become stale after archiving.

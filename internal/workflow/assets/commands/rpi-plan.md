@@ -1,5 +1,5 @@
 ---
-description: Create implementation plans — works standalone for simple tasks or with prior proposals for complex ones
+description: Create implementation plans — works standalone for simple tasks or with prior designs for complex ones
 model: sonnet
 disable-model-invocation: true
 ---
@@ -11,7 +11,7 @@ Create implementation plans with phased tasks, success criteria, and verificatio
 **Two modes — auto-detected from input:**
 
 - **Standalone mode**: Plain task description → lightweight research, then plan directly
-- **Pipeline mode**: Path to a proposal document → plan built from prior pipeline work
+- **Pipeline mode**: Path to a design document → plan built from prior pipeline work
 - **Nothing provided** → Ask for input with brief examples of each mode
 
 ---
@@ -45,15 +45,15 @@ Present the plan summary and ask if anything needs adjusting. Keep iterating unt
 
 ## Pipeline Mode
 
-For complex tasks that already went through the pipeline. Triggered by proposal documents from `/rpi-propose`.
+For complex tasks that already went through the pipeline. Triggered by design documents from `/rpi-propose`.
 
 ### Step 1: Read inputs & validate
 
 1. Check the project's conventions for test/lint/build commands
-2. Use the rpi_frontmatter_get tool to check the proposal's status — warn if it's still in draft or already marked complete
-3. Use the rpi_chain tool to resolve the full artifact chain from the proposal. Read all linked files fully.
-4. Read specs covering modules affected by this proposal — these are the behavioral contracts the plan must satisfy
-5. Spot-check 3-5 key files from the proposal against the current codebase — flag any significant drift
+2. Use the rpi_frontmatter_get tool to check the design's status — warn if it's still in draft or already marked complete
+3. Use the rpi_chain tool to resolve the full artifact chain from the design. Read all linked files fully.
+4. Read specs covering modules affected by this design — these are the behavioral contracts the plan must satisfy
+5. Spot-check 3-5 key files from the design against the current codebase — flag any significant drift
 6. Present validation results and any scoping questions before proceeding
 
 ### Step 2: Scope assessment
@@ -63,7 +63,7 @@ For complex tasks that already went through the pipeline. Triggered by proposal 
 
 ### Step 3: Phase definition
 
-Break the proposal's changes into ordered phases:
+Break the design's changes into ordered phases:
 - Group related changes that must ship together
 - Respect dependency order (data model → business logic → API → UI)
 - Each phase should leave the codebase in a working, testable state
@@ -73,7 +73,7 @@ Present proposed phases for buy-in before writing the full plan.
 
 ### Step 4: Write the plan
 
-Use the rpi_scaffold tool to scaffold and save a plan artifact linked to the proposal (include the spec parameter to link the approved spec). Fill in all phases with:
+Use the rpi_scaffold tool to scaffold and save a plan artifact linked to the design (include the spec parameter to link the approved spec). Fill in all phases with:
 - Overview of what the phase accomplishes and its dependencies
 - Tasks with file paths and change descriptions (include key code snippets)
 - Each phase maps to spec behaviors — note which behavior IDs (XX-N) each phase addresses
@@ -84,7 +84,7 @@ Use the rpi_scaffold tool to scaffold and save a plan artifact linked to the pro
 
 ### Step 5: Transition upstream artifacts
 
-After the plan is written, verify it covers all the proposal's design decisions — nothing silently dropped. Use the rpi_frontmatter_transition tool to transition the proposal to complete. If the proposal links to research still marked active, check it too and transition if covered. Note any gaps and ask.
+After the plan is written, verify it covers all the design's decisions — nothing silently dropped. Use the rpi_frontmatter_transition tool to transition the design to complete. If the design links to research still marked active, check it too and transition if covered. Note any gaps and ask.
 
 ### Step 6: Review & iterate
 
@@ -101,7 +101,7 @@ Present the plan summary and ask if anything needs adjusting. Keep iterating unt
 5. **Right-size the plan** — simple tasks get simple plans (1 phase, minimal ceremony); complex tasks get detailed phasing
 6. **Commit after each phase** — stage only that phase's files
 7. **Tests belong to their phase** — write tests alongside the code they cover, not in a separate section
-8. **Trust prior stages** (pipeline mode) — don't redo research or proposal work; reference those docs
-9. **Spot-check reality** (pipeline mode) — verify the codebase matches the proposal before planning
+8. **Trust prior stages** (pipeline mode) — don't redo research or design work; reference those docs
+9. **Spot-check reality** (pipeline mode) — verify the codebase matches the design before planning
 
 If the user confirms the plan looks good, proceed to `/rpi-implement` with the plan path.

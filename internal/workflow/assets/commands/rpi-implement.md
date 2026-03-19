@@ -9,8 +9,8 @@ disable-model-invocation: true
 You are tasked with implementing an approved technical plan from `.rpi/plans/`. These plans contain phases with specific changes and success criteria.
 
 Plans come in two forms:
-- **Pipeline plans**: Reference proposals (`.rpi/proposals/`) and optionally research docs. Read these when you need deeper context.
-- **Standalone plans**: Self-contained with all context inline (no proposals). These are typically for simpler tasks.
+- **Pipeline plans**: Reference designs (`.rpi/designs/`) and optionally research docs. Read these when you need deeper context.
+- **Standalone plans**: Self-contained with all context inline (no designs). These are typically for simpler tasks.
 
 ## Getting Started
 
@@ -21,7 +21,7 @@ When given a plan path:
   - If `complete`: warn the user that proceeding may duplicate work
 - Read the plan completely and check for any existing checkmarks (- [x])
 - Resolve the artifact chain: use the rpi_chain tool to resolve the plan's artifact chain and read upstream context.
-  This returns linked proposals, research docs. Read the files it identifies.
+  This returns linked designs, research docs. Read the files it identifies.
 - Read all files mentioned in the plan
 - **Read files fully** - never use limit/offset parameters, you need complete context
 - Think deeply about how the pieces fit together

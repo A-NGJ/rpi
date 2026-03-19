@@ -1,18 +1,18 @@
 ---
-description: Verify implementation against proposal artifacts for completeness, correctness, and coherence
+description: Verify implementation against design artifacts for completeness, correctness, and coherence
 model: opus
 disable-model-invocation: true
 ---
 
 # Verify Implementation
 
-Validate that an implementation matches its proposal artifacts across three dimensions: completeness, correctness, and coherence. Produces a severity-classified verification report.
+Validate that an implementation matches its design artifacts across three dimensions: completeness, correctness, and coherence. Produces a severity-classified verification report.
 
 This command is purely advisory — it does not block anything. It can be re-run after fixes to confirm resolution.
 
 ## Step 1: Receive the input
 
-If the user provided a path to a proposal, plan, or other artifact as command arguments, proceed to Step 3.
+If the user provided a path to a design, plan, or other artifact as command arguments, proceed to Step 3.
 
 If no arguments were provided, proceed to Step 2 (auto-detection).
 
@@ -20,13 +20,13 @@ If no arguments were provided, proceed to Step 2 (auto-detection).
 
 When no path is provided, detect from recent git changes:
 
-1. Use the rpi_git_changed_files tool to get the list of changed files and the rpi_scan tool to find active plans/proposals
+1. Use the rpi_git_changed_files tool to get the list of changed files and the rpi_scan tool to find active plans/designs
 2. If artifacts found, announce what you're verifying and proceed to Step 3
-3. If nothing found, ask for a path to a plan or proposal
+3. If nothing found, ask for a path to a plan or design
 
 ## Step 3: Read referenced artifacts
 
-Read the provided or detected artifact(s) fully. Use the rpi_chain tool to resolve the artifact chain — this returns the full chain (plan → proposal → research) with metadata. Read all linked files.
+Read the provided or detected artifact(s) fully. Use the rpi_chain tool to resolve the artifact chain — this returns the full chain (plan → design → research) with metadata. Read all linked files.
 
 Also check `.rpi/specs/` for relevant specs, and use the rpi_git_changed_files tool to get the list of changed files.
 
@@ -48,9 +48,9 @@ Check whether everything planned has been done:
 
 Check whether the implementation matches the design intent:
 - **Spec conformance**: If specs exist in `.rpi/specs/` for the affected modules, read each spec behavior (XX-N) and verify the implementation satisfies it by reading the actual code and tests — not by looking for comments or markers. Report behaviors that appear unimplemented or untested.
-- Does the implementation follow the approach chosen in the proposal?
+- Does the implementation follow the approach chosen in the design?
 - Do API contracts, function signatures, and data shapes match what was specified?
-- Were edge cases identified in the proposal handled in code?
+- Were edge cases identified in the design handled in code?
 - Are there silent deviations — files changed or approaches used that weren't in the plan?
 
 ### Coherence
