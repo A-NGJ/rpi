@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -58,7 +57,7 @@ Targets:
   opencode  Creates .opencode/ with the same structure and an AGENTS.md rules file
 
 Also creates:
-  .rpi/             Artifact directory hierarchy (research, proposals, plans, etc.)
+  .rpi/             Artifact directory hierarchy (research, designs, plans, etc.)
   PIPELINE.md       Workflow guide in .rpi/
   .rpi/index.json   Codebase symbol index
 
@@ -157,7 +156,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 	// Create .rpi/ artifact subdirs
 	rpiDir := filepath.Join(targetDir, ".rpi")
 	rpiSubdirs := []string{
-		"research", "proposals",
+		"research", "designs",
 		"plans", "specs", "reviews", "archive", "prs",
 	}
 	for _, d := range rpiSubdirs {
@@ -311,53 +310,34 @@ func ensureGitignoreEntry(w io.Writer, targetDir, entry string) error {
 	return nil
 }
 
-func configureMCP(w io.Writer, targetDir string) {
+// mcpCommandRunner abstracts command execution for testing.
+var mcpCommandRunner func(name string, args ...string) ([]byte, error) = func(name string, args ...string) ([]byte, error) {
+	return exec.Command(name, args...).CombinedOutput()
+}
+
+func configureMCP(w io.Writer, _ string) {
+	if _, err := exec.LookPath("claude"); err != nil {
+		logWarning(w, "claude not found in PATH — skipping MCP server configuration")
+		return
+	}
 	if _, err := exec.LookPath("rpi"); err != nil {
 		logWarning(w, "rpi not found in PATH — skipping MCP server configuration")
 		return
 	}
 
-	settingsDir := filepath.Join(targetDir, ".claude")
-	settingsPath := filepath.Join(settingsDir, "settings.local.json")
-
-	var settings map[string]interface{}
-	if data, err := os.ReadFile(settingsPath); err == nil {
-		if err := json.Unmarshal(data, &settings); err != nil {
-			logWarning(w, fmt.Sprintf("Failed to parse %s: %v — skipping MCP configuration", settingsPath, err))
-			return
-		}
-	} else {
-		settings = make(map[string]interface{})
-	}
-
-	if mcpServers, ok := settings["mcpServers"].(map[string]interface{}); ok {
-		if _, exists := mcpServers["rpi"]; exists {
-			logWarning(w, "MCP server 'rpi' already configured in settings.local.json")
-			return
-		}
-	}
-
-	mcpServers, ok := settings["mcpServers"].(map[string]interface{})
-	if !ok {
-		mcpServers = make(map[string]interface{})
-	}
-	mcpServers["rpi"] = map[string]interface{}{
-		"command": "rpi",
-		"args":    []interface{}{"serve"},
-	}
-	settings["mcpServers"] = mcpServers
-
-	data, err := json.MarshalIndent(settings, "", "  ")
-	if err != nil {
-		logWarning(w, fmt.Sprintf("Failed to marshal settings: %v", err))
+	// Check if rpi MCP server is already registered
+	if out, err := mcpCommandRunner("claude", "mcp", "get", "rpi"); err == nil {
+		_ = out
+		logWarning(w, "MCP server 'rpi' already configured")
 		return
 	}
-	os.MkdirAll(settingsDir, 0755)
-	if err := os.WriteFile(settingsPath, append(data, '\n'), 0644); err != nil {
-		logWarning(w, fmt.Sprintf("Failed to write %s: %v", settingsPath, err))
+
+	// Register the MCP server via claude CLI
+	if out, err := mcpCommandRunner("claude", "mcp", "add", "rpi", "--", "rpi", "serve"); err != nil {
+		logWarning(w, fmt.Sprintf("Failed to register MCP server: %s", strings.TrimSpace(string(out))))
 		return
 	}
-	logSuccess(w, "Configured MCP server in .claude/settings.local.json")
+	logSuccess(w, "Configured MCP server via claude mcp add")
 }
 
 // copyDirectory copies all files and subdirectories from src to dest.

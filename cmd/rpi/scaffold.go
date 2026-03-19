@@ -13,7 +13,7 @@ var (
 	topicFlag    string
 	ticketFlag   string
 	researchFlag string
-	proposalFlag string
+	designFlag   string
 	specFlag     string
 	tagsFlag     string
 	writeFlag    bool
@@ -24,14 +24,14 @@ var (
 var typeDirs = map[string]string{
 	"research":      "research",
 	"plan":          "plans",
-	"propose":       "proposals",
+	"design":        "designs",
 	"verify-report": "reviews",
 	"spec":          "specs",
 }
 
 // validTypes lists all supported artifact types.
 var validTypes = []string{
-	"research", "propose", "plan", "verify-report", "spec",
+	"research", "design", "plan", "verify-report", "spec",
 }
 
 var scaffoldCmd = &cobra.Command{
@@ -41,7 +41,7 @@ var scaffoldCmd = &cobra.Command{
 
 Types and their subdirectories:
   research      → .rpi/research/
-  propose       → .rpi/proposals/
+  design        → .rpi/designs/
   plan          → .rpi/plans/
   verify-report → .rpi/reviews/
   spec          → .rpi/specs/
@@ -70,13 +70,13 @@ The rendered file contains YAML frontmatter and section headings from the templa
   rpi scaffold research --topic "auth flow" --write
     → .rpi/research/2026-03-13-auth-flow.md
 
-  # Create a plan linked to a proposal
-  rpi scaffold plan --proposal .rpi/proposals/2026-03-13-auth.md --topic "auth refactor" --write
+  # Create a plan linked to a design
+  rpi scaffold plan --design .rpi/designs/2026-03-13-auth.md --topic "auth refactor" --write
     → .rpi/plans/2026-03-13-auth-refactor.md
 
-  # Create a proposal linked to research
-  rpi scaffold propose --topic "caching strategy" --research .rpi/research/2026-03-13-caching.md --write
-    → .rpi/proposals/2026-03-13-caching-strategy.md
+  # Create a design linked to research
+  rpi scaffold design --topic "caching strategy" --research .rpi/research/2026-03-13-caching.md --write
+    → .rpi/designs/2026-03-13-caching-strategy.md
 
   # Preview to stdout without creating a file
   rpi scaffold spec --topic "user permissions"`,
@@ -90,7 +90,7 @@ func init() {
 	scaffoldCmd.Flags().StringVar(&topicFlag, "topic", "", "Topic/title for the artifact")
 	scaffoldCmd.Flags().StringVar(&ticketFlag, "ticket", "", "Ticket ID (e.g., cli-002)")
 	scaffoldCmd.Flags().StringVar(&researchFlag, "research", "", "Path to research document")
-	scaffoldCmd.Flags().StringVar(&proposalFlag, "proposal", "", "Path to proposal document")
+	scaffoldCmd.Flags().StringVar(&designFlag, "design", "", "Path to design document")
 	scaffoldCmd.Flags().StringVar(&specFlag, "spec", "", "Path to spec document")
 	scaffoldCmd.Flags().StringVar(&tagsFlag, "tags", "", "Comma-separated tags")
 	scaffoldCmd.Flags().BoolVar(&writeFlag, "write", false, "Write to file instead of stdout")
@@ -120,7 +120,7 @@ func runScaffold(cmd *cobra.Command, args []string) error {
 		Topic:    topicFlag,
 		Ticket:   ticketFlag,
 		Research: researchFlag,
-		Proposal: proposalFlag,
+		Design:   designFlag,
 		Spec:     specFlag,
 		Tags:     tagsFlag,
 	}
@@ -129,7 +129,7 @@ func runScaffold(cmd *cobra.Command, args []string) error {
 	typeLabels := map[string]string{
 		"research":      "Research",
 		"plan":          "Plan",
-		"propose":       "Proposal",
+		"design":        "Design",
 		"verify-report": "Verification Report",
 		"spec":          "Spec",
 	}
@@ -161,7 +161,7 @@ func runScaffold(cmd *cobra.Command, args []string) error {
 
 func validateRequiredFlags(artifactType string) error {
 	switch artifactType {
-	case "research", "plan", "propose", "verify-report", "spec":
+	case "research", "plan", "design", "verify-report", "spec":
 		if topicFlag == "" {
 			return fmt.Errorf("--topic is required for type %q", artifactType)
 		}

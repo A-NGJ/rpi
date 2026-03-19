@@ -26,7 +26,7 @@ type RenderContext struct {
 	Topic    string
 	Ticket   string
 	Research string
-	Proposal string
+	Design   string
 	Spec     string
 	Tags     string
 }
@@ -35,7 +35,7 @@ type RenderContext struct {
 var typeLabels = map[string]string{
 	"research":      "Research",
 	"plan":          "Plan",
-	"propose":       "Proposal",
+	"design":        "Design",
 	"verify-report": "Verification Report",
 	"spec":          "Spec",
 }
@@ -70,7 +70,7 @@ func GenerateFilename(artifactType string, ctx *RenderContext) string {
 	datePart := dateFromISO(ctx.Date)
 
 	switch artifactType {
-	case "research", "propose":
+	case "research", "design":
 		return fmt.Sprintf("%s-%s.md", datePart, slug)
 	case "plan":
 		if ctx.Ticket != "" {

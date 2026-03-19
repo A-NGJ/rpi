@@ -240,19 +240,19 @@ func handleArchiveScan(_ context.Context, _ *mcp.CallToolRequest, _ emptyInput) 
 // --- Parameterized tool input structs ---
 
 type scanInput struct {
-	Type       string `json:"type,omitempty" jsonschema:"filter by artifact type (plan, proposal, research, spec, review)"`
+	Type       string `json:"type,omitempty" jsonschema:"filter by artifact type (plan, design, research, spec, review)"`
 	Status     string `json:"status,omitempty" jsonschema:"filter by status (draft, active, complete, superseded)"`
-	Proposal   string `json:"proposal,omitempty" jsonschema:"filter by frontmatter proposal field"`
+	Design     string `json:"design,omitempty" jsonschema:"filter by frontmatter design field"`
 	References string `json:"references,omitempty" jsonschema:"find files that reference this path"`
 	Archivable bool   `json:"archivable,omitempty" jsonschema:"show only archivable artifacts"`
 }
 
 type scaffoldInput struct {
-	Type     string `json:"type" jsonschema:"artifact type: research, propose, plan, verify-report, spec"`
+	Type     string `json:"type" jsonschema:"artifact type: research, design, plan, verify-report, spec"`
 	Topic    string `json:"topic" jsonschema:"topic or title for the artifact"`
 	Ticket   string `json:"ticket,omitempty" jsonschema:"ticket ID"`
 	Research string `json:"research,omitempty" jsonschema:"path to research document"`
-	Proposal string `json:"proposal,omitempty" jsonschema:"path to proposal document"`
+	Design   string `json:"design,omitempty" jsonschema:"path to design document"`
 	Spec     string `json:"spec,omitempty" jsonschema:"path to spec document"`
 	Tags     string `json:"tags,omitempty" jsonschema:"comma-separated tags"`
 	Write    bool   `json:"write,omitempty" jsonschema:"write to file instead of returning content"`
@@ -328,7 +328,7 @@ func handleScan(_ context.Context, _ *mcp.CallToolRequest, input scanInput) (*mc
 	results, err := scanner.Scan(rpiDirFlag, scanner.Filters{
 		Status:     input.Status,
 		Type:       input.Type,
-		Proposal:   input.Proposal,
+		Design:     input.Design,
 		References: input.References,
 		Archivable: input.Archivable,
 	})
@@ -351,13 +351,13 @@ func handleScaffold(_ context.Context, _ *mcp.CallToolRequest, input scaffoldInp
 		Topic:    input.Topic,
 		Ticket:   input.Ticket,
 		Research: input.Research,
-		Proposal: input.Proposal,
+		Design:   input.Design,
 		Spec:     input.Spec,
 		Tags:     input.Tags,
 	}
 
 	labels := map[string]string{
-		"research": "Research", "plan": "Plan", "propose": "Proposal",
+		"research": "Research", "plan": "Plan", "design": "Design",
 		"verify-report": "Verification Report", "spec": "Spec",
 	}
 	ctx.TypeLabel = labels[input.Type]

@@ -51,7 +51,7 @@ func TestInitCreatesAllDirs(t *testing.T) {
 
 	// Verify .rpi/ subdirs
 	rpiSubdirs := []string{
-		"research", "proposals",
+		"research", "designs",
 		"plans", "specs", "reviews", "archive", "prs",
 	}
 	for _, d := range rpiSubdirs {
@@ -127,7 +127,7 @@ func TestInitPartial(t *testing.T) {
 	}
 
 	// All dirs should exist
-	for _, d := range []string{"proposals", "specs", "reviews", "archive", "prs"} {
+	for _, d := range []string{"designs", "specs", "reviews", "archive", "prs"} {
 		path := filepath.Join(dir, ".rpi", d)
 		if _, err := os.Stat(path); err != nil {
 			t.Errorf(".rpi/%s not created: %v", d, err)

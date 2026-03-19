@@ -23,19 +23,19 @@ func setupTestDir(t *testing.T) string {
 	t.Helper()
 	dir := t.TempDir()
 
-	writeFile(t, dir, "proposals/prop1.md",
-		"---\ntopic: \"Proposal One\"\nstatus: draft\n---\n# Prop1\n")
-	writeFile(t, dir, "proposals/prop2.md",
-		"---\ntopic: \"Proposal Two\"\nstatus: complete\n---\n# Prop2\n")
+	writeFile(t, dir, "designs/prop1.md",
+		"---\ntopic: \"Design One\"\nstatus: draft\n---\n# Prop1\n")
+	writeFile(t, dir, "designs/prop2.md",
+		"---\ntopic: \"Design Two\"\nstatus: complete\n---\n# Prop2\n")
 	writeFile(t, dir, "plans/p1.md",
-		"---\ntopic: \"Plan One\"\nstatus: draft\nproposal: proposals/prop1.md\n---\n# P1\n")
+		"---\ntopic: \"Plan One\"\nstatus: draft\ndesign: designs/prop1.md\n---\n# P1\n")
 	writeFile(t, dir, "plans/p2.md",
-		"# Plan Two\n\n## Source Documents\n- Proposal: `proposals/prop1.md`\n")
+		"# Plan Two\n\n## Source Documents\n- Proposal: `designs/prop1.md`\n")
 	writeFile(t, dir, "research/r1.md",
-		"---\ntopic: \"Research One\"\nstatus: superseded\n---\n# R1\nReferences proposals/prop1.md in body.\n")
+		"---\ntopic: \"Research One\"\nstatus: superseded\n---\n# R1\nReferences designs/prop1.md in body.\n")
 	writeFile(t, dir, "specs/s1.md",
 		"---\ntopic: \"Spec One\"\nstatus: implemented\n---\n# S1\n")
-	writeFile(t, dir, "archive/proposals/old.md",
+	writeFile(t, dir, "archive/designs/old.md",
 		"---\ntopic: \"Archived\"\nstatus: archived\n---\n# Old\n")
 
 	return dir
@@ -78,7 +78,7 @@ func TestScanStatusFilter(t *testing.T) {
 func TestScanTypeFilter(t *testing.T) {
 	dir := setupTestDir(t)
 
-	results, err := Scan(dir, Filters{Type: "proposal"})
+	results, err := Scan(dir, Filters{Type: "design"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -87,8 +87,8 @@ func TestScanTypeFilter(t *testing.T) {
 		t.Errorf("got %d results, want 2", len(results))
 	}
 	for _, r := range results {
-		if r.Type != "proposal" {
-			t.Errorf("got type %s, want proposal", r.Type)
+		if r.Type != "design" {
+			t.Errorf("got type %s, want design", r.Type)
 		}
 	}
 }
@@ -96,7 +96,7 @@ func TestScanTypeFilter(t *testing.T) {
 func TestScanCombinedFilters(t *testing.T) {
 	dir := setupTestDir(t)
 
-	results, err := Scan(dir, Filters{Type: "proposal", Status: "draft"})
+	results, err := Scan(dir, Filters{Type: "design", Status: "draft"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -104,20 +104,20 @@ func TestScanCombinedFilters(t *testing.T) {
 	if len(results) != 1 {
 		t.Errorf("got %d results, want 1", len(results))
 	}
-	if len(results) > 0 && (results[0].Title == nil || *results[0].Title != "Proposal One") {
-		t.Errorf("expected Proposal One, got %v", results[0].Title)
+	if len(results) > 0 && (results[0].Title == nil || *results[0].Title != "Design One") {
+		t.Errorf("expected Design One, got %v", results[0].Title)
 	}
 }
 
 func TestScanProposalFilter(t *testing.T) {
 	dir := setupTestDir(t)
 
-	results, err := Scan(dir, Filters{Proposal: "proposals/prop1.md"})
+	results, err := Scan(dir, Filters{Design: "designs/prop1.md"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	// Only p1 has proposal: proposals/prop1.md
+	// Only p1 has design: designs/prop1.md
 	if len(results) != 1 {
 		t.Errorf("got %d results, want 1", len(results))
 	}
@@ -126,7 +126,7 @@ func TestScanProposalFilter(t *testing.T) {
 func TestScanReferencesFilter(t *testing.T) {
 	dir := setupTestDir(t)
 
-	results, err := Scan(dir, Filters{References: "proposals/prop1.md"})
+	results, err := Scan(dir, Filters{References: "designs/prop1.md"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -217,12 +217,12 @@ func TestScanNoFrontmatter(t *testing.T) {
 func TestFindReferencesFrontmatter(t *testing.T) {
 	dir := setupTestDir(t)
 
-	refs, err := FindReferences(dir, "proposals/prop1.md")
+	refs, err := FindReferences(dir, "designs/prop1.md")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	// p1 has proposal: proposals/prop1.md in frontmatter
+	// p1 has design: designs/prop1.md in frontmatter
 	// p2 has body reference
 	// r1 has body reference
 	if len(refs) != 3 {
@@ -235,12 +235,12 @@ func TestFindReferencesFrontmatter(t *testing.T) {
 	// Check that at least one is a frontmatter field reference
 	foundField := false
 	for _, r := range refs {
-		if r.FieldOrLine == "proposal: proposals/prop1.md" {
+		if r.FieldOrLine == "design: designs/prop1.md" {
 			foundField = true
 		}
 	}
 	if !foundField {
-		t.Error("expected a frontmatter field reference 'proposal: proposals/prop1.md'")
+		t.Error("expected a frontmatter field reference 'design: designs/prop1.md'")
 	}
 }
 
@@ -260,7 +260,7 @@ func TestFindReferencesUnreferenced(t *testing.T) {
 func TestCountReferences(t *testing.T) {
 	dir := setupTestDir(t)
 
-	count, err := CountReferences(dir, "proposals/prop1.md")
+	count, err := CountReferences(dir, "designs/prop1.md")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -286,15 +286,15 @@ func TestCountReferencesZero(t *testing.T) {
 func TestFindReferencesBodyLine(t *testing.T) {
 	dir := setupTestDir(t)
 
-	refs, err := FindReferences(dir, "proposals/prop1.md")
+	refs, err := FindReferences(dir, "designs/prop1.md")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	// r1 references proposals/prop1.md in body
+	// r1 references designs/prop1.md in body
 	foundBody := false
 	for _, r := range refs {
-		if strings.Contains(r.ReferencingFile, "r1.md") && strings.Contains(r.FieldOrLine, "References proposals/prop1.md") {
+		if strings.Contains(r.ReferencingFile, "r1.md") && strings.Contains(r.FieldOrLine, "References designs/prop1.md") {
 			foundBody = true
 		}
 	}

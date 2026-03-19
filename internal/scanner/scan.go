@@ -22,7 +22,7 @@ type ArtifactInfo struct {
 type Filters struct {
 	Status     string
 	Type       string
-	Proposal   string
+	Design     string
 	References string
 	Archivable bool
 }
@@ -108,9 +108,9 @@ func matches(doc *frontmatter.Document, info ArtifactInfo, f Filters) bool {
 		}
 	}
 
-	if f.Proposal != "" {
-		val, ok := getStr(doc.Frontmatter, "proposal")
-		if !ok || val != f.Proposal {
+	if f.Design != "" {
+		val, ok := getStr(doc.Frontmatter, "design")
+		if !ok || val != f.Design {
 			return false
 		}
 	}
@@ -241,8 +241,8 @@ func InferType(path string) string {
 			return "plan"
 		case "research":
 			return "research"
-		case "proposals":
-			return "proposal"
+		case "designs":
+			return "design"
 		case "prs":
 			return "pr"
 		case "reviews":

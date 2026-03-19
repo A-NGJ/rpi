@@ -27,13 +27,13 @@ mutually exclusive.
 
 Output formats: text (default), json, md.`,
 	Example: `  # Extract a section by name (case-insensitive prefix match)
-  rpi extract .rpi/proposals/2026-03-13-auth.md --section "summary"
+  rpi extract .rpi/designs/2026-03-13-auth.md --section "summary"
 
   # List all section headings in a file
-  rpi extract .rpi/proposals/2026-03-13-auth.md --list-sections
+  rpi extract .rpi/designs/2026-03-13-auth.md --list-sections
 
   # Extract as JSON
-  rpi extract .rpi/proposals/2026-03-13-auth.md --section "overview" --format json`,
+  rpi extract .rpi/designs/2026-03-13-auth.md --section "overview" --format json`,
 	Args: cobra.ExactArgs(1),
 	RunE: runExtract,
 }

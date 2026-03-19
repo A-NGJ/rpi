@@ -25,7 +25,7 @@ to "archived", archived_date added).`,
   rpi archive scan
 
   # Check if an artifact has active references
-  rpi archive check-refs .rpi/proposals/2026-03-13-auth.md
+  rpi archive check-refs .rpi/designs/2026-03-13-auth.md
 
   # Archive an artifact (fails with exit 3 if active refs exist)
   rpi archive move .rpi/plans/2026-03-13-auth.md
@@ -53,7 +53,7 @@ var archiveCheckRefsCmd = &cobra.Command{
 	Short: "Find all files referencing a given path",
 	Long: `Search frontmatter fields and body text of all .rpi/ files for
 references to the given path. Returns a list of files that reference it.`,
-	Example: `  rpi archive check-refs .rpi/proposals/2026-03-13-auth.md
+	Example: `  rpi archive check-refs .rpi/designs/2026-03-13-auth.md
   # → [".rpi/plans/2026-03-13-auth.md"]`,
 	Args: cobra.ExactArgs(1),
 	RunE: runArchiveCheckRefs,

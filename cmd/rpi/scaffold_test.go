@@ -188,7 +188,7 @@ func TestScaffoldAllTypes(t *testing.T) {
 	}{
 		{"research", []string{"--topic", "Test research"}},
 		{"plan", []string{"--topic", "Test plan"}},
-		{"propose", []string{"--topic", "Test proposal"}},
+		{"design", []string{"--topic", "Test design"}},
 		{"verify-report", []string{"--topic", "Test verify"}},
 		{"spec", []string{"--topic", "Test spec"}},
 	}

@@ -12,7 +12,7 @@ import (
 const maxDepth = 10
 
 // linkFields are frontmatter fields that contain paths to other artifacts.
-var linkFields = []string{"research", "ticket", "related_research", "proposal", "spec"}
+var linkFields = []string{"research", "ticket", "related_research", "design", "spec"}
 
 // listLinkFields are frontmatter fields that contain lists of paths.
 var listLinkFields = []string{"depends_on"}
@@ -206,8 +206,8 @@ func inferType(path string) string {
 			return "plan"
 		case "research":
 			return "research"
-		case "proposals":
-			return "proposal"
+		case "designs":
+			return "design"
 		case "prs":
 			return "pr"
 		case "reviews":

@@ -22,14 +22,14 @@ func writeFile(t *testing.T, dir, relPath, content string) string {
 func TestResolveSimpleChain(t *testing.T) {
 	dir := t.TempDir()
 
-	proposalPath := writeFile(t, dir, ".rpi/proposals/proposal.md",
-		"---\ntopic: \"My Proposal\"\nstatus: complete\nrelated_research: .rpi/research/research.md\n---\n# Proposal\n")
+	designPath := writeFile(t, dir, ".rpi/designs/design.md",
+		"---\ntopic: \"My Design\"\nstatus: complete\nrelated_research: .rpi/research/research.md\n---\n# Design\n")
 
 	writeFile(t, dir, ".rpi/research/research.md",
 		"---\ntopic: \"My Research\"\nstatus: complete\n---\n# Research\n")
 
 	planPath := writeFile(t, dir, ".rpi/plans/test-plan.md",
-		"---\ntopic: \"Test Plan\"\nstatus: draft\nproposal: "+proposalPath+"\n---\n# Plan\n")
+		"---\ntopic: \"Test Plan\"\nstatus: draft\ndesign: "+designPath+"\n---\n# Plan\n")
 
 	result, err := Resolve(planPath, ResolveOptions{})
 	if err != nil {
@@ -41,7 +41,7 @@ func TestResolveSimpleChain(t *testing.T) {
 	}
 
 	if len(result.Artifacts) != 2 {
-		// plan + proposal (research uses relative path so won't resolve from absolute proposal path)
+		// plan + design (research uses relative path so won't resolve from absolute design path)
 		t.Fatalf("got %d artifacts, want 2", len(result.Artifacts))
 	}
 
@@ -57,13 +57,13 @@ func TestResolveSimpleChain(t *testing.T) {
 func TestResolveCycleDetection(t *testing.T) {
 	dir := t.TempDir()
 
-	aPath := filepath.Join(dir, ".rpi/proposals/a.md")
-	bPath := filepath.Join(dir, ".rpi/proposals/b.md")
+	aPath := filepath.Join(dir, ".rpi/designs/a.md")
+	bPath := filepath.Join(dir, ".rpi/designs/b.md")
 
-	writeFile(t, dir, ".rpi/proposals/a.md",
-		"---\ntopic: A\nstatus: draft\nproposal: "+bPath+"\n---\n# A\n")
-	writeFile(t, dir, ".rpi/proposals/b.md",
-		"---\ntopic: B\nstatus: draft\nproposal: "+aPath+"\n---\n# B\n")
+	writeFile(t, dir, ".rpi/designs/a.md",
+		"---\ntopic: A\nstatus: draft\ndesign: "+bPath+"\n---\n# A\n")
+	writeFile(t, dir, ".rpi/designs/b.md",
+		"---\ntopic: B\nstatus: draft\ndesign: "+aPath+"\n---\n# B\n")
 
 	result, err := Resolve(aPath, ResolveOptions{})
 	if err != nil {
@@ -79,7 +79,7 @@ func TestResolveMissingFile(t *testing.T) {
 	dir := t.TempDir()
 
 	planPath := writeFile(t, dir, ".rpi/plans/p.md",
-		"---\ntopic: P\nstatus: draft\nproposal: /nonexistent/proposal.md\n---\n# P\n")
+		"---\ntopic: P\nstatus: draft\ndesign: /nonexistent/design.md\n---\n# P\n")
 
 	result, err := Resolve(planPath, ResolveOptions{})
 	if err != nil {
@@ -97,18 +97,18 @@ func TestResolveMissingFile(t *testing.T) {
 func TestResolveNoFrontmatterFallback(t *testing.T) {
 	dir := t.TempDir()
 
-	proposalPath := writeFile(t, dir, ".rpi/proposals/proposal.md",
-		"---\ntopic: Proposal\nstatus: complete\n---\n# Proposal\n")
+	designPath := writeFile(t, dir, ".rpi/designs/design.md",
+		"---\ntopic: Design\nstatus: complete\n---\n# Design\n")
 
 	planPath := writeFile(t, dir, ".rpi/plans/plan.md",
-		"# Plan\n\n## Source Documents\n- Proposal: `"+proposalPath+"`\n- Research: `.rpi/research/r.md`\n")
+		"# Plan\n\n## Source Documents\n- Proposal: `"+designPath+"`\n- Research: `.rpi/research/r.md`\n")
 
 	result, err := Resolve(planPath, ResolveOptions{})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	// Plan itself + proposal (research file missing → warning)
+	// Plan itself + design (research file missing → warning)
 	if len(result.Artifacts) < 2 {
 		t.Fatalf("got %d artifacts, want at least 2", len(result.Artifacts))
 	}
@@ -124,7 +124,7 @@ func TestResolveNoFrontmatterFallback(t *testing.T) {
 func TestResolveSingleFile(t *testing.T) {
 	dir := t.TempDir()
 
-	path := writeFile(t, dir, ".rpi/proposals/solo.md",
+	path := writeFile(t, dir, ".rpi/designs/solo.md",
 		"---\ntopic: Solo\nstatus: draft\n---\n# Solo\n")
 
 	result, err := Resolve(path, ResolveOptions{})
@@ -169,9 +169,9 @@ func TestResolveMaxDepth(t *testing.T) {
 	for i := 14; i >= 0; i-- {
 		link := ""
 		if i < 14 {
-			link = "proposal: " + paths[i+1] + "\n"
+			link = "design: " + paths[i+1] + "\n"
 		}
-		paths[i] = writeFile(t, dir, filepath.Join(".rpi/proposals", fmt.Sprintf("p%d.md", i)),
+		paths[i] = writeFile(t, dir, filepath.Join(".rpi/designs", fmt.Sprintf("p%d.md", i)),
 			"---\ntopic: P"+fmt.Sprintf("%d", i)+"\nstatus: draft\n"+link+"---\n# P\n")
 	}
 
@@ -192,8 +192,8 @@ func TestResolveMaxDepth(t *testing.T) {
 func TestResolveSectionsExtraction(t *testing.T) {
 	dir := t.TempDir()
 
-	path := writeFile(t, dir, ".rpi/proposals/proposal.md",
-		"---\ntopic: My Proposal\nstatus: complete\n---\n# Proposal\n\n## Summary\n\nThis is the summary.\n\n## Architecture\n\nDiagram here.\n")
+	path := writeFile(t, dir, ".rpi/designs/design.md",
+		"---\ntopic: My Design\nstatus: complete\n---\n# Design\n\n## Summary\n\nThis is the summary.\n\n## Architecture\n\nDiagram here.\n")
 
 	result, err := Resolve(path, ResolveOptions{Sections: []string{"Summary"}})
 	if err != nil {
@@ -216,8 +216,8 @@ func TestResolveSectionsExtraction(t *testing.T) {
 func TestResolveSectionsEmptyOptions(t *testing.T) {
 	dir := t.TempDir()
 
-	path := writeFile(t, dir, ".rpi/proposals/proposal.md",
-		"---\ntopic: My Proposal\nstatus: complete\n---\n# Proposal\n\n## Summary\n\nContent.\n")
+	path := writeFile(t, dir, ".rpi/designs/design.md",
+		"---\ntopic: My Design\nstatus: complete\n---\n# Design\n\n## Summary\n\nContent.\n")
 
 	result, err := Resolve(path, ResolveOptions{})
 	if err != nil {
@@ -232,8 +232,8 @@ func TestResolveSectionsEmptyOptions(t *testing.T) {
 func TestResolveSectionsNoMatch(t *testing.T) {
 	dir := t.TempDir()
 
-	path := writeFile(t, dir, ".rpi/proposals/proposal.md",
-		"---\ntopic: My Proposal\nstatus: complete\n---\n# Proposal\n\n## Summary\n\nContent.\n")
+	path := writeFile(t, dir, ".rpi/designs/design.md",
+		"---\ntopic: My Design\nstatus: complete\n---\n# Design\n\n## Summary\n\nContent.\n")
 
 	result, err := Resolve(path, ResolveOptions{Sections: []string{"Nonexistent"}})
 	if err != nil {
@@ -251,7 +251,7 @@ func TestInferType(t *testing.T) {
 		want string
 	}{
 		{".rpi/plans/foo.md", "plan"},
-		{".rpi/proposals/foo.md", "proposal"},
+		{".rpi/designs/foo.md", "design"},
 		{".rpi/research/foo.md", "research"},
 		{".rpi/prs/foo.md", "pr"},
 		{".rpi/reviews/foo.md", "review"},

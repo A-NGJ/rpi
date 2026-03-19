@@ -46,7 +46,7 @@ func TestGenerateFilename(t *testing.T) {
 		want         string
 	}{
 		{"research", ctx, "2026-03-08-templates-scaffold.md"},
-		{"propose", ctx, "2026-03-08-templates-scaffold.md"},
+		{"design", ctx, "2026-03-08-templates-scaffold.md"},
 		{"plan", ctx, "2026-03-08-cli-002-templates-scaffold.md"},
 		{"verify-report", ctx, "2026-03-08-verify-templates-scaffold.md"},
 		{"spec", ctx, "templates-scaffold.md"},
@@ -186,7 +186,7 @@ func TestRenderAllTemplates(t *testing.T) {
 		Topic:      "Test Topic",
 		Ticket:     "cli-007",
 		Research:   ".rpi/research/2026-03-08-test.md",
-		Proposal:   ".rpi/proposals/2026-03-08-test.md",
+		Design:     ".rpi/designs/2026-03-08-test.md",
 		Spec:       ".rpi/specs/test.md",
 		Tags:       "go, cli",
 		TypeLabel:  "Plan",
@@ -198,7 +198,7 @@ func TestRenderAllTemplates(t *testing.T) {
 	}{
 		{"research", []string{"# Research: Test Topic", "researcher: Claude", "git_commit: abc1234"}},
 		{"plan", []string{"# cli-007: Test Topic", "ticket: \"cli-007\"", `spec: ".rpi/specs/test.md"`}},
-		{"propose", []string{"# Proposal: Test Topic"}},
+		{"design", []string{"# Design: Test Topic"}},
 		{"verify-report", []string{"# Verification Report: Test Topic", "## Completeness"}},
 		{"spec", []string{"domain: Test Topic", "## Purpose", "## Behavior", "## Constraints", "## Test Cases", "id:", "status: draft"}},
 	}

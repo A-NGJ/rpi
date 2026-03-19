@@ -18,7 +18,7 @@ var chainCmd = &cobra.Command{
 	Long: `Follow frontmatter link fields recursively from a root artifact and return
 the full dependency chain as a flat metadata list.
 
-Link fields followed: research, proposal, ticket, depends_on, related_research.
+Link fields followed: research, design, ticket, depends_on, related_research.
 Recurses up to depth 10 and detects cycles. Falls back to scanning
 "## Source Documents" / "## References" sections for .rpi/ paths.
 
@@ -36,7 +36,7 @@ for a markdown table.`,
   #   "root": ".rpi/plans/2026-03-13-auth.md",
   #   "artifacts": [
   #     {"path": ".rpi/plans/2026-03-13-auth.md", "type": "plan", "status": "draft", ...},
-  #     {"path": ".rpi/proposals/2026-03-12-auth.md", "type": "proposal", ...}
+  #     {"path": ".rpi/designs/2026-03-12-auth.md", "type": "design", ...}
   #   ]
   # }`,
 	Args: cobra.ExactArgs(1),

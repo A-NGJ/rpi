@@ -20,7 +20,7 @@ var rootCmd = &cobra.Command{
 Research → Propose → Plan → Implement → Verify → Archive pipeline.
 
 Each stage produces a markdown artifact in .rpi/ with YAML frontmatter.
-Artifacts link to each other via frontmatter fields (research, proposal,
+Artifacts link to each other via frontmatter fields (research, design,
 depends_on), forming dependency chains that rpi can resolve.`,
 	Example: `  # Scaffold a research artifact
   rpi scaffold research --topic "auth flow" --write
