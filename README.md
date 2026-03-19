@@ -56,6 +56,7 @@ AI coding assistants are powerful but unpredictable when given large tasks. They
    - `.rpi/index.json` -- Codebase symbol index
    - `.rpi/cli-reference.md` -- Auto-generated CLI reference
    - `CLAUDE.md` (or `AGENTS.md`) -- Project-level instructions for the AI
+   - MCP server registration (Claude Code only) -- auto-registers `rpi serve` so the AI calls typed tools instead of shelling out
 
    To regenerate the index and CLI reference after updating the `rpi` binary:
    ```bash
@@ -95,6 +96,12 @@ See the [full workflow guide](docs/workflow-guide.md) for detailed examples of e
 - [`.rpi/` Directory](docs/thoughts-directory.md) -- Artifact structure, naming, status lifecycle, and team sharing
 - [`rpi init`](docs/rpi-init.md) -- CLI bootstrapping, flags, shell completion, and OpenCode support
 - [Architecture](docs/architecture.md) -- Why a Go binary, CLI commands, and project structure
+
+## MCP Server
+
+The `rpi` binary doubles as an [MCP](https://modelcontextprotocol.io/) server. Running `rpi serve` starts a stdio-based server that exposes all CLI operations as typed tools (`rpi_scaffold`, `rpi_scan`, `rpi_chain`, `rpi_frontmatter_get`, etc.). AI assistants call these tools with validated JSON schemas instead of constructing shell commands.
+
+`rpi init` auto-registers the MCP server with Claude Code when both `rpi` and `claude` are in your PATH. Use `--no-mcp` to skip this. See [Architecture](docs/architecture.md) for details.
 
 ## How It Compares
 

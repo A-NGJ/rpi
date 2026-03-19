@@ -18,6 +18,7 @@ rpi init ~/projects/my-app --target opencode
 # Options
 rpi init --force            # Overwrite existing files and directories
 rpi init --no-claude-md     # Skip rules file generation (CLAUDE.md or AGENTS.md)
+rpi init --no-mcp           # Skip MCP server registration
 rpi init --track-rpi        # Don't gitignore .rpi/ (track in git)
 ```
 
@@ -28,9 +29,10 @@ rpi init --track-rpi        # Don't gitignore .rpi/ (track in git)
 - `.claude/agents/` -- Agent definitions (e.g., codebase-analyzer)
 - `.claude/commands/` -- Slash command definitions (rpi-plan, rpi-research, rpi-propose, etc.)
 - `.claude/skills/` -- Skill definitions (find-patterns, locate-codebase, etc.)
-- `.claude/templates/` -- Scaffold templates for plans, proposals, research docs, etc.
+- `.claude/templates/` -- Scaffold templates for plans, designs, research docs, etc.
 - `.claude/hooks/` -- Empty directory for custom hooks
 - `CLAUDE.md` -- Project-level instructions for Claude Code
+- MCP server registered via `claude mcp add rpi -- rpi serve`
 
 ### OpenCode target
 
@@ -46,6 +48,16 @@ rpi init --track-rpi        # Don't gitignore .rpi/ (track in git)
 - `.rpi/` -- Directory structure for pipeline artifacts (gitignored by default)
 - `.rpi/PIPELINE.md` -- Pipeline reference guide
 - `.rpi/index.json` -- Codebase symbol index
+
+### MCP Server Configuration
+
+When the target is `claude`, `rpi init` auto-registers an MCP server so the AI calls typed tools (`rpi_scaffold`, `rpi_scan`, etc.) instead of shelling out to the CLI.
+
+- Requires both `rpi` and `claude` to be in PATH
+- Skipped with `--no-mcp` or when the target is `opencode`
+- Warns and continues (doesn't fail) if `rpi` or `claude` are not found, or if the server is already registered
+- Uses `claude mcp add rpi -- rpi serve` to register
+- `rpi init --update` does **not** re-register the MCP server (only rebuilds the index and CLI reference)
 
 ## Installation
 
