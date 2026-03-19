@@ -1,6 +1,7 @@
 ---
 description: Research the codebase to understand problems before proposing solutions
 model: sonnet
+disable-model-invocation: true
 ---
 
 # Research Codebase

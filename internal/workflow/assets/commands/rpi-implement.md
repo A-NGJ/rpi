@@ -1,6 +1,7 @@
 ---
 description: Implement technical plans from .rpi/plans with verification
 model: sonnet
+disable-model-invocation: true
 ---
 
 # Implement Plan

@@ -1,6 +1,7 @@
 ---
 description: Create implementation plans — works standalone for simple tasks or with prior proposals for complex ones
 model: sonnet
+disable-model-invocation: true
 ---
 
 # Implementation Plan

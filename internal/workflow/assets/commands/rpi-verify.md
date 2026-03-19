@@ -1,6 +1,7 @@
 ---
 description: Verify implementation against proposal artifacts for completeness, correctness, and coherence
 model: opus
+disable-model-invocation: true
 ---
 
 # Verify Implementation

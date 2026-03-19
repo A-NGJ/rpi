@@ -1,6 +1,7 @@
 ---
 description: Archive completed artifacts to keep .rpi/ directory clean
 model: haiku
+disable-model-invocation: true
 ---
 
 # Archive Artifacts

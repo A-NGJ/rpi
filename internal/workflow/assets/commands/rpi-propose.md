@@ -1,6 +1,7 @@
 ---
 description: Investigate, analyze, and propose solutions — from quick decisions to complex features
 model: opus
+disable-model-invocation: true
 ---
 
 # Solution Proposal
