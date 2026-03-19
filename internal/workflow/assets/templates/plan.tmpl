@@ -6,8 +6,8 @@ status: draft
 {{- if .Ticket}}
 ticket: "{{.Ticket}}"
 {{- end}}
-{{- if .Proposal}}
-proposal: "{{.Proposal}}"
+{{- if .Design}}
+design: "{{.Design}}"
 {{- end}}
 {{- if .Spec}}
 spec: "{{.Spec}}"
@@ -25,8 +25,8 @@ spec: "{{.Spec}}"
 {{- if .Ticket}}
 - **Ticket**: <!-- TODO: path --> — {{.Ticket}}
 {{- end}}
-{{- if .Proposal}}
-- **Proposal**: {{.Proposal}}
+{{- if .Design}}
+- **Proposal**: {{.Design}}
 {{- end}}
 {{- if .Spec}}
 - **Spec**: {{.Spec}}
@@ -70,8 +70,8 @@ spec: "{{.Spec}}"
 {{- if .Ticket}}
 - Ticket: <!-- TODO: path --> — {{.Ticket}}
 {{- end}}
-{{- if .Proposal}}
-- Proposal: {{.Proposal}}
+{{- if .Design}}
+- Design: {{.Design}}
 {{- end}}
 {{- if .Spec}}
 - Spec: {{.Spec}}

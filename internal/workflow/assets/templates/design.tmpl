@@ -1,0 +1,39 @@
+---
+date: {{.Date}}
+topic: "{{.Topic}}"
+tags: [design{{if .Tags}}, {{.Tags}}{{end}}]
+status: draft
+{{- if .Research}}
+related_research: {{.Research}}
+{{- end}}
+---
+
+# Design: {{.Topic}}
+
+## Summary
+<!-- TODO: 1-3 sentence elevator pitch -->
+
+## Context
+<!-- TODO: Why this change — relevant background and constraints that shaped the design -->
+
+## Constraints
+<!-- TODO: What limits our options -->
+
+## Components
+<!-- TODO: What pieces exist or are being built, their responsibilities.
+Integrate decisions inline — describe the component, mention alternatives
+considered, explain the choice in context. -->
+
+## File Structure
+<!-- TODO: New/modified files — when applicable -->
+
+## Risks
+<!-- TODO: What could go wrong and how we'd handle it -->
+
+## Out of Scope
+<!-- TODO: What this design intentionally does not cover -->
+
+## References
+{{- if .Research}}
+- Research: {{.Research}}
+{{- end}}
