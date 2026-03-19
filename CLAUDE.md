@@ -21,7 +21,7 @@ This project uses a `.rpi/` directory for persistent context:
 ```
 .rpi/
 ├── research/      # Codebase research notes (optional, from /rpi-research)
-├── proposals/     # Solution proposals (created by /rpi-propose)
+├── designs/       # Solution designs (created by /rpi-propose)
 ├── plans/         # Implementation plans (created by /rpi-plan)
 ├── specs/         # Living behavioral specs
 ├── reviews/       # Verification reports
@@ -33,7 +33,7 @@ This project uses a `.rpi/` directory for persistent context:
 ### Usage
 
 - **Research**: Save exploration findings in `.rpi/research/`
-- **Proposals**: Record investigation findings and design decisions in `.rpi/proposals/`
+- **Designs**: Record architecture and design decisions in `.rpi/designs/`
 - **Plans**: Store implementation plans in `.rpi/plans/`
 - **Specs**: Maintain behavioral specs in `.rpi/specs/`
 
@@ -41,7 +41,7 @@ This project uses a `.rpi/` directory for persistent context:
 
 - The `.rpi/` directory is gitignored
 - Use descriptive filenames: `YYYY-MM-DD-feature-name.md`
-- Proposals go in `.rpi/proposals/`. Implementation plans go in `.rpi/plans/`. Never save planning artifacts in the project root or other directories unless explicitly told otherwise.
+- Designs go in `.rpi/designs/`. Implementation plans go in `.rpi/plans/`. Never save planning artifacts in the project root or other directories unless explicitly told otherwise.
 
 ### Development Pipeline
 
@@ -71,7 +71,7 @@ When the user says 'looks good' or similar short affirmations during planning, p
 
 ## Plan Mode
 
-Do NOT use `EnterPlanMode` during any `/rpi-*` command. The RPI workflow has its own structured phases with checkpoints and approval gates. Entering plan mode mid-flow restricts tool access, causes steps to be skipped, and can make Claude rush into planning the entire project — bypassing the research and proposal phases entirely. Follow the RPI command's steps as written instead.
+Do NOT use `EnterPlanMode` during any `/rpi-*` command. The RPI workflow has its own structured phases with checkpoints and approval gates. Entering plan mode mid-flow restricts tool access, causes steps to be skipped, and can make Claude rush into planning the entire project — bypassing the research and design phases entirely. Follow the RPI command's steps as written instead.
 
 ## Debugging
 

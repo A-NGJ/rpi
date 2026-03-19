@@ -3,12 +3,12 @@
 Standard workflow for taking features from idea to implementation.
 
 ```
-[Research] → Propose → [spec + proposal] → Plan → Implement → Verify
-    │           │              │               │        │          │
-    ▼           ▼              ▼               ▼        ▼          ▼
-(optional)  .rpi/    Approve/Edit     .rpi/  code +   .rpi/
-.rpi/  proposals/ +  (gate 1:         plans/      tests +  reviews/
-research/   specs/         contract                    commits
+[Research] → Propose → [spec + design] → Plan → Implement → Verify
+    │           │              │              │        │          │
+    ▼           ▼              ▼              ▼        ▼          ▼
+(optional)  .rpi/    Approve/Edit    .rpi/  code +   .rpi/
+.rpi/    designs/ +  (gate 1:        plans/      tests +  reviews/
+research/   specs/         contract                   commits
                            agreed?)
 ```
 
@@ -54,12 +54,12 @@ Research is conversational by default — no artifact unless you ask. Everything
 **Inputs**:
 - Plain text description → **Quick mode** (focused decision)
 - Complex feature description or path to research doc → **Full mode** (multi-decision)
-- Path to existing proposal → **Incremental mode** (update)
+- Path to existing design → **Incremental mode** (update)
 
 **Quick mode** (focused decisions):
 1. Quick context gathering (1-2 sub-tasks)
 2. Trade-off analysis with recommendation
-3. Write proposal doc
+3. Write design doc
 4. Create/update spec (behavioral contract with test cases) → present for approval
 
 **Full mode** (complex features):
@@ -67,12 +67,12 @@ Research is conversational by default — no artifact unless you ask. Everything
 2. Present findings + questions → **human checkpoint**
 3. Explore design options → **human checkpoint**
 4. Synthesize chosen direction → **human checkpoint**
-5. Write proposal doc
+5. Write design doc
 6. Create/update spec (behavioral contract with test cases)
 7. Review spec contract & iterate → **approval gate**
 
-**Output**: `.rpi/proposals/YYYY-MM-DD-description.md` + `.rpi/specs/<module>.md`
-- Proposal: summary, investigation findings, constraints, design decisions, rationale
+**Output**: `.rpi/designs/YYYY-MM-DD-description.md` + `.rpi/specs/<module>.md`
+- Design: summary, context, constraints, components, file structure, risks
 - Spec: purpose, behaviors (prefixed IDs), constraints (Must/Must Not/Out of Scope), test cases (Given/When/Then)
 
 **When to use**:
@@ -95,11 +95,11 @@ Research is conversational by default — no artifact unless you ask. Everything
 **Purpose**: Create a detailed, phase-by-phase implementation plan with specific file changes, code snippets, and verifiable success criteria. Automatically assesses scope and decomposes when needed.
 
 **Inputs**:
-- Proposal document → **Pipeline mode** (with scope assessment + decomposition)
+- Design document → **Pipeline mode** (with scope assessment + decomposition)
 - Task description → **Standalone mode** (lightweight research + plan)
 
 **Process**:
-1. Read all provided context (proposal, approved spec, key files) — the spec is the behavioral contract the plan must satisfy
+1. Read all provided context (design, approved spec, key files) — the spec is the behavioral contract the plan must satisfy
 2. **Scope assessment**: single concern ≤4 phases → single plan; multiple concerns → decompose into separate plan files
 3. Define phases (each maps to spec behaviors), success criteria, commit strategy
 4. Write plan file(s) with `spec:` frontmatter linking the approved spec
@@ -117,7 +117,7 @@ Research is conversational by default — no artifact unless you ask. Everything
 **Example**:
 ```
 /rpi-plan Add a retry mechanism to the webhook handler
-/rpi-plan .rpi/proposals/2026-03-10-feature-name.md
+/rpi-plan .rpi/designs/2026-03-10-feature-name.md
 ```
 
 ---
@@ -132,7 +132,7 @@ Research is conversational by default — no artifact unless you ask. Everything
 - Plan document (path to `.rpi/plans/` file)
 
 **Process**:
-1. Read the plan, resolve artifact chain (proposal, specs)
+1. Read the plan, resolve artifact chain (design, specs)
 2. For each phase:
    - Pre-review: present intended changes for approval
    - Implement changes
@@ -159,7 +159,7 @@ Research is conversational by default — no artifact unless you ask. Everything
 | Command | Input | Output |
 |---------|-------|--------|
 | `/rpi-research` | Question or topic | Conversational (optional `.rpi/research/`) |
-| `/rpi-propose` | Description, research doc, or existing proposal | `.rpi/proposals/` |
+| `/rpi-propose` | Description, research doc, or existing design | `.rpi/designs/` |
 | `/rpi-plan` | Proposal doc or task description | `.rpi/plans/` |
 | `/rpi-implement` | Plan doc | Code + tests + commits |
 | `/rpi-commit` | Working tree changes | Git commits |

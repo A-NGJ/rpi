@@ -17,7 +17,7 @@ This project uses a `.rpi/` directory for persistent context:
 ```
 .rpi/
 ├── research/      # Codebase research notes (optional, from /rpi-research)
-├── proposals/     # Solution proposals (created by /rpi-propose)
+├── designs/       # Solution designs (created by /rpi-propose)
 ├── plans/         # Implementation plans (created by /rpi-plan)
 ├── specs/         # Living behavioral specs
 ├── reviews/       # Verification reports
@@ -29,7 +29,7 @@ This project uses a `.rpi/` directory for persistent context:
 ### Usage
 
 - **Research**: Save exploration findings in `.rpi/research/`
-- **Proposals**: Record investigation findings and design decisions in `.rpi/proposals/`
+- **Designs**: Record architecture and design decisions in `.rpi/designs/`
 - **Plans**: Store implementation plans in `.rpi/plans/`
 - **Specs**: Maintain behavioral specs in `.rpi/specs/`
 
@@ -37,7 +37,7 @@ This project uses a `.rpi/` directory for persistent context:
 
 - The `.rpi/` directory is gitignored
 - Use descriptive filenames: `YYYY-MM-DD-feature-name.md`
-- Proposals go in `.rpi/proposals/`. Implementation plans go in `.rpi/plans/`. Never save planning artifacts in the project root or other directories unless explicitly told otherwise.
+- Designs go in `.rpi/designs/`. Implementation plans go in `.rpi/plans/`. Never save planning artifacts in the project root or other directories unless explicitly told otherwise.
 
 ### Development Pipeline
 
