@@ -41,6 +41,10 @@ For tasks that don't need the full propose → plan pipeline: bug fixes, small f
 
 Present the plan summary and ask if anything needs adjusting. Keep iterating until the user confirms.
 
+> **NEXT STAGE** — You MUST do this immediately when the user confirms the plan:
+> Suggest: `→ /rpi-implement .rpi/plans/YYYY-MM-DD-description.md`
+> Include the actual path of the plan artifact you just created.
+
 ---
 
 ## Pipeline Mode
@@ -90,6 +94,10 @@ After the plan is written, verify it covers all the design's decisions — nothi
 
 Present the plan summary and ask if anything needs adjusting. Keep iterating until the user confirms.
 
+> **NEXT STAGE** — You MUST do this immediately when the user confirms the plan:
+> Suggest: `→ /rpi-implement .rpi/plans/YYYY-MM-DD-description.md`
+> Include the actual path of the plan artifact you just created.
+
 ---
 
 ## Guidelines
@@ -103,5 +111,3 @@ Present the plan summary and ask if anything needs adjusting. Keep iterating unt
 7. **Tests belong to their phase** — write tests alongside the code they cover, not in a separate section
 8. **Trust prior stages** (pipeline mode) — don't redo research or design work; reference those docs
 9. **Spot-check reality** (pipeline mode) — verify the codebase matches the design before planning
-
-If the user confirms the plan looks good, proceed to `/rpi-implement` with the plan path.

@@ -77,6 +77,9 @@ Synthesize all results:
 
 Ask if they have follow-up questions.
 
+> **NEXT STAGE** — When findings point to something actionable and the user is ready to move forward:
+> You MUST suggest: `→ /rpi-propose` (or `/rpi-propose .rpi/research/YYYY-MM-DD-topic.md` if a research artifact was saved).
+
 ## Step 8: Optional summary save
 
 If the user asks to save findings ("save this", "summarize what we found"), or if the investigation is substantial enough that cross-session handoff is clearly valuable:
@@ -88,9 +91,8 @@ Offer to save to `.rpi/research/`. If they agree:
 
 **Do not force artifact creation.** The default is conversational — only save when requested or clearly useful.
 
-## Step 9: Transition out
-
-When insights crystallize into something actionable, suggest continuing with `/rpi-propose`. If in the same session, the full context carries over. If in a new session, they can pass the saved summary: `/rpi-propose .rpi/research/YYYY-MM-DD-topic.md`.
+> **NEXT STAGE** — After saving, if findings are actionable and the user is ready:
+> You MUST suggest: `→ /rpi-propose .rpi/research/YYYY-MM-DD-topic.md` (use the actual path of the artifact you just saved).
 
 ## Guidelines
 

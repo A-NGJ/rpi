@@ -49,7 +49,9 @@ If this design was created from a research doc, use the rpi_frontmatter_get tool
 
 Present the spec to the user for approval or editing. Once accepted, use the rpi_frontmatter_transition tool to transition the spec from `draft` to `approved`.
 
-Then suggest: `→ /rpi-plan .rpi/designs/YYYY-MM-DD-description.md`
+> **NEXT STAGE** — You MUST do this immediately when the user approves the spec:
+> Suggest: `→ /rpi-plan .rpi/designs/YYYY-MM-DD-description.md`
+> Include the actual path of the design artifact you just created.
 
 ---
 
@@ -104,7 +106,9 @@ Focus on the spec as the contract that drives all downstream work. Iterate based
 
 Once accepted, use the rpi_frontmatter_transition tool to transition the spec from `draft` to `approved`.
 
-Then suggest: `→ /rpi-plan .rpi/designs/YYYY-MM-DD-description.md`
+> **NEXT STAGE** — You MUST do this immediately when the user approves the spec:
+> Suggest: `→ /rpi-plan .rpi/designs/YYYY-MM-DD-description.md`
+> Include the actual path of the design artifact you just created.
 
 ---
 
