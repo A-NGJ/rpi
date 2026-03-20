@@ -1,6 +1,6 @@
 ---
 description: Implement technical plans from .rpi/plans with verification
-model: sonnet
+model: inherit
 disable-model-invocation: true
 ---
 
@@ -36,6 +36,7 @@ If no plan path provided, ask for one.
 Plans are carefully designed, but reality can be messy. Your job is to:
 
 - **Preview before writing**: Before modifying any files in a phase, present a summary of all intended changes for approval (see Pre-Review below)
+- **Red/green TDD for new code**: Write tests first, confirm they fail (red), then implement until they pass (green)
 - Follow the plan's intent while adapting to what you find
 - Implement each phase fully before moving to the next
 - Verify your work makes sense in the broader codebase context

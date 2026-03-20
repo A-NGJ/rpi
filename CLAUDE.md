@@ -51,19 +51,11 @@ See `.rpi/PIPELINE.md` for the full workflow guide covering: Research → Propos
 
 The `rpi` binary manages `.rpi/` artifacts. See `.rpi/cli-reference.md` for all available commands and flags. Run `rpi init --update` to regenerate after CLI changes.
 
-## Implementing Plans
-
-- When implementing a plan from `.rpi/plans/`, present intended changes for each phase before writing code. Pause between phases for manual verification. Update checkboxes in the plan file as items complete, and resume from the first unchecked item if checkboxes already exist.
-- After implementing changes, always run the full test suite before commiting. If tests fail, fix them before presenting the commit plan.
-Tests commonly break due to: outdated fixture values, incorrect mock setup, and missing edge cases.
-
 ## Development Conventions
 
 Before implementing any changes, always: 1) Read the current version of each file you plan to modify, 2) Run the existing test suite to establish a baseline, 3) Implement changes incrementally — one logical unit at a time, 4) Run tests after each unit. If tests fail, fix before proceeding. Do not batch all changes and test at the end.
 
-## Testing 
-
-After implementing changes, always run the full test suite before committing. If tests fail, fix them before presenting the commit plan. Tests commonly break due to: outdated fixture values, incorrect mock setup, and missing edge cases.
+When implementing a plan from `.rpi/plans/`, present intended changes for each phase before writing code. Pause between phases for manual verification. Update checkboxes in the plan file as items complete, and resume from the first unchecked item if checkboxes already exist.
 
 ## Communication Style
 
