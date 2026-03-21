@@ -546,8 +546,8 @@ func TestInitOpenCode(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read rpi-research.md: %v", err)
 	}
-	if !strings.Contains(string(cmdData), "model: anthropic/claude-sonnet-4-6") {
-		t.Error("command model should be transformed to full provider ID")
+	if !strings.Contains(string(cmdData), "model: inherit") {
+		t.Error("command model: inherit should pass through unchanged for opencode")
 	}
 
 	// Verify command body is tool-agnostic (no Sub-task syntax)

@@ -4,11 +4,9 @@ This file provides guidance to Claude Code when working with this repository.
 
 ## Project Overview
 
-This project introduces a structured workflow for software development, emphasizing clear documentation, incremental implementation, and rigorous testing.
+This project follows Spec-Driven Development (SDD). Behavioral specs live in `.rpi/specs/` and serve as the source of truth for expected behavior. Always consult relevant specs before implementing or modifying features.
 
-It consists of the following key components:
-- **RPI Workflow**: A set of commands for the Research-Propose-Plan-Implement workflow in form of commands and skills in markdown format.
-- **RPI Binary**: A command-line tool to manage the RPI workflow, written in go.
+<!-- TODO: Add brief project description -->
 
 ## Git Workflow 
 
@@ -25,48 +23,16 @@ This project uses a `.rpi/` directory for persistent context:
 ├── plans/         # Implementation plans (created by /rpi-plan)
 ├── specs/         # Living behavioral specs
 ├── reviews/       # Verification reports
-├── prs/           # PR descriptions
 ├── archive/       # Archived completed artifacts
 ```
 
-
-### Usage
-
-- **Research**: Save exploration findings in `.rpi/research/`
-- **Designs**: Record architecture and design decisions in `.rpi/designs/`
-- **Plans**: Store implementation plans in `.rpi/plans/`
-- **Specs**: Maintain behavioral specs in `.rpi/specs/`
-
-### Conventions
-
-- The `.rpi/` directory is gitignored
-- Use descriptive filenames: `YYYY-MM-DD-feature-name.md`
-- Designs go in `.rpi/designs/`. Implementation plans go in `.rpi/plans/`. Never save planning artifacts in the project root or other directories unless explicitly told otherwise.
 
 ### Development Pipeline
 
 See `.rpi/PIPELINE.md` for the full workflow guide covering: Research → Propose → Plan → Implement.
 
-### RPI CLI
-
-The `rpi` binary manages `.rpi/` artifacts. See `.rpi/cli-reference.md` for all available commands and flags. Run `rpi init --update` to regenerate after CLI changes.
 
 ## Development Conventions
 
 Before implementing any changes, always: 1) Read the current version of each file you plan to modify, 2) Run the existing test suite to establish a baseline, 3) Implement changes incrementally — one logical unit at a time, 4) Run tests after each unit. If tests fail, fix before proceeding. Do not batch all changes and test at the end.
-
-When implementing a plan from `.rpi/plans/`, present intended changes for each phase before writing code. Pause between phases for manual verification. Update checkboxes in the plan file as items complete, and resume from the first unchecked item if checkboxes already exist.
-
-## Communication Style
-
-When the user says 'looks good' or similar short affirmations during planning, proceed immediately with implementation. Do not elaborate further on the plan or ask for additional confirmation.
-
-## Plan Mode
-
-Do NOT use `EnterPlanMode` during any `/rpi-*` command. The RPI workflow has its own structured phases with checkpoints and approval gates. Entering plan mode mid-flow restricts tool access, causes steps to be skipped, and can make Claude rush into planning the entire project — bypassing the research and design phases entirely. Follow the RPI command's steps as written instead.
-
-## Debugging
-
-When the user reports a bug with a concrete example, reproduce the exact example first before proposing a fix. Do not assume you understand the issue until you've verified with the user's specific data.
-
-
+<!-- TODO: Add project-specific conventions -->

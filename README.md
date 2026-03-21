@@ -74,7 +74,7 @@ AI coding assistants are powerful but unpredictable when given large tasks. They
 | `/rpi-plan` | Creates phased implementation plan with success criteria | `.rpi/plans/YYYY-MM-DD-topic.md` |
 | `/rpi-implement` | Executes a plan phase-by-phase with verification | Code, tests, and commits |
 | `/rpi-commit` | Creates focused git commits with smart grouping | Git commits |
-| `/rpi-verify` | Validates implementation matches proposal artifacts | Verification report |
+| `/rpi-verify` | Validates implementation matches design artifacts | Verification report |
 | `/rpi-archive` | Archives completed artifacts to keep `.rpi/` clean | Moves files to `.rpi/archive/` |
 
 ## Choosing Your Path
