@@ -444,6 +444,144 @@ func TestIntegration_AllToolsRegistered(t *testing.T) {
 	}
 }
 
+// --- MCP Description Tests (GG-1 through GG-4) ---
+
+func TestMCPDescription_IncludesLongText(t *testing.T) {
+	// GG-1: Every MCP tool description includes the Cobra command's Long field
+	s := newRPIServer()
+	ctx := context.Background()
+	client := mcp.NewClient(&mcp.Implementation{Name: "test", Version: "v0"}, nil)
+	st, ct := mcp.NewInMemoryTransports()
+	ss, err := s.Connect(ctx, st, nil)
+	if err != nil {
+		t.Fatalf("server connect: %v", err)
+	}
+	defer ss.Close()
+	cs, err := client.Connect(ctx, ct, nil)
+	if err != nil {
+		t.Fatalf("client connect: %v", err)
+	}
+	defer cs.Close()
+
+	res, err := cs.ListTools(ctx, nil)
+	if err != nil {
+		t.Fatalf("ListTools: %v", err)
+	}
+
+	tools := make(map[string]string)
+	for _, tool := range res.Tools {
+		tools[tool.Name] = tool.Description
+	}
+
+	// scaffold's Long contains "Types and their subdirectories"
+	if desc, ok := tools["rpi_scaffold"]; !ok {
+		t.Error("missing rpi_scaffold tool")
+	} else if !strings.Contains(desc, "Types and their subdirectories") {
+		t.Errorf("rpi_scaffold description missing Long content, got: %s", desc[:min(len(desc), 100)])
+	}
+}
+
+func TestMCPDescription_IncludesExamples(t *testing.T) {
+	// GG-2: Every MCP tool description includes the Cobra command's Example field
+	s := newRPIServer()
+	ctx := context.Background()
+	client := mcp.NewClient(&mcp.Implementation{Name: "test", Version: "v0"}, nil)
+	st, ct := mcp.NewInMemoryTransports()
+	ss, err := s.Connect(ctx, st, nil)
+	if err != nil {
+		t.Fatalf("server connect: %v", err)
+	}
+	defer ss.Close()
+	cs, err := client.Connect(ctx, ct, nil)
+	if err != nil {
+		t.Fatalf("client connect: %v", err)
+	}
+	defer cs.Close()
+
+	res, err := cs.ListTools(ctx, nil)
+	if err != nil {
+		t.Fatalf("ListTools: %v", err)
+	}
+
+	tools := make(map[string]string)
+	for _, tool := range res.Tools {
+		tools[tool.Name] = tool.Description
+	}
+
+	// chain's Example contains "rpi chain .rpi/plans/"
+	if desc, ok := tools["rpi_chain"]; !ok {
+		t.Error("missing rpi_chain tool")
+	} else if !strings.Contains(desc, "rpi chain .rpi/plans/") {
+		t.Errorf("rpi_chain description missing Example content, got: %s", desc[:min(len(desc), 100)])
+	}
+}
+
+func TestMCPDescription_SingleSourceOfTruth(t *testing.T) {
+	// GG-3: No inline description strings — all derived from Cobra commands (should be long)
+	s := newRPIServer()
+	ctx := context.Background()
+	client := mcp.NewClient(&mcp.Implementation{Name: "test", Version: "v0"}, nil)
+	st, ct := mcp.NewInMemoryTransports()
+	ss, err := s.Connect(ctx, st, nil)
+	if err != nil {
+		t.Fatalf("server connect: %v", err)
+	}
+	defer ss.Close()
+	cs, err := client.Connect(ctx, ct, nil)
+	if err != nil {
+		t.Fatalf("client connect: %v", err)
+	}
+	defer cs.Close()
+
+	res, err := cs.ListTools(ctx, nil)
+	if err != nil {
+		t.Fatalf("ListTools: %v", err)
+	}
+
+	for _, tool := range res.Tools {
+		if len(tool.Description) < 50 {
+			t.Errorf("tool %s has short description (%d chars) — likely not derived from Cobra Long: %q",
+				tool.Name, len(tool.Description), tool.Description)
+		}
+	}
+}
+
+func TestMCPDescription_FrontmatterIncludesParent(t *testing.T) {
+	// GG-4: Frontmatter subcommand tools include parent command's Long field
+	s := newRPIServer()
+	ctx := context.Background()
+	client := mcp.NewClient(&mcp.Implementation{Name: "test", Version: "v0"}, nil)
+	st, ct := mcp.NewInMemoryTransports()
+	ss, err := s.Connect(ctx, st, nil)
+	if err != nil {
+		t.Fatalf("server connect: %v", err)
+	}
+	defer ss.Close()
+	cs, err := client.Connect(ctx, ct, nil)
+	if err != nil {
+		t.Fatalf("client connect: %v", err)
+	}
+	defer cs.Close()
+
+	res, err := cs.ListTools(ctx, nil)
+	if err != nil {
+		t.Fatalf("ListTools: %v", err)
+	}
+
+	tools := make(map[string]string)
+	for _, tool := range res.Tools {
+		tools[tool.Name] = tool.Description
+	}
+
+	// frontmatter_transition should contain state transition info from parent Long
+	desc := tools["rpi_frontmatter_transition"]
+	for _, keyword := range []string{"draft", "active", "complete"} {
+		if !strings.Contains(desc, keyword) {
+			t.Errorf("rpi_frontmatter_transition description missing %q from parent Long field", keyword)
+		}
+	}
+}
+
 func TestHandleVerifyCompleteness(t *testing.T) {
 	dir := t.TempDir()
 	plan := filepath.Join(dir, "plan.md")

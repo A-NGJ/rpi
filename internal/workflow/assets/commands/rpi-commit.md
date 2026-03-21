@@ -6,66 +6,23 @@ disable-model-invocation: true
 
 # Commit Changes
 
-Create git commits for changes in the working tree. This includes changes from the current session and any pre-existing staged or unstaged modifications.
+## Goal
 
-## Process
+Create git commits for changes in the working tree with user approval. This includes changes from the current session and any pre-existing modifications.
 
-### 1. Understand the changes
+## Invariants
 
-Use the rpi_git_context tool to gather consolidated git context (status, diff, recent commits, sensitive files).
-
-This returns branch, status (tracked/untracked/staged files), diff summary, and recent commits as JSON. Use this to get the full picture.
-
-Review the conversation history to understand the intent behind changes. If there are staged files not discussed in the conversation, inspect them too — the user may have edited files manually.
-
-### 2. Check for problems
-
-Before planning commits, scan the changeset for issues:
-
-- **Sensitive files**: Use the rpi_git_sensitive_check tool to check staged files for sensitive content (`.env`, credentials, secrets, API keys, or large binaries). Warn the user and exclude them unless explicitly told otherwise.
-- **Nothing to commit**: If the working tree is clean (no staged, unstaged, or untracked changes), tell the user and stop — don't create an empty commit.
-
-### 3. Plan your commit(s)
-
+- Gather consolidated git context first: branch, status, diff summary, recent commits
+- Scan staged files for sensitive content (.env, credentials, secrets, API keys) — warn and exclude unless explicitly told otherwise
+- If the working tree is clean, inform the user and stop — no empty commits
 - Group related files into logical, focused commits — prefer smaller over monolithic
-- Draft commit messages in imperative mood, focusing on the "why" not the "what"
-- Match the repo's existing commit style from the recent commits in the git context. If there aren't any commit conventions detected, follow commitizen convention:
-  - `feat: add user authentication`
-  - `fix: resolve null pointer in data loader`
-  - `refactor: extract validation into shared module`
-  - `test: add coverage for edge cases in parser`
-  - `docs: update setup instructions`
-  - `chore: remove unused dependencies`
+- Draft commit messages in imperative mood, matching the repo's existing commit style; fall back to commitizen convention if no style detected
+- Present the commit plan (files to stage + commit message for each) and ask for approval before executing
+- Stage specific files with `git add <file>` — never use `-A` or `.`
+- Use HEREDOC for commit messages to handle special characters safely
+- After hook failure: read error output, fix the issue, re-stage, create a new commit — never use `--amend` (the failed commit didn't happen)
 
-### 4. Present the plan
+## Principles
 
-For each planned commit, show:
-- The files to be staged
-- The commit message
-
-Then ask: "I plan to create [N] commit(s) with these changes. Shall I proceed?"
-
-### 5. Execute
-
-On confirmation:
-
-1. Stage specific files with `git add <file>` (never `-A` or `.`)
-2. Commit using a HEREDOC to handle special characters and multi-line messages safely:
-   ```bash
-   git commit -m "$(cat <<'EOF'
-   feat: add user authentication
-   EOF
-   )"
-   ```
-3. Repeat for each planned commit
-4. Show the result with `git log --oneline -n [number of commits]`
-
-### 6. If a hook blocks the commit
-
-Pre-commit hooks (linting, formatting, type checking) may reject the commit. When this happens:
-
-- Read the error output to understand what failed
-- Fix the issues (run formatters, resolve lint errors, etc.)
-- Re-stage the affected files
-- Create a **new** commit — never use `--amend`, because the failed commit didn't actually happen and amending would modify the previous unrelated commit
-
+- Review conversation history to understand intent behind changes
+- Inspect manually-edited files (staged but not discussed) before committing

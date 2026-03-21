@@ -65,109 +65,132 @@ func jsonResult(v any) (*mcp.CallToolResult, any, error) {
 
 type emptyInput struct{}
 
+// mcpDescription derives an MCP tool description from a Cobra command's Long
+// and Example fields — single source of truth, no duplicated text.
+func mcpDescription(cmd *cobra.Command) string {
+	desc := cmd.Long
+	if cmd.Example != "" {
+		desc += "\n\nExamples:\n" + cmd.Example
+	}
+	return desc
+}
+
+// mcpDescriptionWithPrefix prepends an action-specific one-liner to the parent
+// command's description. Used for multi-tool commands (frontmatter, git-context,
+// verify, extract) where one Cobra command maps to several MCP tools.
+func mcpDescriptionWithPrefix(prefix string, cmd *cobra.Command) string {
+	return prefix + "\n\n" + mcpDescription(cmd)
+}
+
 func registerTools(s *mcp.Server) {
-	// No-param tools
+	// No-param tools — git context (1 Cobra cmd → 3 MCP tools)
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_git_context",
-		Description: "Consolidated git state gathering",
+		Description: mcpDescriptionWithPrefix("Gather full git context.", gitContextCmd),
 	}, handleGitContext)
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_git_changed_files",
-		Description: "List files changed vs main branch",
+		Description: mcpDescriptionWithPrefix("List files changed vs main branch.", gitContextCmd),
 	}, handleGitChangedFiles)
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_git_sensitive_check",
-		Description: "Scan staged files for sensitive filenames and content patterns",
+		Description: mcpDescriptionWithPrefix("Scan staged files for sensitive content.", gitContextCmd),
 	}, handleGitSensitiveCheck)
 
+	// No-param tools — index status
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_index_status",
-		Description: "Show index metadata and freshness",
+		Description: mcpDescription(indexStatusCmd),
 	}, handleIndexStatus)
 
+	// No-param tools — archive scan
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_archive_scan",
-		Description: "Discover archivable artifacts with reference counts",
+		Description: mcpDescription(archiveScanCmd),
 	}, handleArchiveScan)
 
-	// Artifact tools
+	// Artifact tools — 1:1 mappings
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_scan",
-		Description: "Discover and filter artifacts in .rpi/",
+		Description: mcpDescription(scanCmd),
 	}, handleScan)
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_scaffold",
-		Description: "Generate artifact files from templates",
+		Description: mcpDescription(scaffoldCmd),
 	}, handleScaffold)
 
+	// Frontmatter (1 Cobra cmd → 3 MCP tools)
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_frontmatter_get",
-		Description: "Read frontmatter fields from an artifact file",
+		Description: mcpDescriptionWithPrefix("Read frontmatter fields from an artifact file.", frontmatterCmd),
 	}, handleFrontmatterGet)
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_frontmatter_set",
-		Description: "Set a frontmatter field value in an artifact file",
+		Description: mcpDescriptionWithPrefix("Set a frontmatter field value.", frontmatterCmd),
 	}, handleFrontmatterSet)
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_frontmatter_transition",
-		Description: "Validated status transition (enforces state machine)",
+		Description: mcpDescriptionWithPrefix("Validated status transition (enforces state machine).", frontmatterCmd),
 	}, handleFrontmatterTransition)
 
+	// 1:1 mappings
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_chain",
-		Description: "Resolve artifact cross-reference chain",
+		Description: mcpDescription(chainCmd),
 	}, handleChain)
 
+	// Extract (1 Cobra cmd → 2 MCP tools)
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_extract",
-		Description: "Extract a section from a markdown file",
+		Description: mcpDescriptionWithPrefix("Extract a section from a markdown file.", extractCmd),
 	}, handleExtract)
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_extract_list_sections",
-		Description: "List all section headings in a markdown file",
+		Description: mcpDescriptionWithPrefix("List all section headings in a markdown file.", extractCmd),
 	}, handleExtractListSections)
 
-	// Verification + index tools
+	// Verify (1 Cobra cmd → 2 MCP tools)
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_verify_completeness",
-		Description: "Check plan progress: checkbox counts and file coverage",
+		Description: mcpDescriptionWithPrefix("Check plan progress: checkbox counts and file coverage.", verifyCmd),
 	}, handleVerifyCompleteness)
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_verify_markers",
-		Description: "Scan for TODO/FIXME/HACK markers in source files",
+		Description: mcpDescriptionWithPrefix("Scan for TODO/FIXME/HACK markers in source files.", verifyCmd),
 	}, handleVerifyMarkers)
 
+	// Index (1:1 subcommand mappings)
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_index_build",
-		Description: "Build a symbol index of the codebase",
+		Description: mcpDescription(indexBuildCmd),
 	}, handleIndexBuild)
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_index_query",
-		Description: "Search for symbols in the index",
+		Description: mcpDescription(indexQueryCmd),
 	}, handleIndexQuery)
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_index_files",
-		Description: "List all indexed files",
+		Description: mcpDescription(indexFilesCmd),
 	}, handleIndexFiles)
 
-	// Archive tools
+	// Archive (1:1 subcommand mappings)
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_archive_check_refs",
-		Description: "Find all files referencing a given path",
+		Description: mcpDescription(archiveCheckRefsCmd),
 	}, handleArchiveCheckRefs)
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_archive_move",
-		Description: "Archive an artifact: update frontmatter and move to archive/",
+		Description: mcpDescription(archiveMoveCmd),
 	}, handleArchiveMove)
 }
 
