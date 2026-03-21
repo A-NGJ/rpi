@@ -6,8 +6,11 @@ status: draft
 {{- if .Ticket}}
 ticket: "{{.Ticket}}"
 {{- end}}
-{{- if .Proposal}}
-proposal: "{{.Proposal}}"
+{{- if .Design}}
+design: "{{.Design}}"
+{{- end}}
+{{- if .Spec}}
+spec: "{{.Spec}}"
 {{- end}}
 ---
 
@@ -22,8 +25,11 @@ proposal: "{{.Proposal}}"
 {{- if .Ticket}}
 - **Ticket**: <!-- TODO: path --> — {{.Ticket}}
 {{- end}}
-{{- if .Proposal}}
-- **Proposal**: {{.Proposal}}
+{{- if .Design}}
+- **Proposal**: {{.Design}}
+{{- end}}
+{{- if .Spec}}
+- **Spec**: {{.Spec}}
 {{- end}}
 {{- if .Research}}
 - **Research**: {{.Research}}
@@ -49,14 +55,13 @@ proposal: "{{.Proposal}}"
 #### Automated Verification:
 - [ ] <!-- TODO: specific automated checks, e.g., tests passing, linting clean -->
 
-#### Manual Verification:
-- [ ] <!-- TODO: specific verification -->
+<!-- Only add manual verification items below if they are NOT covered by automated checks above (e.g., visual UI review, infrastructure changes, external service behavior) -->
 
 ### Commit:
 - [ ] Stage: <!-- TODO: files -->
 - [ ] Message: `<!-- TODO: type(scope): message -->`
 
-**Note**: Pause for manual confirmation before proceeding to next phase.
+**Note**: If all success criteria are covered by automated checks and they pass, proceed to the next phase. Only pause for manual confirmation when the phase includes manual verification items.
 
 ---
 
@@ -64,8 +69,11 @@ proposal: "{{.Proposal}}"
 {{- if .Ticket}}
 - Ticket: <!-- TODO: path --> — {{.Ticket}}
 {{- end}}
-{{- if .Proposal}}
-- Proposal: {{.Proposal}}
+{{- if .Design}}
+- Design: {{.Design}}
+{{- end}}
+{{- if .Spec}}
+- Spec: {{.Spec}}
 {{- end}}
 {{- if .Research}}
 - Research: {{.Research}}
