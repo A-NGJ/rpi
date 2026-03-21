@@ -58,7 +58,6 @@ Targets:
 
 Also creates:
   .rpi/             Artifact directory hierarchy (research, designs, plans, etc.)
-  PIPELINE.md       Workflow guide in .rpi/
   .rpi/index.json   Codebase symbol index
 
 Use --force to reinitialize an existing project. Use --update to regenerate
@@ -157,7 +156,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 	rpiDir := filepath.Join(targetDir, ".rpi")
 	rpiSubdirs := []string{
 		"research", "designs",
-		"plans", "specs", "reviews", "archive", "prs",
+		"plans", "specs", "reviews", "archive",
 	}
 	for _, d := range rpiSubdirs {
 		path := filepath.Join(rpiDir, d)
@@ -182,21 +181,6 @@ func runInit(cmd *cobra.Command, args []string) error {
 			}
 			logSuccess(w, fmt.Sprintf("Created %s", cfg.rulesFile))
 		}
-	}
-
-	// Generate .rpi/PIPELINE.md
-	pipelinePath := filepath.Join(rpiDir, "PIPELINE.md")
-	if _, err := os.Stat(pipelinePath); err == nil && !initForce {
-		logWarning(w, ".rpi/PIPELINE.md already exists (use --force to overwrite)")
-	} else {
-		content, err := templates.Get("PIPELINE.md")
-		if err != nil {
-			return fmt.Errorf("get PIPELINE.md template: %w", err)
-		}
-		if err := os.WriteFile(pipelinePath, []byte(content), 0644); err != nil {
-			return fmt.Errorf("write PIPELINE.md: %w", err)
-		}
-		logSuccess(w, "Created .rpi/PIPELINE.md")
 	}
 
 	// Manage .gitignore

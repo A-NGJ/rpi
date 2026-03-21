@@ -52,7 +52,7 @@ func TestInitCreatesAllDirs(t *testing.T) {
 	// Verify .rpi/ subdirs
 	rpiSubdirs := []string{
 		"research", "designs",
-		"plans", "specs", "reviews", "archive", "prs",
+		"plans", "specs", "reviews", "archive",
 	}
 	for _, d := range rpiSubdirs {
 		path := filepath.Join(dir, ".rpi", d)
@@ -66,12 +66,9 @@ func TestInitCreatesAllDirs(t *testing.T) {
 		}
 	}
 
-	// Verify CLAUDE.md and PIPELINE.md created
+	// Verify CLAUDE.md created
 	if _, err := os.Stat(filepath.Join(dir, "CLAUDE.md")); err != nil {
 		t.Error("CLAUDE.md not created")
-	}
-	if _, err := os.Stat(filepath.Join(dir, ".rpi", "PIPELINE.md")); err != nil {
-		t.Error(".rpi/PIPELINE.md not created")
 	}
 
 	// Verify .gitignore entries
@@ -127,7 +124,7 @@ func TestInitPartial(t *testing.T) {
 	}
 
 	// All dirs should exist
-	for _, d := range []string{"designs", "specs", "reviews", "archive", "prs"} {
+	for _, d := range []string{"designs", "specs", "reviews", "archive"} {
 		path := filepath.Join(dir, ".rpi", d)
 		if _, err := os.Stat(path); err != nil {
 			t.Errorf(".rpi/%s not created: %v", d, err)
@@ -191,10 +188,6 @@ func TestInitNoClaudeMD(t *testing.T) {
 		t.Error("CLAUDE.md should not be created with --no-claude-md")
 	}
 
-	// PIPELINE.md should still exist
-	if _, err := os.Stat(filepath.Join(dir, ".rpi", "PIPELINE.md")); err != nil {
-		t.Error(".rpi/PIPELINE.md should still be created")
-	}
 }
 
 func TestInitTrackRpi(t *testing.T) {
@@ -332,14 +325,6 @@ func TestInitTemplateContent(t *testing.T) {
 		t.Error("CLAUDE.md missing expected template header")
 	}
 
-	// Verify PIPELINE.md has template content
-	pipelineData, err := os.ReadFile(filepath.Join(dir, ".rpi", "PIPELINE.md"))
-	if err != nil {
-		t.Fatalf("read PIPELINE.md: %v", err)
-	}
-	if !strings.Contains(string(pipelineData), "# Development Pipeline") {
-		t.Error("PIPELINE.md missing expected template header")
-	}
 }
 
 func TestInitInstallsWorkflowFiles(t *testing.T) {

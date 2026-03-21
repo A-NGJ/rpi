@@ -11,9 +11,8 @@ import (
 
 // knownTemplates maps user-facing names to their asset paths inside workflow/assets/.
 var knownTemplates = map[string]string{
-	"AGENTS.md":   "templates/AGENTS.md.template",
-	"CLAUDE.md":   "templates/CLAUDE.md.template",
-	"PIPELINE.md": "templates/PIPELINE.md.template",
+	"AGENTS.md": "templates/AGENTS.md.template",
+	"CLAUDE.md": "templates/CLAUDE.md.template",
 }
 
 // UserTemplatesDir returns the path to ~/.rpi/templates/.

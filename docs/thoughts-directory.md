@@ -6,12 +6,10 @@ All pipeline artifacts live in `.rpi/`, which is **gitignored by default**. The 
 .rpi/
 ├── index.json           # Codebase symbol index
 ├── cli-reference.md     # Auto-generated CLI reference
-├── PIPELINE.md          # This workflow reference guide
 ├── research/            # Codebase research documents
 ├── designs/             # Solution designs with trade-off analysis
 ├── plans/               # Implementation plans with checkboxes
 ├── specs/               # Living behavioral specs for modules/domains
-├── prs/                 # PR descriptions
 ├── reviews/             # Code review and verification reports
 └── archive/             # Completed artifacts (mirrors above structure)
 ```

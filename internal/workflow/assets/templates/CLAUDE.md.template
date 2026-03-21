@@ -28,7 +28,15 @@ This project uses a `.rpi/` directory for persistent context:
 
 ### Development Pipeline
 
-See `.rpi/PIPELINE.md` for the full workflow guide covering: Research → Propose → Plan → Implement.
+Workflow: Research → Propose → Plan → Implement → Verify
+
+- **Research** (`/rpi-research`): Investigate the codebase. Optional.
+- **Propose** (`/rpi-propose`): Analyze trade-offs, write design + spec (behavioral contract). Approval gate.
+- **Plan** (`/rpi-plan`): Create phased implementation plan from approved spec.
+- **Implement** (`/rpi-implement`): Execute plan phase-by-phase with verification.
+- **Verify** (`/rpi-verify`): Validate spec conformance.
+
+Each command suggests the next step. Start with `/rpi-propose` for features, `/rpi-plan` for bug fixes, `/rpi-research` when exploring.
 
 ## Development Conventions
 

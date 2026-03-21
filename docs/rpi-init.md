@@ -46,7 +46,6 @@ rpi init --track-rpi        # Don't gitignore .rpi/ (track in git)
 ### Shared (both targets)
 
 - `.rpi/` -- Directory structure for pipeline artifacts (gitignored by default)
-- `.rpi/PIPELINE.md` -- Pipeline reference guide
 - `.rpi/index.json` -- Codebase symbol index
 
 ### MCP Server Configuration
