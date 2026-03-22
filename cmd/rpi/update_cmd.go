@@ -89,7 +89,7 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 
 	// Ensure .rpi/ subdirs exist
 	rpiSubdirs := []string{
-		"research", "designs",
+		"research", "designs", "diagnoses",
 		"plans", "specs", "reviews", "archive",
 	}
 	for _, d := range rpiSubdirs {

@@ -49,7 +49,7 @@ func TestInitCreatesAllDirs(t *testing.T) {
 
 	// Verify .rpi/ subdirs
 	rpiSubdirs := []string{
-		"research", "designs",
+		"research", "designs", "diagnoses",
 		"plans", "specs", "reviews", "archive",
 	}
 	for _, d := range rpiSubdirs {

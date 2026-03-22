@@ -141,7 +141,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 	// Create .rpi/ artifact subdirs
 	rpiDir := filepath.Join(targetDir, ".rpi")
 	rpiSubdirs := []string{
-		"research", "designs",
+		"research", "designs", "diagnoses",
 		"plans", "specs", "reviews", "archive",
 	}
 	for _, d := range rpiSubdirs {
