@@ -15,11 +15,9 @@ import (
 )
 
 var (
-	initForce      bool
 	initNoClaudeMD bool
 	initTrackRpi   bool
 	initTarget     string
-	initUpdate     bool
 	initNoMCP      bool
 )
 
@@ -60,33 +58,25 @@ Also creates:
   .rpi/             Artifact directory hierarchy (research, designs, plans, etc.)
   .rpi/index.json   Codebase symbol index
 
-Use --force to reinitialize an existing project. Use --update to regenerate
-only dynamic artifacts (index, CLI reference). Use --no-claude-md to skip
-rules file generation. Use --track-rpi to keep .rpi/ tracked in git.`,
+Use --no-claude-md to skip rules file generation. Use --track-rpi to keep
+.rpi/ tracked in git. Use "rpi update" to sync an existing project with
+the latest workflow files.`,
 	Example: `  # Initialize for Claude Code (default)
   rpi init
 
   # Initialize for OpenCode
   rpi init --target opencode
 
-  # Reinitialize with force
-  rpi init --force
-
   # Initialize in a specific directory without rules file
-  rpi init ./my-project --no-claude-md
-
-  # Regenerate index and CLI reference
-  rpi init --update`,
+  rpi init ./my-project --no-claude-md`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runInit,
 }
 
 func init() {
-	initCmd.Flags().BoolVar(&initForce, "force", false, "Overwrite existing files and directories")
 	initCmd.Flags().BoolVar(&initNoClaudeMD, "no-claude-md", false, "Skip rules file generation (CLAUDE.md or AGENTS.md)")
 	initCmd.Flags().BoolVar(&initTrackRpi, "track-rpi", false, "Do not add .rpi/ to .gitignore")
 	initCmd.Flags().StringVar(&initTarget, "target", "claude", `AI coding tool to initialize for: "claude" or "opencode"`)
-	initCmd.Flags().BoolVar(&initUpdate, "update", false, "Regenerate dynamic artifacts (index, CLI reference) without full init")
 	initCmd.Flags().BoolVar(&initNoMCP, "no-mcp", false, "Skip MCP server configuration")
 	rootCmd.AddCommand(initCmd)
 }
@@ -125,10 +115,6 @@ func runInit(cmd *cobra.Command, args []string) error {
 		targetDir = args[0]
 	}
 
-	if initUpdate {
-		return runInitUpdate(cmd, targetDir)
-	}
-
 	cfg, err := resolveTargetConfig(initTarget)
 	if err != nil {
 		return err
@@ -139,8 +125,8 @@ func runInit(cmd *cobra.Command, args []string) error {
 	toolDirPath := filepath.Join(targetDir, cfg.toolDir)
 
 	// Check if already initialized
-	if _, err := os.Stat(toolDirPath); err == nil && !initForce {
-		return fmt.Errorf("%s/ already exists; use --force to reinitialize", cfg.toolDir)
+	if _, err := os.Stat(toolDirPath); err == nil {
+		return fmt.Errorf("%s/ already exists; use rpi update to sync", cfg.toolDir)
 	}
 
 	// Create tool subdirs
@@ -169,18 +155,14 @@ func runInit(cmd *cobra.Command, args []string) error {
 	// Generate rules file (CLAUDE.md or AGENTS.md)
 	if !initNoClaudeMD {
 		rulesPath := filepath.Join(targetDir, cfg.rulesFile)
-		if _, err := os.Stat(rulesPath); err == nil && !initForce {
-			logWarning(w, fmt.Sprintf("%s already exists (use --force to overwrite)", cfg.rulesFile))
-		} else {
-			content, err := templates.Get(cfg.rulesFile)
-			if err != nil {
-				return fmt.Errorf("get %s template: %w", cfg.rulesFile, err)
-			}
-			if err := os.WriteFile(rulesPath, []byte(content), 0644); err != nil {
-				return fmt.Errorf("write %s: %w", cfg.rulesFile, err)
-			}
-			logSuccess(w, fmt.Sprintf("Created %s", cfg.rulesFile))
+		content, err := templates.Get(cfg.rulesFile)
+		if err != nil {
+			return fmt.Errorf("get %s template: %w", cfg.rulesFile, err)
 		}
+		if err := os.WriteFile(rulesPath, []byte(content), 0644); err != nil {
+			return fmt.Errorf("write %s: %w", cfg.rulesFile, err)
+		}
+		logSuccess(w, fmt.Sprintf("Created %s", cfg.rulesFile))
 	}
 
 	// Manage .gitignore
@@ -189,7 +171,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 	}
 
 	// Install embedded workflow files (agents, commands, skills)
-	n, err := workflow.InstallTo(toolDirPath, cfg.target, initForce)
+	n, err := workflow.InstallTo(toolDirPath, cfg.target, false)
 	if err != nil {
 		return fmt.Errorf("install workflow files: %w", err)
 	}
@@ -227,34 +209,6 @@ func runInit(cmd *cobra.Command, args []string) error {
 			writeCLIReference(w, rpiDir)
 		}
 	}
-
-	return nil
-}
-
-func runInitUpdate(cmd *cobra.Command, targetDir string) error {
-	w := cmd.OutOrStdout()
-	rpiDir := filepath.Join(targetDir, ".rpi")
-
-	if _, err := os.Stat(rpiDir); err != nil {
-		return fmt.Errorf("not initialized; run rpi init first")
-	}
-
-	// Rebuild codebase index
-	logInfo(w, "Rebuilding codebase index...")
-	idx, err := index.Build(targetDir, index.BuildOptions{})
-	if err != nil {
-		logWarning(w, fmt.Sprintf("Index build failed: %v", err))
-	} else {
-		indexPath := filepath.Join(rpiDir, "index.json")
-		if saveErr := index.Save(idx, indexPath); saveErr != nil {
-			logWarning(w, fmt.Sprintf("Index save failed: %v", saveErr))
-		} else {
-			logSuccess(w, fmt.Sprintf("Rebuilt codebase index (%d files, %d symbols)", idx.Metadata.FileCount, idx.Metadata.SymbolCount))
-		}
-	}
-
-	// Generate CLI reference
-	writeCLIReference(w, rpiDir)
 
 	return nil
 }

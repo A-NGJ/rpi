@@ -10,11 +10,9 @@ import (
 )
 
 func resetInitFlags() {
-	initForce = false
 	initNoClaudeMD = false
 	initTrackRpi = false
 	initTarget = "claude"
-	initUpdate = false
 	initNoMCP = false
 }
 
@@ -132,44 +130,6 @@ func TestInitPartial(t *testing.T) {
 	}
 }
 
-func TestInitForce(t *testing.T) {
-	dir := t.TempDir()
-
-	// First run
-	_, err := runInitInDir(t, dir)
-	if err != nil {
-		t.Fatalf("first run error: %v", err)
-	}
-
-	// Write custom CLAUDE.md content
-	claudeMD := filepath.Join(dir, "CLAUDE.md")
-	original, _ := os.ReadFile(claudeMD)
-	os.WriteFile(claudeMD, []byte("custom content"), 0644)
-
-	// Second run with --force
-	resetInitFlags()
-	initForce = true
-	buf := new(bytes.Buffer)
-	cmd := initCmd
-	cmd.SetOut(buf)
-	err = cmd.RunE(cmd, []string{dir})
-	if err != nil {
-		t.Fatalf("--force run error: %v", err)
-	}
-
-	// CLAUDE.md should be overwritten with template content
-	data, err := os.ReadFile(claudeMD)
-	if err != nil {
-		t.Fatalf("read CLAUDE.md: %v", err)
-	}
-	if string(data) == "custom content" {
-		t.Error("--force should have overwritten CLAUDE.md")
-	}
-	if string(data) != string(original) {
-		t.Error("--force should have restored template content")
-	}
-}
-
 func TestInitNoClaudeMD(t *testing.T) {
 	dir := t.TempDir()
 
@@ -245,7 +205,7 @@ func TestInitExistingClaudeDir(t *testing.T) {
 
 	_, err := runInitInDir(t, dir)
 	if err == nil {
-		t.Fatal("should error when .claude/ exists without --force")
+		t.Fatal("should error when .claude/ already exists")
 	}
 	if !strings.Contains(err.Error(), ".claude/ already exists") {
 		t.Errorf("expected '.claude/ already exists' error, got: %v", err)
@@ -271,40 +231,6 @@ func TestInitGitignore(t *testing.T) {
 	}
 	if !strings.Contains(content, ".rpi/") {
 		t.Error("missing .rpi/ entry")
-	}
-}
-
-func TestInitGitignoreIdempotent(t *testing.T) {
-	dir := t.TempDir()
-
-	// First run
-	_, err := runInitInDir(t, dir)
-	if err != nil {
-		t.Fatalf("first run error: %v", err)
-	}
-
-	// Second run with --force
-	resetInitFlags()
-	initForce = true
-	buf := new(bytes.Buffer)
-	cmd := initCmd
-	cmd.SetOut(buf)
-	err = cmd.RunE(cmd, []string{dir})
-	if err != nil {
-		t.Fatalf("--force run error: %v", err)
-	}
-
-	data, err := os.ReadFile(filepath.Join(dir, ".gitignore"))
-	if err != nil {
-		t.Fatalf("failed to read .gitignore: %v", err)
-	}
-
-	content := string(data)
-	if strings.Count(content, ".claude/") != 1 {
-		t.Errorf(".claude/ appears %d times, want 1", strings.Count(content, ".claude/"))
-	}
-	if strings.Count(content, ".rpi/") != 1 {
-		t.Errorf(".rpi/ appears %d times, want 1", strings.Count(content, ".rpi/"))
 	}
 }
 
@@ -356,35 +282,6 @@ func TestInitInstallsWorkflowFiles(t *testing.T) {
 	output := buf.String()
 	if !strings.Contains(output, "Installed") {
 		t.Error("output missing install confirmation")
-	}
-}
-
-func TestInitDoesNotOverwriteWithoutForce(t *testing.T) {
-	dir := t.TempDir()
-	_, err := runInitInDir(t, dir)
-	if err != nil {
-		t.Fatalf("first run error: %v", err)
-	}
-
-	// Modify an installed file
-	cmdFile := filepath.Join(dir, ".claude", "commands", "rpi-plan.md")
-	os.WriteFile(cmdFile, []byte("custom content"), 0644)
-
-	// Second run with --force
-	resetInitFlags()
-	initForce = true
-	buf := new(bytes.Buffer)
-	cmd := initCmd
-	cmd.SetOut(buf)
-	err = cmd.RunE(cmd, []string{dir})
-	if err != nil {
-		t.Fatalf("--force run error: %v", err)
-	}
-
-	// File should be overwritten
-	data, _ := os.ReadFile(cmdFile)
-	if string(data) == "custom content" {
-		t.Error("--force should have overwritten customized file")
 	}
 }
 
@@ -619,67 +516,6 @@ func TestInitGeneratesCLIReference(t *testing.T) {
 	}
 	if !strings.Contains(string(data), "rpi scan") {
 		t.Error("CLI reference missing rpi scan command")
-	}
-}
-
-func TestInitUpdateRegeneratesArtifacts(t *testing.T) {
-	dir := t.TempDir()
-
-	// First: normal init
-	_, err := runInitInDir(t, dir)
-	if err != nil {
-		t.Fatalf("init error: %v", err)
-	}
-
-	// Delete CLI reference
-	cliRefPath := filepath.Join(dir, ".rpi", "cli-reference.md")
-	os.Remove(cliRefPath)
-
-	// Record a command file's content to verify it's NOT touched
-	cmdFile := filepath.Join(dir, ".claude", "commands", "rpi-plan.md")
-	originalCmd, _ := os.ReadFile(cmdFile)
-
-	// Run with --update
-	resetInitFlags()
-	initUpdate = true
-	buf := new(bytes.Buffer)
-	cmd := initCmd
-	cmd.SetOut(buf)
-	err = cmd.RunE(cmd, []string{dir})
-	if err != nil {
-		t.Fatalf("--update error: %v", err)
-	}
-
-	// CLI reference should be recreated
-	data, err := os.ReadFile(cliRefPath)
-	if err != nil {
-		t.Fatalf("CLI reference not recreated: %v", err)
-	}
-	if !strings.Contains(string(data), "# RPI CLI Reference") {
-		t.Error("CLI reference missing expected header")
-	}
-
-	// Command files should be untouched
-	currentCmd, _ := os.ReadFile(cmdFile)
-	if string(currentCmd) != string(originalCmd) {
-		t.Error("--update should not modify workflow files")
-	}
-}
-
-func TestInitUpdateRequiresExistingProject(t *testing.T) {
-	dir := t.TempDir()
-
-	resetInitFlags()
-	initUpdate = true
-	buf := new(bytes.Buffer)
-	cmd := initCmd
-	cmd.SetOut(buf)
-	err := cmd.RunE(cmd, []string{dir})
-	if err == nil {
-		t.Fatal("--update should error without prior init")
-	}
-	if !strings.Contains(err.Error(), "not initialized") {
-		t.Errorf("expected 'not initialized' error, got: %v", err)
 	}
 }
 
