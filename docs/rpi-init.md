@@ -16,7 +16,6 @@ rpi init ~/projects/my-app
 rpi init ~/projects/my-app --target opencode
 
 # Options
-rpi init --force            # Overwrite existing files and directories
 rpi init --no-claude-md     # Skip rules file generation (CLAUDE.md or AGENTS.md)
 rpi init --no-mcp           # Skip MCP server registration
 rpi init --track-rpi        # Don't gitignore .rpi/ (track in git)
@@ -56,7 +55,7 @@ When the target is `claude`, `rpi init` auto-registers an MCP server so the AI c
 - Skipped with `--no-mcp` or when the target is `opencode`
 - Warns and continues (doesn't fail) if `rpi` or `claude` are not found, or if the server is already registered
 - Uses `claude mcp add rpi -- rpi serve` to register
-- `rpi init --update` does **not** re-register the MCP server (only rebuilds the index and CLI reference)
+- Use `rpi update` to sync an existing project (see `rpi update --help`)
 
 ## Installation
 
