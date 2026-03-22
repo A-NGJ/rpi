@@ -35,6 +35,7 @@ Workflow: Research → Propose → Plan → Implement → Verify
 - **Plan** (`/rpi-plan`): Create phased implementation plan from approved spec.
 - **Implement** (`/rpi-implement`): Execute plan phase-by-phase with verification.
 - **Verify** (`/rpi-verify`): Validate spec conformance.
+- **Explain** (`/rpi-explain`): Diff-scoped walkthrough of an implemented solution. Optional.
 
 Each command suggests the next step. Start with `/rpi-propose` for features, `/rpi-plan` for bug fixes, `/rpi-research` when exploring.
 
