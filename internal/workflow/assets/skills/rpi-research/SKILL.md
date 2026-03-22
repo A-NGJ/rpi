@@ -1,6 +1,6 @@
 ---
+name: rpi-research
 description: Research the codebase to understand problems before proposing solutions
-model: inherit
 ---
 
 # Codebase Research
@@ -28,4 +28,3 @@ When insights crystallize into something actionable, suggest → `/rpi-propose` 
 - Be interactive — stop interviewing when you have enough; ask more if findings raise new questions
 - Facts first, opinions when warranted — present what exists before suggesting what should change
 - Follow-ups welcome — append to existing research docs rather than creating new ones
-- Do NOT use `EnterPlanMode` — this command has its own structured flow

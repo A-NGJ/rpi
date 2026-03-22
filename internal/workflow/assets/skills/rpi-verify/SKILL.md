@@ -1,6 +1,6 @@
 ---
+name: rpi-verify
 description: Verify implementation against design artifacts for completeness, correctness, and coherence
-model: inherit
 ---
 
 # Verify Implementation

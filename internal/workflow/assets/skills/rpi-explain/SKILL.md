@@ -1,6 +1,6 @@
 ---
+name: rpi-explain
 description: Explain an implemented solution with a diff-scoped walkthrough
-model: inherit
 ---
 
 # Explain Implementation

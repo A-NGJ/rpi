@@ -1,6 +1,6 @@
 ---
+name: rpi-commit
 description: Create git commits with user approval and no Claude attribution
-model: haiku
 ---
 
 # Commit Changes

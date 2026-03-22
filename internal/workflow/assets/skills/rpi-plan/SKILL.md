@@ -1,6 +1,6 @@
 ---
+name: rpi-plan
 description: Create implementation plans — works standalone for simple tasks or with prior designs for complex ones
-model: inherit
 ---
 
 # Implementation Plan
@@ -35,4 +35,3 @@ When the user confirms the plan, suggest → `/rpi-implement <plan-path>`.
 - Right-size the plan — simple tasks get 1 phase with minimal ceremony; complex tasks get detailed phasing
 - Be practical — incremental, testable changes that keep the codebase working
 - Trust prior stages (pipeline) — don't redo research or design work
-- Do NOT use `EnterPlanMode` — this command has its own structured flow

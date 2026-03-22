@@ -1,6 +1,6 @@
 ---
+name: rpi-implement
 description: Implement technical plans from .rpi/plans with verification
-model: inherit
 ---
 
 # Implement Plan
@@ -34,4 +34,3 @@ After all phases are complete and verified, announce completion and update the p
 - Follow the plan's intent while adapting to what you find — your judgment matters
 - Implement each phase fully before moving to the next
 - Trust completed checkmarks when resuming — verify only if something seems off
-- Do NOT use `EnterPlanMode` — this command has its own structured flow

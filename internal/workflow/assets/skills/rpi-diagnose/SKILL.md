@@ -1,6 +1,6 @@
 ---
+name: rpi-diagnose
 description: Diagnose bugs through iterative root-cause analysis and fix attempts
-model: inherit
 ---
 
 # Diagnose Bug

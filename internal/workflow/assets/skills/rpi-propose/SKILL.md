@@ -1,6 +1,6 @@
 ---
+name: rpi-propose
 description: Investigate, analyze, and propose solutions — from quick decisions to complex features
-model: inherit
 ---
 
 # Solution Design
@@ -35,4 +35,3 @@ When the user approves the spec, suggest → `/rpi-plan <design-path>`.
 - Be interactive — checkpoint before major decisions; a design that surprises during review means the process failed
 - Scale effort to complexity — a focused decision needs less investigation than a new subsystem
 - Specs are the contract — every design culminates in an approved spec
-- Do NOT use `EnterPlanMode` — this command has its own structured flow
