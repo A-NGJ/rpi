@@ -18,7 +18,7 @@ After the initial walkthrough, enter conversation mode — the user can ask foll
 ## Invariants
 
 - If an artifact path is provided, resolve its full chain (plan → design → research) and use as context for attributing rationale (EX-1)
-- If no arguments, use `rpi git-context changed-files` to identify changed files and proceed without artifact context (EX-2)
+- If no arguments, identify changed files from git and proceed without artifact context (EX-2)
 - If a provided path doesn't exist or has no linked artifacts, proceed with diff-only explanation and note the missing context (EX-3)
 - Read all changed files fully before generating explanations — never use limit/offset
 - Walk through changes file-by-file, providing a factual summary of what changed in each (EX-4)

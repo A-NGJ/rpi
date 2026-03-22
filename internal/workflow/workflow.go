@@ -1,23 +1,21 @@
 package workflow
 
 import (
-	"bytes"
 	"embed"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"gopkg.in/yaml.v3"
 )
 
 // Target identifies which AI coding tool the workflow assets are installed for.
 type Target string
 
 const (
-	TargetClaude   Target = "claude"
-	TargetOpenCode Target = "opencode"
+	TargetClaude     Target = "claude"
+	TargetOpenCode   Target = "opencode"
+	TargetAgentsOnly Target = "agents-only"
 )
 
 // modelMap translates short model aliases used in Claude Code assets to full
@@ -26,6 +24,14 @@ var modelMap = map[string]string{
 	"opus":   "anthropic/claude-opus-4-6",
 	"sonnet": "anthropic/claude-sonnet-4-6",
 	"haiku":  "anthropic/claude-haiku-4-5-20251001",
+}
+
+// skillOverrides defines per-skill tool-specific frontmatter fields to inject
+// when installing to a tool-specific directory. Skills not listed here get no
+// extra fields (model defaults to inherit for Claude, omitted for OpenCode).
+var skillOverrides = map[string]map[string]string{
+	"rpi-archive": {"model": "haiku", "disable-model-invocation": "true"},
+	"rpi-commit":  {"model": "haiku"},
 }
 
 //go:embed all:assets
@@ -37,23 +43,31 @@ func ReadAsset(path string) ([]byte, error) {
 	return assets.ReadFile("assets/" + path)
 }
 
-// Install copies all embedded workflow files (agents, commands, skills)
-// into the target .claude/ directory. Existing files are only overwritten
-// when force is true.
+// Install copies all embedded workflow files into the target .claude/ directory.
+// Existing files are only overwritten when force is true.
 func Install(claudeDir string, force bool) (int, error) {
 	return InstallTo(claudeDir, TargetClaude, force)
 }
 
-// InstallTo copies all embedded workflow files into targetDir, applying
-// frontmatter transforms for the given target. Existing files are only
-// overwritten when force is true.
-func InstallTo(targetDir string, target Target, force bool) (int, error) {
+// InstallTo copies embedded non-skill assets (templates) into targetDir.
+// Skills are installed separately via InstallSkills.
+// Existing files are only overwritten when force is true.
+func InstallTo(targetDir string, _ Target, force bool) (int, error) {
 	count := 0
 	err := fs.WalkDir(assets, "assets", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 		rel, _ := filepath.Rel("assets", path)
+
+		// Skip skills — they are installed via InstallSkills.
+		if rel == "skills" || strings.HasPrefix(rel, "skills/") || strings.HasPrefix(rel, "skills\\") {
+			if d.IsDir() {
+				return fs.SkipDir
+			}
+			return nil
+		}
+
 		dest := filepath.Join(targetDir, rel)
 
 		if d.IsDir() {
@@ -69,22 +83,6 @@ func InstallTo(targetDir string, target Target, force bool) (int, error) {
 			return err
 		}
 
-		if target == TargetOpenCode {
-			parts := strings.SplitN(filepath.ToSlash(rel), "/", 2)
-			if len(parts) > 0 {
-				switch parts[0] {
-				case "commands":
-					data = transformCommandFrontmatter(data)
-				case "agents":
-					transformed, transformErr := transformAgentFrontmatter(data)
-					if transformErr != nil {
-						return fmt.Errorf("transform agent %s: %w", path, transformErr)
-					}
-					data = transformed
-				}
-			}
-		}
-
 		if err := os.WriteFile(dest, data, 0644); err != nil {
 			return err
 		}
@@ -94,88 +92,100 @@ func InstallTo(targetDir string, target Target, force bool) (int, error) {
 	return count, err
 }
 
-// transformCommandFrontmatter rewrites the model: field in a command markdown
-// file from a short alias ("opus") to the full provider-qualified ID for OpenCode.
-func transformCommandFrontmatter(content []byte) []byte {
-	lines := bytes.Split(content, []byte("\n"))
-	inFrontmatter := false
-	fmCount := 0
-	for i, line := range lines {
-		s := string(bytes.TrimRight(line, " \t"))
-		if s == "---" {
-			fmCount++
-			if fmCount == 1 {
-				inFrontmatter = true
-				continue
-			}
-			break
+// InstallSkills copies embedded skills to both the cross-tool directory
+// (.agents/skills/) and the tool-specific directory (<toolDir>/skills/).
+// Canonical SKILL.md files (name+description only) go to agentsDir.
+// Enriched copies with tool-specific frontmatter go to toolDir/skills/.
+// For TargetAgentsOnly, only the canonical copy is installed.
+// Existing files are only overwritten when force is true.
+func InstallSkills(agentsDir, toolDir string, target Target, force bool) (int, error) {
+	count := 0
+
+	entries, err := fs.ReadDir(assets, "assets/skills")
+	if err != nil {
+		return 0, fmt.Errorf("read embedded skills: %w", err)
+	}
+
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
 		}
-		if inFrontmatter && strings.HasPrefix(s, "model: ") {
-			alias := strings.TrimPrefix(s, "model: ")
-			if fullID, ok := modelMap[alias]; ok {
-				lines[i] = []byte("model: " + fullID)
+		skillName := entry.Name()
+		srcPath := "assets/skills/" + skillName + "/SKILL.md"
+
+		data, err := assets.ReadFile(srcPath)
+		if err != nil {
+			return count, fmt.Errorf("read %s: %w", srcPath, err)
+		}
+
+		// Install canonical copy to .agents/skills/<name>/SKILL.md
+		canonDest := filepath.Join(agentsDir, skillName, "SKILL.md")
+		if err := os.MkdirAll(filepath.Dir(canonDest), 0755); err != nil {
+			return count, fmt.Errorf("create %s: %w", filepath.Dir(canonDest), err)
+		}
+		if _, statErr := os.Stat(canonDest); statErr != nil || force {
+			if err := os.WriteFile(canonDest, data, 0644); err != nil {
+				return count, fmt.Errorf("write %s: %w", canonDest, err)
+			}
+			count++
+		}
+
+		// Install enriched copy to <toolDir>/skills/<name>/SKILL.md
+		if target != TargetAgentsOnly && toolDir != "" {
+			enriched := data
+			if overrides, ok := skillOverrides[skillName]; ok {
+				enriched = injectFrontmatter(data, overrides, target)
+			}
+
+			toolDest := filepath.Join(toolDir, "skills", skillName, "SKILL.md")
+			if err := os.MkdirAll(filepath.Dir(toolDest), 0755); err != nil {
+				return count, fmt.Errorf("create %s: %w", filepath.Dir(toolDest), err)
+			}
+			if _, statErr := os.Stat(toolDest); statErr != nil || force {
+				if err := os.WriteFile(toolDest, enriched, 0644); err != nil {
+					return count, fmt.Errorf("write %s: %w", toolDest, err)
+				}
+				count++
 			}
 		}
 	}
-	return bytes.Join(lines, []byte("\n"))
+
+	return count, nil
 }
 
-// transformAgentFrontmatter converts a Claude Code agent markdown file's
-// frontmatter to OpenCode format: adds mode: subagent, converts tools to
-// a bool deny-map, drops model: inherit.
-func transformAgentFrontmatter(content []byte) ([]byte, error) {
+// injectFrontmatter inserts additional YAML fields into an existing SKILL.md
+// frontmatter block. For OpenCode targets, model aliases are translated to
+// full provider-qualified IDs.
+func injectFrontmatter(content []byte, fields map[string]string, target Target) []byte {
 	s := string(content)
 	if !strings.HasPrefix(s, "---\n") {
-		return content, nil
+		return content
 	}
-	end := strings.Index(s[4:], "\n---\n")
+
+	end := strings.Index(s[4:], "\n---")
 	if end < 0 {
-		// Check for --- at end of file (no trailing newline after closing ---)
-		end = strings.Index(s[4:], "\n---")
-		if end < 0 {
-			return content, nil
+		return content
+	}
+
+	fmEnd := 4 + end // index of \n before closing ---
+	existingFM := s[4:fmEnd]
+	rest := s[fmEnd:] // "\n---\n..." rest of file
+
+	var extra strings.Builder
+	for key, val := range fields {
+		if key == "model" && target == TargetOpenCode {
+			if fullID, ok := modelMap[val]; ok {
+				val = fullID
+			}
 		}
-	}
-	fmStr := s[4 : 4+end]
-	// Find where the body starts: skip past the closing ---\n
-	bodyStart := 4 + end + 4 // len("\n---")
-	if bodyStart < len(s) && s[bodyStart] == '\n' {
-		bodyStart++
-	}
-	body := ""
-	if bodyStart < len(s) {
-		body = s[bodyStart:]
+		extra.WriteString(key + ": " + val + "\n")
 	}
 
-	var src struct {
-		Name        string `yaml:"name"`
-		Description string `yaml:"description"`
-	}
-	if err := yaml.Unmarshal([]byte(fmStr), &src); err != nil {
-		return nil, fmt.Errorf("parse agent frontmatter: %w", err)
-	}
-
-	out := struct {
-		Name        string          `yaml:"name"`
-		Description string          `yaml:"description"`
-		Mode        string          `yaml:"mode"`
-		Tools       map[string]bool `yaml:"tools"`
-	}{
-		Name:        src.Name,
-		Description: src.Description,
-		Mode:        "subagent",
-		Tools:       map[string]bool{"bash": false, "write": false, "edit": false},
-	}
-
-	fmBytes, err := yaml.Marshal(out)
-	if err != nil {
-		return nil, fmt.Errorf("marshal agent frontmatter: %w", err)
-	}
-
-	var buf bytes.Buffer
+	var buf strings.Builder
 	buf.WriteString("---\n")
-	buf.Write(fmBytes)
-	buf.WriteString("---\n")
-	buf.WriteString(body)
-	return buf.Bytes(), nil
+	buf.WriteString(existingFM)
+	buf.WriteString("\n")
+	buf.WriteString(extra.String())
+	buf.WriteString(rest[1:]) // skip the leading \n (already added above)
+	return []byte(buf.String())
 }
