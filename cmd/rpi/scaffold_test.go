@@ -223,7 +223,7 @@ func TestScaffoldMissingRequiredFlag(t *testing.T) {
 func TestScaffoldCustomTemplatesDir(t *testing.T) {
 	binary := buildBinary(t)
 	repoRoot := findRepoRoot(t)
-	customDir := filepath.Join(repoRoot, ".claude", "templates")
+	customDir := filepath.Join(repoRoot, "internal", "workflow", "assets", "templates")
 
 	stdout, _, exitCode := runRPI(t, binary,
 		"scaffold", "research",

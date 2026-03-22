@@ -392,7 +392,7 @@ func handleScaffold(_ context.Context, _ *mcp.CallToolRequest, input scaffoldInp
 
 	tplDir := templatesDirFlag
 	if tplDir == "" {
-		tplDir = ".claude/templates"
+		tplDir = ".rpi/templates"
 	}
 	output, err := tmpl.RenderTemplate(input.Type, ctx, tplDir)
 	if err != nil {

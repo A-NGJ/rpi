@@ -175,7 +175,7 @@ func findRepoRoot(t *testing.T) string {
 
 func TestRenderAllTemplates(t *testing.T) {
 	repoRoot := findRepoRoot(t)
-	templatesDir := filepath.Join(repoRoot, ".claude", "templates")
+	templatesDir := filepath.Join(repoRoot, "internal", "workflow", "assets", "templates")
 
 	// Full context with all fields populated
 	fullCtx := &RenderContext{
@@ -226,7 +226,7 @@ func TestRenderAllTemplates(t *testing.T) {
 
 func TestRenderTemplatesWithoutOptionalVars(t *testing.T) {
 	repoRoot := findRepoRoot(t)
-	templatesDir := filepath.Join(repoRoot, ".claude", "templates")
+	templatesDir := filepath.Join(repoRoot, "internal", "workflow", "assets", "templates")
 
 	// Minimal context — only required fields
 	minCtx := &RenderContext{

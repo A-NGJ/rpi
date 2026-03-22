@@ -3,6 +3,7 @@ package template
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
@@ -113,17 +114,35 @@ func gitCommand(args ...string) string {
 	return strings.TrimSpace(string(out))
 }
 
+// EmbeddedTemplateReader is set by the main package to provide fallback access
+// to embedded templates when filesystem templates are not found.
+var EmbeddedTemplateReader func(name string) ([]byte, error)
+
 // RenderTemplate loads a .tmpl file from templatesDir and renders it with the given context.
+// If the file is not found on the filesystem, it falls back to embedded templates.
 func RenderTemplate(templateName string, ctx *RenderContext, templatesDir string) (string, error) {
 	tmplPath := filepath.Join(templatesDir, templateName+".tmpl")
 
-	tmpl, err := template.ParseFiles(tmplPath)
-	if err != nil {
+	var tmplContent []byte
+	var err error
+
+	tmplContent, err = os.ReadFile(tmplPath)
+	if err != nil && EmbeddedTemplateReader != nil {
+		tmplContent, err = EmbeddedTemplateReader(templateName)
+		if err != nil {
+			return "", fmt.Errorf("template %q not found on filesystem (%s) or in embedded assets", templateName, templatesDir)
+		}
+	} else if err != nil {
 		return "", fmt.Errorf("parse template %s: %w", tmplPath, err)
 	}
 
+	t, err := template.New(templateName).Parse(string(tmplContent))
+	if err != nil {
+		return "", fmt.Errorf("parse template %s: %w", templateName, err)
+	}
+
 	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, ctx); err != nil {
+	if err := t.Execute(&buf, ctx); err != nil {
 		return "", fmt.Errorf("execute template %s: %w", templateName, err)
 	}
 

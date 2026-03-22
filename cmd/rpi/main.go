@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	tmpl "github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/template"
+	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/workflow"
 	"github.com/spf13/cobra"
 )
 
@@ -54,7 +56,13 @@ func addRpiDirFlag(cmd *cobra.Command) {
 }
 
 func addTemplatesDirFlag(cmd *cobra.Command) {
-	cmd.Flags().StringVar(&templatesDirFlag, "templates-dir", ".claude/templates", "Path to templates directory")
+	cmd.Flags().StringVar(&templatesDirFlag, "templates-dir", ".rpi/templates", "Path to templates directory")
+}
+
+func init() {
+	tmpl.EmbeddedTemplateReader = func(name string) ([]byte, error) {
+		return workflow.ReadAsset("templates/" + name + ".tmpl")
+	}
 }
 
 func main() {

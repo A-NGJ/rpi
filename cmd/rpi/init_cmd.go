@@ -213,6 +213,14 @@ func runInit(cmd *cobra.Command, args []string) error {
 	}
 	logSuccess(w, fmt.Sprintf("Installed %d skill files", skillCount))
 
+	// Install scaffold templates to .rpi/templates/
+	templatesDir := filepath.Join(rpiDir, "templates")
+	tplCount, err := workflow.InstallTemplates(templatesDir, false)
+	if err != nil {
+		return fmt.Errorf("install templates: %w", err)
+	}
+	logSuccess(w, fmt.Sprintf("Installed %d template files", tplCount))
+
 	// Configure MCP server (Claude only)
 	if !initNoMCP && cfg.target == workflow.TargetClaude {
 		configureMCP(w, targetDir)

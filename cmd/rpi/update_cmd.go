@@ -122,6 +122,16 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 		logSuccess(w, fmt.Sprintf("Updated %d skill files", skillCount))
 	}
 
+	// Install/update scaffold templates to .rpi/templates/
+	templatesDir := filepath.Join(rpiDir, "templates")
+	tplCount, err := workflow.InstallTemplates(templatesDir, updateForce)
+	if err != nil {
+		return fmt.Errorf("install templates: %w", err)
+	}
+	if tplCount > 0 {
+		logSuccess(w, fmt.Sprintf("Updated %d template files", tplCount))
+	}
+
 	// Update rules file (skip for agents-only)
 	if !updateNoClaudeMD && cfg.rulesFile != "" {
 		rulesPath := filepath.Join(targetDir, cfg.rulesFile)

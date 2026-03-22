@@ -89,6 +89,41 @@ func InstallSkills(skillsDir string, target Target, force bool) (int, error) {
 	return count, nil
 }
 
+// InstallTemplates copies embedded .tmpl files to templatesDir.
+// Existing files are only overwritten when force is true.
+func InstallTemplates(templatesDir string, force bool) (int, error) {
+	entries, err := fs.ReadDir(assets, "assets/templates")
+	if err != nil {
+		return 0, fmt.Errorf("read embedded templates: %w", err)
+	}
+
+	if err := os.MkdirAll(templatesDir, 0755); err != nil {
+		return 0, fmt.Errorf("create %s: %w", templatesDir, err)
+	}
+
+	count := 0
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".tmpl") {
+			continue
+		}
+
+		data, err := assets.ReadFile("assets/templates/" + entry.Name())
+		if err != nil {
+			return count, fmt.Errorf("read %s: %w", entry.Name(), err)
+		}
+
+		dest := filepath.Join(templatesDir, entry.Name())
+		if _, statErr := os.Stat(dest); statErr != nil || force {
+			if err := os.WriteFile(dest, data, 0644); err != nil {
+				return count, fmt.Errorf("write %s: %w", dest, err)
+			}
+			count++
+		}
+	}
+
+	return count, nil
+}
+
 // injectFrontmatter inserts additional YAML fields into an existing SKILL.md
 // frontmatter block. For OpenCode targets, model aliases are translated to
 // full provider-qualified IDs.
