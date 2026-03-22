@@ -1,11 +1,10 @@
 # The `.rpi/` Directory
 
-All pipeline artifacts live in `.rpi/`, which is **gitignored by default**. The `.rpi/` directory also contains the codebase index and CLI reference alongside the artifacts:
+All pipeline artifacts live in `.rpi/`, which is **gitignored by default**. The `.rpi/` directory also contains the codebase index alongside the artifacts:
 
 ```
 .rpi/
 ├── index.json           # Codebase symbol index
-├── cli-reference.md     # Auto-generated CLI reference
 ├── research/            # Codebase research documents
 ├── designs/             # Solution designs with trade-off analysis
 ├── plans/               # Implementation plans with checkboxes

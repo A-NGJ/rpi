@@ -23,7 +23,7 @@ var updateCmd = &cobra.Command{
 
 This command brings an already-initialized project up to date:
   - Creates any missing .rpi/ or tool subdirectories
-  - Rebuilds the codebase index and CLI reference
+  - Rebuilds the codebase index
   - Updates the rules file (CLAUDE.md or AGENTS.md)
 
 Workflow files (commands, agents, skills) are only overwritten with --force.`,
@@ -139,9 +139,6 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 			logSuccess(w, fmt.Sprintf("Rebuilt codebase index (%d files, %d symbols)", idx.Metadata.FileCount, idx.Metadata.SymbolCount))
 		}
 	}
-
-	// Generate CLI reference
-	writeCLIReference(w, rpiDir)
 
 	return nil
 }

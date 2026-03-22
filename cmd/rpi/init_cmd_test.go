@@ -499,26 +499,6 @@ func TestInitInvalidTarget(t *testing.T) {
 	}
 }
 
-func TestInitGeneratesCLIReference(t *testing.T) {
-	dir := t.TempDir()
-	_, err := runInitInDir(t, dir)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	cliRefPath := filepath.Join(dir, ".rpi", "cli-reference.md")
-	data, err := os.ReadFile(cliRefPath)
-	if err != nil {
-		t.Fatalf("CLI reference not created: %v", err)
-	}
-	if !strings.Contains(string(data), "# RPI CLI Reference") {
-		t.Error("CLI reference missing expected header")
-	}
-	if !strings.Contains(string(data), "rpi scan") {
-		t.Error("CLI reference missing rpi scan command")
-	}
-}
-
 // spec:MC-12
 func TestInitNoMCPFlag(t *testing.T) {
 	flag := initCmd.Flags().Lookup("no-mcp")

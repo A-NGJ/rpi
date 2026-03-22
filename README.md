@@ -54,13 +54,12 @@ AI coding assistants are powerful but unpredictable when given large tasks. They
    - `.claude/` (or `.opencode/`) -- Agents, commands, skills, and templates
    - `.rpi/` -- Directory for all pipeline artifacts (gitignored by default)
    - `.rpi/index.json` -- Codebase symbol index
-   - `.rpi/cli-reference.md` -- Auto-generated CLI reference
    - `CLAUDE.md` (or `AGENTS.md`) -- Project-level instructions for the AI
    - MCP server registration (Claude Code only) -- auto-registers `rpi serve` so the AI calls typed tools instead of shelling out
 
    To sync an existing project with the latest workflow files after updating the `rpi` binary:
    ```bash
-   rpi update          # add missing dirs, rebuild index and CLI reference
+   rpi update          # add missing dirs, rebuild index, update workflow files
    rpi update --force  # also overwrite workflow files with latest versions
    ```
 

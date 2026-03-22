@@ -205,22 +205,10 @@ func runInit(cmd *cobra.Command, args []string) error {
 				logSuccess(w, fmt.Sprintf("Built codebase index (%d files, %d symbols)", idx.Metadata.FileCount, idx.Metadata.SymbolCount))
 			}
 
-			// Generate CLI reference
-			writeCLIReference(w, rpiDir)
 		}
 	}
 
 	return nil
-}
-
-func writeCLIReference(w io.Writer, rpiDir string) {
-	cliRef := generateCLIReference(rootCmd)
-	cliRefPath := filepath.Join(rpiDir, "cli-reference.md")
-	if err := os.WriteFile(cliRefPath, []byte(cliRef), 0644); err != nil {
-		logWarning(w, fmt.Sprintf("CLI reference write failed: %v", err))
-	} else {
-		logSuccess(w, "Generated CLI reference")
-	}
 }
 
 func ensureGitignoreEntry(w io.Writer, targetDir, entry string) error {

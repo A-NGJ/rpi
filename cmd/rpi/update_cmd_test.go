@@ -174,40 +174,6 @@ func TestUpdateRegeneratesIndex(t *testing.T) {
 	}
 }
 
-func TestUpdateRegeneratesCLIReference(t *testing.T) {
-	dir := t.TempDir()
-
-	// Init
-	resetInitFlags()
-	buf := new(bytes.Buffer)
-	cmd := initCmd
-	cmd.SetOut(buf)
-	if err := cmd.RunE(cmd, []string{dir}); err != nil {
-		t.Fatalf("init failed: %v", err)
-	}
-
-	// Delete CLI reference
-	cliRefPath := filepath.Join(dir, ".rpi", "cli-reference.md")
-	os.Remove(cliRefPath)
-
-	// Update
-	resetUpdateFlags()
-	buf = new(bytes.Buffer)
-	cmd = updateCmd
-	cmd.SetOut(buf)
-	if err := cmd.RunE(cmd, []string{dir}); err != nil {
-		t.Fatalf("update error: %v", err)
-	}
-
-	data, err := os.ReadFile(cliRefPath)
-	if err != nil {
-		t.Fatalf("CLI reference not recreated: %v", err)
-	}
-	if !strings.Contains(string(data), "# RPI CLI Reference") {
-		t.Error("CLI reference missing expected header")
-	}
-}
-
 func TestUpdateUpdatesRulesFile(t *testing.T) {
 	dir := t.TempDir()
 
