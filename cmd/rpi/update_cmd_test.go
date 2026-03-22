@@ -102,9 +102,9 @@ func TestUpdateDoesNotOverwriteWithoutForce(t *testing.T) {
 		t.Fatalf("init failed: %v", err)
 	}
 
-	// Modify a workflow file
-	cmdFile := filepath.Join(dir, ".claude", "commands", "rpi-plan.md")
-	os.WriteFile(cmdFile, []byte("custom content"), 0644)
+	// Modify a skill file
+	skillFile := filepath.Join(dir, ".agents", "skills", "rpi-plan", "SKILL.md")
+	os.WriteFile(skillFile, []byte("custom content"), 0644)
 
 	// Update without --force
 	resetUpdateFlags()
@@ -116,7 +116,7 @@ func TestUpdateDoesNotOverwriteWithoutForce(t *testing.T) {
 	}
 
 	// File should NOT be overwritten
-	data, _ := os.ReadFile(cmdFile)
+	data, _ := os.ReadFile(skillFile)
 	if string(data) != "custom content" {
 		t.Error("update without --force should not overwrite existing files")
 	}
@@ -134,9 +134,9 @@ func TestUpdateForceOverwritesFiles(t *testing.T) {
 		t.Fatalf("init failed: %v", err)
 	}
 
-	// Modify a workflow file
-	cmdFile := filepath.Join(dir, ".claude", "commands", "rpi-plan.md")
-	os.WriteFile(cmdFile, []byte("custom content"), 0644)
+	// Modify a skill file
+	skillFile := filepath.Join(dir, ".agents", "skills", "rpi-plan", "SKILL.md")
+	os.WriteFile(skillFile, []byte("custom content"), 0644)
 
 	// Update with --force
 	resetUpdateFlags()
@@ -149,7 +149,7 @@ func TestUpdateForceOverwritesFiles(t *testing.T) {
 	}
 
 	// File should be overwritten
-	data, _ := os.ReadFile(cmdFile)
+	data, _ := os.ReadFile(skillFile)
 	if string(data) == "custom content" {
 		t.Error("update --force should overwrite existing files")
 	}
@@ -305,5 +305,86 @@ func TestUpdateDetectsOpenCodeTarget(t *testing.T) {
 	output := buf.String()
 	if !strings.Contains(output, "Created .opencode/hooks/") {
 		t.Error("output missing .opencode/hooks/ creation message")
+	}
+}
+
+// TC-6: Update with existing commands dir
+func TestUpdatePreservesExistingCommandsDir(t *testing.T) {
+	dir := t.TempDir()
+
+	// Manually set up an old-style project with .claude/commands/
+	os.MkdirAll(filepath.Join(dir, ".claude", "skills"), 0755)
+	os.MkdirAll(filepath.Join(dir, ".claude", "hooks"), 0755)
+	os.MkdirAll(filepath.Join(dir, ".claude", "commands"), 0755)
+	os.WriteFile(filepath.Join(dir, ".claude", "commands", "rpi-propose.md"), []byte("old command"), 0644)
+	os.MkdirAll(filepath.Join(dir, ".rpi", "plans"), 0755)
+
+	// Run update
+	resetUpdateFlags()
+	updateForce = true
+	buf := new(bytes.Buffer)
+	cmd := updateCmd
+	cmd.SetOut(buf)
+	if err := cmd.RunE(cmd, []string{dir}); err != nil {
+		t.Fatalf("update error: %v", err)
+	}
+
+	// AS-13: .claude/commands/ must not be deleted
+	data, err := os.ReadFile(filepath.Join(dir, ".claude", "commands", "rpi-propose.md"))
+	if err != nil {
+		t.Error(".claude/commands/rpi-propose.md was deleted (AS-13)")
+	} else if string(data) != "old command" {
+		t.Error(".claude/commands/rpi-propose.md was modified (AS-13)")
+	}
+
+	// .agents/skills/ should be created
+	if _, err := os.Stat(filepath.Join(dir, ".agents", "skills")); err != nil {
+		t.Error(".agents/skills/ not created during update")
+	}
+
+	// .claude/skills/ should have new skills
+	entries, err := os.ReadDir(filepath.Join(dir, ".claude", "skills"))
+	if err != nil {
+		t.Fatalf("read .claude/skills/: %v", err)
+	}
+	if len(entries) != 9 {
+		t.Errorf("expected 9 skill dirs in .claude/skills/, got %d", len(entries))
+	}
+}
+
+func TestUpdateDetectsAgentsOnlyTarget(t *testing.T) {
+	dir := t.TempDir()
+
+	// Init with agents-only
+	resetInitFlags()
+	initTarget = "agents-only"
+	buf := new(bytes.Buffer)
+	cmd := initCmd
+	cmd.SetOut(buf)
+	if err := cmd.RunE(cmd, []string{dir}); err != nil {
+		t.Fatalf("init failed: %v", err)
+	}
+
+	// Update (should auto-detect agents-only)
+	resetUpdateFlags()
+	buf = new(bytes.Buffer)
+	cmd = updateCmd
+	cmd.SetOut(buf)
+	if err := cmd.RunE(cmd, []string{dir}); err != nil {
+		t.Fatalf("update error: %v", err)
+	}
+
+	// Should still have 9 skills
+	entries, err := os.ReadDir(filepath.Join(dir, ".agents", "skills"))
+	if err != nil {
+		t.Fatalf("read .agents/skills/: %v", err)
+	}
+	if len(entries) != 9 {
+		t.Errorf("expected 9 skill dirs, got %d", len(entries))
+	}
+
+	// No tool-specific dirs should be created
+	if _, err := os.Stat(filepath.Join(dir, ".claude")); err == nil {
+		t.Error(".claude/ should not be created for agents-only update")
 	}
 }

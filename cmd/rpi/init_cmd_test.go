@@ -26,6 +26,7 @@ func runInitInDir(t *testing.T, dir string) (*bytes.Buffer, error) {
 	return buf, err
 }
 
+// TC-1: Fresh claude init
 func TestInitCreatesAllDirs(t *testing.T) {
 	dir := t.TempDir()
 	buf, err := runInitInDir(t, dir)
@@ -33,9 +34,15 @@ func TestInitCreatesAllDirs(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	// Verify .claude/ subdirs
-	claudeSubdirs := []string{"agents", "commands", "skills", "hooks"}
-	for _, d := range claudeSubdirs {
+	// AS-14: no .claude/commands/ or .claude/agents/
+	for _, d := range []string{"commands", "agents"} {
+		if _, err := os.Stat(filepath.Join(dir, ".claude", d)); err == nil {
+			t.Errorf(".claude/%s should not be created (AS-14)", d)
+		}
+	}
+
+	// Verify .claude/ subdirs (skills, hooks only)
+	for _, d := range []string{"skills", "hooks"} {
 		path := filepath.Join(dir, ".claude", d)
 		info, err := os.Stat(path)
 		if err != nil {
@@ -45,6 +52,26 @@ func TestInitCreatesAllDirs(t *testing.T) {
 		if !info.IsDir() {
 			t.Errorf(".claude/%s is not a directory", d)
 		}
+	}
+
+	// AS-1: .agents/skills/ has 9 dirs
+	agentsSkills := filepath.Join(dir, ".agents", "skills")
+	entries, err := os.ReadDir(agentsSkills)
+	if err != nil {
+		t.Fatalf(".agents/skills/ not created: %v", err)
+	}
+	if len(entries) != 9 {
+		t.Errorf("expected 9 skill dirs in .agents/skills/, got %d", len(entries))
+	}
+
+	// AS-2: .claude/skills/ has 9 dirs
+	claudeSkills := filepath.Join(dir, ".claude", "skills")
+	entries, err = os.ReadDir(claudeSkills)
+	if err != nil {
+		t.Fatalf(".claude/skills/ not created: %v", err)
+	}
+	if len(entries) != 9 {
+		t.Errorf("expected 9 skill dirs in .claude/skills/, got %d", len(entries))
 	}
 
 	// Verify .rpi/ subdirs
@@ -82,8 +109,8 @@ func TestInitCreatesAllDirs(t *testing.T) {
 	}
 
 	output := buf.String()
-	if !strings.Contains(output, "Created .claude/agents/") {
-		t.Error("output missing .claude/agents/ creation message")
+	if !strings.Contains(output, "Created .agents/skills/") {
+		t.Error("output missing .agents/skills/ creation message")
 	}
 	if !strings.Contains(output, "Created .rpi/research/") {
 		t.Error("output missing .rpi/research/ creation message")
@@ -147,7 +174,6 @@ func TestInitNoClaudeMD(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(dir, "CLAUDE.md")); err == nil {
 		t.Error("CLAUDE.md should not be created with --no-claude-md")
 	}
-
 }
 
 func TestInitTrackRpi(t *testing.T) {
@@ -186,8 +212,11 @@ func TestInitTargetDir(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if _, err := os.Stat(filepath.Join(target, ".claude", "commands")); err != nil {
-		t.Error(".claude/commands not created in target dir")
+	if _, err := os.Stat(filepath.Join(target, ".claude", "skills")); err != nil {
+		t.Error(".claude/skills not created in target dir")
+	}
+	if _, err := os.Stat(filepath.Join(target, ".agents", "skills")); err != nil {
+		t.Error(".agents/skills not created in target dir")
 	}
 	if _, err := os.Stat(filepath.Join(target, ".rpi", "plans")); err != nil {
 		t.Error(".rpi/plans not created in target dir")
@@ -250,32 +279,26 @@ func TestInitTemplateContent(t *testing.T) {
 	if !strings.Contains(string(claudeData), "# CLAUDE.md") {
 		t.Error("CLAUDE.md missing expected template header")
 	}
-
 }
 
-func TestInitInstallsWorkflowFiles(t *testing.T) {
+func TestInitInstallsSkills(t *testing.T) {
 	dir := t.TempDir()
 	buf, err := runInitInDir(t, dir)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	// Verify embedded agents are installed
-	if _, err := os.Stat(filepath.Join(dir, ".claude", "agents", "codebase-analyzer.md")); err != nil {
-		t.Error("agents/codebase-analyzer.md not installed")
+	// Verify skills in .agents/skills/
+	expectedSkills := []string{
+		"rpi-research", "rpi-propose", "rpi-plan", "rpi-implement",
+		"rpi-verify", "rpi-diagnose", "rpi-explain", "rpi-commit", "rpi-archive",
 	}
-
-	// Verify embedded commands are installed
-	for _, cmd := range []string{"rpi-plan.md", "rpi-research.md", "rpi-propose.md", "rpi-implement.md"} {
-		if _, err := os.Stat(filepath.Join(dir, ".claude", "commands", cmd)); err != nil {
-			t.Errorf("commands/%s not installed", cmd)
+	for _, skill := range expectedSkills {
+		if _, err := os.Stat(filepath.Join(dir, ".agents", "skills", skill, "SKILL.md")); err != nil {
+			t.Errorf(".agents/skills/%s/SKILL.md not installed", skill)
 		}
-	}
-
-	// Verify embedded skills are installed
-	for _, skill := range []string{"find-patterns", "analyze-thoughts", "locate-codebase", "locate-thoughts"} {
 		if _, err := os.Stat(filepath.Join(dir, ".claude", "skills", skill, "SKILL.md")); err != nil {
-			t.Errorf("skills/%s/SKILL.md not installed", skill)
+			t.Errorf(".claude/skills/%s/SKILL.md not installed", skill)
 		}
 	}
 
@@ -389,8 +412,15 @@ func TestInitOpenCode(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	// Verify .opencode/ subdirs
-	for _, d := range []string{"agents", "commands", "skills", "hooks"} {
+	// AS-14: no commands/ or agents/ dirs
+	for _, d := range []string{"commands", "agents"} {
+		if _, err := os.Stat(filepath.Join(dir, ".opencode", d)); err == nil {
+			t.Errorf(".opencode/%s should not be created", d)
+		}
+	}
+
+	// Verify .opencode/ subdirs (skills, hooks only)
+	for _, d := range []string{"skills", "hooks"} {
 		path := filepath.Join(dir, ".opencode", d)
 		info, err := os.Stat(path)
 		if err != nil {
@@ -400,6 +430,26 @@ func TestInitOpenCode(t *testing.T) {
 		if !info.IsDir() {
 			t.Errorf(".opencode/%s is not a directory", d)
 		}
+	}
+
+	// AS-1: .agents/skills/ has 9 dirs
+	agentsSkills := filepath.Join(dir, ".agents", "skills")
+	entries, err := os.ReadDir(agentsSkills)
+	if err != nil {
+		t.Fatalf(".agents/skills/ not created: %v", err)
+	}
+	if len(entries) != 9 {
+		t.Errorf("expected 9 skill dirs in .agents/skills/, got %d", len(entries))
+	}
+
+	// AS-3: .opencode/skills/ has 9 dirs
+	ocSkills := filepath.Join(dir, ".opencode", "skills")
+	entries, err = os.ReadDir(ocSkills)
+	if err != nil {
+		t.Fatalf(".opencode/skills/ not created: %v", err)
+	}
+	if len(entries) != 9 {
+		t.Errorf("expected 9 skill dirs in .opencode/skills/, got %d", len(entries))
 	}
 
 	// Verify AGENTS.md generated, CLAUDE.md absent
@@ -423,41 +473,9 @@ func TestInitOpenCode(t *testing.T) {
 		t.Error(".gitignore should not contain .claude/ for opencode target")
 	}
 
-	// Verify command frontmatter transform (model: opus → full ID)
-	cmdData, err := os.ReadFile(filepath.Join(dir, ".opencode", "commands", "rpi-research.md"))
-	if err != nil {
-		t.Fatalf("read rpi-research.md: %v", err)
-	}
-	if !strings.Contains(string(cmdData), "model: inherit") {
-		t.Error("command model: inherit should pass through unchanged for opencode")
-	}
-
-	// Verify command body is tool-agnostic (no Sub-task syntax)
-	if strings.Contains(string(cmdData), "Sub-task") {
-		t.Error("command body should not contain tool-specific Sub-task syntax")
-	}
-
-	// Verify agent frontmatter transform
-	agentData, err := os.ReadFile(filepath.Join(dir, ".opencode", "agents", "codebase-analyzer.md"))
-	if err != nil {
-		t.Fatalf("read codebase-analyzer.md: %v", err)
-	}
-	if !strings.Contains(string(agentData), "mode: subagent") {
-		t.Error("agent should have mode: subagent")
-	}
-
-	// Verify TodoWrite removed from rpi-plan.md
-	planData, err := os.ReadFile(filepath.Join(dir, ".opencode", "commands", "rpi-plan.md"))
-	if err != nil {
-		t.Fatalf("read rpi-plan.md: %v", err)
-	}
-	if strings.Contains(string(planData), "TodoWrite") {
-		t.Error("TodoWrite should be removed from command body")
-	}
-
 	output := buf.String()
-	if !strings.Contains(output, "Created .opencode/agents/") {
-		t.Error("output missing .opencode/agents/ creation message")
+	if !strings.Contains(output, "Created .opencode/skills/") {
+		t.Error("output missing .opencode/skills/ creation message")
 	}
 	if !strings.Contains(output, "Installed") {
 		t.Error("output missing install confirmation")
@@ -496,6 +514,95 @@ func TestInitInvalidTarget(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "unknown target") {
 		t.Errorf("expected 'unknown target' error, got: %v", err)
+	}
+}
+
+// TC-2: Fresh agents-only init
+func TestInitAgentsOnly(t *testing.T) {
+	dir := t.TempDir()
+
+	resetInitFlags()
+	initTarget = "agents-only"
+	buf := new(bytes.Buffer)
+	cmd := initCmd
+	cmd.SetOut(buf)
+	err := cmd.RunE(cmd, []string{dir})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// AS-4: .agents/skills/ has 9 dirs
+	agentsSkills := filepath.Join(dir, ".agents", "skills")
+	entries, err := os.ReadDir(agentsSkills)
+	if err != nil {
+		t.Fatalf(".agents/skills/ not created: %v", err)
+	}
+	if len(entries) != 9 {
+		t.Errorf("expected 9 skill dirs, got %d", len(entries))
+	}
+
+	// No .claude/ or .opencode/ directories
+	if _, err := os.Stat(filepath.Join(dir, ".claude")); err == nil {
+		t.Error(".claude/ should not exist for agents-only")
+	}
+	if _, err := os.Stat(filepath.Join(dir, ".opencode")); err == nil {
+		t.Error(".opencode/ should not exist for agents-only")
+	}
+
+	// No CLAUDE.md or AGENTS.md
+	if _, err := os.Stat(filepath.Join(dir, "CLAUDE.md")); err == nil {
+		t.Error("CLAUDE.md should not exist for agents-only")
+	}
+	if _, err := os.Stat(filepath.Join(dir, "AGENTS.md")); err == nil {
+		t.Error("AGENTS.md should not exist for agents-only")
+	}
+
+	// .rpi/ should still exist
+	if _, err := os.Stat(filepath.Join(dir, ".rpi", "plans")); err != nil {
+		t.Error(".rpi/plans/ not created for agents-only")
+	}
+}
+
+func TestInitAgentsOnlyIdempotent(t *testing.T) {
+	dir := t.TempDir()
+
+	resetInitFlags()
+	initTarget = "agents-only"
+	buf := new(bytes.Buffer)
+	cmd := initCmd
+	cmd.SetOut(buf)
+	if err := cmd.RunE(cmd, []string{dir}); err != nil {
+		t.Fatalf("first run: %v", err)
+	}
+
+	// Second run should error
+	buf = new(bytes.Buffer)
+	cmd.SetOut(buf)
+	err := cmd.RunE(cmd, []string{dir})
+	if err == nil {
+		t.Fatal("second run should error")
+	}
+	if !strings.Contains(err.Error(), ".agents/ already exists") {
+		t.Errorf("expected '.agents/ already exists' error, got: %v", err)
+	}
+}
+
+func TestInitAgentsNotInGitignore(t *testing.T) {
+	dir := t.TempDir()
+
+	_, err := runInitInDir(t, dir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(dir, ".gitignore"))
+	if err != nil {
+		t.Fatalf("failed to read .gitignore: %v", err)
+	}
+
+	// .agents/ should NOT be in .gitignore (skills should be shared)
+	if strings.Contains(string(data), ".agents/") {
+		t.Error(".agents/ should not be in .gitignore")
 	}
 }
 

@@ -47,13 +47,15 @@ func logInfo(w io.Writer, msg string) {
 
 var initCmd = &cobra.Command{
 	Use:   "init [directory]",
-	Short: "Initialize project with workflow directories and rules file for Claude Code or OpenCode",
+	Short: "Initialize project with workflow skills and rules file",
 	Long: `Initialize a project with the RPI workflow structure.
 
 Targets:
-  claude    Creates .claude/ with agents, commands, skills, hooks subdirectories
-            and a CLAUDE.md rules file (default)
-  opencode  Creates .opencode/ with the same structure and an AGENTS.md rules file
+  claude      Creates .claude/ with skills and hooks subdirectories,
+              .agents/skills/ for cross-tool compatibility,
+              and a CLAUDE.md rules file (default)
+  opencode    Creates .opencode/ with the same structure and an AGENTS.md rules file
+  agents-only Creates only .agents/skills/ — no tool-specific directory, no MCP config
 
 Also creates:
   .rpi/             Artifact directory hierarchy (research, designs, plans, etc.)
@@ -68,6 +70,9 @@ the latest workflow files.`,
   # Initialize for OpenCode
   rpi init --target opencode
 
+  # Initialize cross-tool skills only (no tool-specific setup)
+  rpi init --target agents-only
+
   # Initialize in a specific directory without rules file
   rpi init ./my-project --no-claude-md`,
 	Args: cobra.MaximumNArgs(1),
@@ -77,15 +82,15 @@ the latest workflow files.`,
 func init() {
 	initCmd.Flags().BoolVar(&initNoClaudeMD, "no-claude-md", false, "Skip rules file generation (CLAUDE.md or AGENTS.md)")
 	initCmd.Flags().BoolVar(&initTrackRpi, "track-rpi", false, "Do not add .rpi/ to .gitignore")
-	initCmd.Flags().StringVar(&initTarget, "target", "claude", `AI coding tool to initialize for: "claude" or "opencode"`)
+	initCmd.Flags().StringVar(&initTarget, "target", "claude", `AI coding tool to initialize for: "claude", "opencode", or "agents-only"`)
 	initCmd.Flags().BoolVar(&initNoMCP, "no-mcp", false, "Skip MCP server configuration")
 	rootCmd.AddCommand(initCmd)
 }
 
 type targetConfig struct {
-	toolDir   string // ".claude" or ".opencode"
+	toolDir   string // ".claude", ".opencode", or "" for agents-only
 	subdirs   []string
-	rulesFile string // "CLAUDE.md" or "AGENTS.md"
+	rulesFile string // "CLAUDE.md", "AGENTS.md", or "" for agents-only
 	target    workflow.Target
 }
 
@@ -94,19 +99,26 @@ func resolveTargetConfig(t string) (targetConfig, error) {
 	case "claude":
 		return targetConfig{
 			toolDir:   ".claude",
-			subdirs:   []string{"agents", "commands", "skills", "hooks"},
+			subdirs:   []string{"skills", "hooks"},
 			rulesFile: "CLAUDE.md",
 			target:    workflow.TargetClaude,
 		}, nil
 	case "opencode":
 		return targetConfig{
 			toolDir:   ".opencode",
-			subdirs:   []string{"agents", "commands", "skills", "hooks"},
+			subdirs:   []string{"skills", "hooks"},
 			rulesFile: "AGENTS.md",
 			target:    workflow.TargetOpenCode,
 		}, nil
+	case "agents-only":
+		return targetConfig{
+			toolDir:   "",
+			subdirs:   nil,
+			rulesFile: "",
+			target:    workflow.TargetAgentsOnly,
+		}, nil
 	default:
-		return targetConfig{}, fmt.Errorf("unknown target %q: must be \"claude\" or \"opencode\"", t)
+		return targetConfig{}, fmt.Errorf("unknown target %q: must be \"claude\", \"opencode\", or \"agents-only\"", t)
 	}
 }
 
@@ -123,21 +135,37 @@ func runInit(cmd *cobra.Command, args []string) error {
 
 	w := cmd.OutOrStdout()
 
-	toolDirPath := filepath.Join(targetDir, cfg.toolDir)
-
-	// Check if already initialized
-	if _, err := os.Stat(toolDirPath); err == nil {
-		return fmt.Errorf("%s/ already exists; use rpi update to sync", cfg.toolDir)
-	}
-
-	// Create tool subdirs
-	for _, d := range cfg.subdirs {
-		path := filepath.Join(toolDirPath, d)
-		if err := os.MkdirAll(path, 0755); err != nil {
-			return fmt.Errorf("create %s: %w", path, err)
+	// For agents-only, check .agents/ instead of a tool dir
+	if cfg.target == workflow.TargetAgentsOnly {
+		agentsPath := filepath.Join(targetDir, ".agents")
+		if _, err := os.Stat(agentsPath); err == nil {
+			return fmt.Errorf(".agents/ already exists; use rpi update to sync")
 		}
-		logSuccess(w, fmt.Sprintf("Created %s/%s/", cfg.toolDir, d))
+	} else {
+		toolDirPath := filepath.Join(targetDir, cfg.toolDir)
+		if _, err := os.Stat(toolDirPath); err == nil {
+			return fmt.Errorf("%s/ already exists; use rpi update to sync", cfg.toolDir)
+		}
 	}
+
+	// Create tool subdirs (skip for agents-only)
+	if cfg.toolDir != "" {
+		toolDirPath := filepath.Join(targetDir, cfg.toolDir)
+		for _, d := range cfg.subdirs {
+			path := filepath.Join(toolDirPath, d)
+			if err := os.MkdirAll(path, 0755); err != nil {
+				return fmt.Errorf("create %s: %w", path, err)
+			}
+			logSuccess(w, fmt.Sprintf("Created %s/%s/", cfg.toolDir, d))
+		}
+	}
+
+	// Create .agents/skills/ for all targets
+	agentsSkillsDir := filepath.Join(targetDir, ".agents", "skills")
+	if err := os.MkdirAll(agentsSkillsDir, 0755); err != nil {
+		return fmt.Errorf("create .agents/skills/: %w", err)
+	}
+	logSuccess(w, "Created .agents/skills/")
 
 	// Create .rpi/ artifact subdirs
 	rpiDir := filepath.Join(targetDir, ".rpi")
@@ -153,8 +181,8 @@ func runInit(cmd *cobra.Command, args []string) error {
 		logSuccess(w, fmt.Sprintf("Created .rpi/%s/", d))
 	}
 
-	// Generate rules file (CLAUDE.md or AGENTS.md)
-	if !initNoClaudeMD {
+	// Generate rules file (skip for agents-only)
+	if !initNoClaudeMD && cfg.rulesFile != "" {
 		rulesPath := filepath.Join(targetDir, cfg.rulesFile)
 		content, err := templates.Get(cfg.rulesFile)
 		if err != nil {
@@ -166,17 +194,34 @@ func runInit(cmd *cobra.Command, args []string) error {
 		logSuccess(w, fmt.Sprintf("Created %s", cfg.rulesFile))
 	}
 
-	// Manage .gitignore
-	if err := ensureGitignoreEntry(w, targetDir, cfg.toolDir+"/"); err != nil {
-		logWarning(w, fmt.Sprintf("Failed to update .gitignore: %v", err))
+	// Manage .gitignore for tool dir (skip for agents-only)
+	if cfg.toolDir != "" {
+		if err := ensureGitignoreEntry(w, targetDir, cfg.toolDir+"/"); err != nil {
+			logWarning(w, fmt.Sprintf("Failed to update .gitignore: %v", err))
+		}
 	}
 
-	// Install embedded workflow files (agents, commands, skills)
-	n, err := workflow.InstallTo(toolDirPath, cfg.target, false)
-	if err != nil {
-		return fmt.Errorf("install workflow files: %w", err)
+	// Install skills to .agents/skills/ and tool-specific dir
+	toolDirPath := ""
+	if cfg.toolDir != "" {
+		toolDirPath = filepath.Join(targetDir, cfg.toolDir)
 	}
-	logSuccess(w, fmt.Sprintf("Installed %d workflow files to %s/ (agents, commands, skills)", n, cfg.toolDir))
+	skillCount, err := workflow.InstallSkills(agentsSkillsDir, toolDirPath, cfg.target, false)
+	if err != nil {
+		return fmt.Errorf("install skills: %w", err)
+	}
+	logSuccess(w, fmt.Sprintf("Installed %d skill files to .agents/skills/", skillCount))
+
+	// Install templates to tool dir (skip for agents-only)
+	if cfg.toolDir != "" {
+		tplCount, err := workflow.InstallTo(toolDirPath, cfg.target, false)
+		if err != nil {
+			return fmt.Errorf("install templates: %w", err)
+		}
+		if tplCount > 0 {
+			logSuccess(w, fmt.Sprintf("Installed %d template files to %s/", tplCount, cfg.toolDir))
+		}
+	}
 
 	// Configure MCP server (Claude only)
 	if !initNoMCP && cfg.target == workflow.TargetClaude {
@@ -185,7 +230,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 
 	// Configure settings.json with MCP tool permissions (Claude only)
 	if cfg.target == workflow.TargetClaude {
-		configureSettings(w, toolDirPath)
+		configureSettings(w, filepath.Join(targetDir, cfg.toolDir))
 	}
 
 	// Add .rpi/ to .gitignore (unless --track-rpi)

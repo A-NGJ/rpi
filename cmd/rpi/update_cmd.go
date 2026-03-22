@@ -23,10 +23,11 @@ var updateCmd = &cobra.Command{
 
 This command brings an already-initialized project up to date:
   - Creates any missing .rpi/ or tool subdirectories
+  - Updates skills in .agents/skills/ and tool-specific directory
   - Rebuilds the codebase index
   - Updates the rules file (CLAUDE.md or AGENTS.md)
 
-Workflow files (commands, agents, skills) are only overwritten with --force.`,
+Workflow files (skills) are only overwritten with --force.`,
 	Example: `  # Update current project
   rpi update
 
@@ -53,7 +54,10 @@ func detectTarget(targetDir string) (targetConfig, error) {
 	if _, err := os.Stat(filepath.Join(targetDir, ".opencode")); err == nil {
 		return resolveTargetConfig("opencode")
 	}
-	return targetConfig{}, fmt.Errorf("no .claude/ or .opencode/ found; run rpi init first")
+	if _, err := os.Stat(filepath.Join(targetDir, ".agents")); err == nil {
+		return resolveTargetConfig("agents-only")
+	}
+	return targetConfig{}, fmt.Errorf("no .claude/, .opencode/, or .agents/ found; run rpi init first")
 }
 
 func runUpdate(cmd *cobra.Command, args []string) error {
@@ -74,17 +78,24 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	toolDirPath := filepath.Join(targetDir, cfg.toolDir)
-
-	// Ensure tool subdirs exist
-	for _, d := range cfg.subdirs {
-		path := filepath.Join(toolDirPath, d)
-		if _, statErr := os.Stat(path); statErr != nil {
-			if mkErr := os.MkdirAll(path, 0755); mkErr != nil {
-				return fmt.Errorf("create %s: %w", path, mkErr)
+	// Ensure tool subdirs exist (skip for agents-only)
+	if cfg.toolDir != "" {
+		toolDirPath := filepath.Join(targetDir, cfg.toolDir)
+		for _, d := range cfg.subdirs {
+			path := filepath.Join(toolDirPath, d)
+			if _, statErr := os.Stat(path); statErr != nil {
+				if mkErr := os.MkdirAll(path, 0755); mkErr != nil {
+					return fmt.Errorf("create %s: %w", path, mkErr)
+				}
+				logSuccess(w, fmt.Sprintf("Created %s/%s/", cfg.toolDir, d))
 			}
-			logSuccess(w, fmt.Sprintf("Created %s/%s/", cfg.toolDir, d))
 		}
+	}
+
+	// Ensure .agents/skills/ exists
+	agentsSkillsDir := filepath.Join(targetDir, ".agents", "skills")
+	if err := os.MkdirAll(agentsSkillsDir, 0755); err != nil {
+		return fmt.Errorf("create .agents/skills/: %w", err)
 	}
 
 	// Ensure .rpi/ subdirs exist
@@ -102,17 +113,32 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Install workflow files (only overwrites existing when --force)
-	n, err := workflow.InstallTo(toolDirPath, cfg.target, updateForce)
-	if err != nil {
-		return fmt.Errorf("install workflow files: %w", err)
+	// Install skills to .agents/skills/ and tool-specific dir
+	toolDirPath := ""
+	if cfg.toolDir != "" {
+		toolDirPath = filepath.Join(targetDir, cfg.toolDir)
 	}
-	if n > 0 {
-		logSuccess(w, fmt.Sprintf("Updated %d workflow files in %s/", n, cfg.toolDir))
+	skillCount, err := workflow.InstallSkills(agentsSkillsDir, toolDirPath, cfg.target, updateForce)
+	if err != nil {
+		return fmt.Errorf("install skills: %w", err)
+	}
+	if skillCount > 0 {
+		logSuccess(w, fmt.Sprintf("Updated %d skill files", skillCount))
 	}
 
-	// Update rules file (CLAUDE.md or AGENTS.md)
-	if !updateNoClaudeMD {
+	// Install templates to tool dir (skip for agents-only)
+	if cfg.toolDir != "" {
+		tplCount, err := workflow.InstallTo(toolDirPath, cfg.target, updateForce)
+		if err != nil {
+			return fmt.Errorf("install templates: %w", err)
+		}
+		if tplCount > 0 {
+			logSuccess(w, fmt.Sprintf("Updated %d template files in %s/", tplCount, cfg.toolDir))
+		}
+	}
+
+	// Update rules file (skip for agents-only)
+	if !updateNoClaudeMD && cfg.rulesFile != "" {
 		rulesPath := filepath.Join(targetDir, cfg.rulesFile)
 		content, tplErr := templates.Get(cfg.rulesFile)
 		if tplErr != nil {
@@ -128,7 +154,7 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 
 	// Ensure settings.json has MCP tool permissions (Claude only)
 	if cfg.target == workflow.TargetClaude {
-		configureSettings(w, toolDirPath)
+		configureSettings(w, filepath.Join(targetDir, cfg.toolDir))
 	}
 
 	// Rebuild codebase index
