@@ -1,7 +1,6 @@
 ---
 description: Investigate, analyze, and propose solutions — from quick decisions to complex features
 model: inherit
-disable-model-invocation: true
 ---
 
 # Solution Design

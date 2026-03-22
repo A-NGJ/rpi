@@ -1,7 +1,6 @@
 ---
 description: Implement technical plans from .rpi/plans with verification
 model: inherit
-disable-model-invocation: true
 ---
 
 # Implement Plan

@@ -1,7 +1,6 @@
 ---
 description: Research the codebase to understand problems before proposing solutions
 model: inherit
-disable-model-invocation: true
 ---
 
 # Codebase Research

@@ -1,7 +1,6 @@
 ---
 description: Explain an implemented solution with a diff-scoped walkthrough
 model: inherit
-disable-model-invocation: true
 ---
 
 # Explain Implementation

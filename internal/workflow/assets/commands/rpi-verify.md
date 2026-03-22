@@ -1,7 +1,6 @@
 ---
 description: Verify implementation against design artifacts for completeness, correctness, and coherence
 model: inherit
-disable-model-invocation: true
 ---
 
 # Verify Implementation

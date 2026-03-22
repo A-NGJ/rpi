@@ -1,7 +1,6 @@
 ---
 description: Create implementation plans — works standalone for simple tasks or with prior designs for complex ones
 model: inherit
-disable-model-invocation: true
 ---
 
 # Implementation Plan
