@@ -27,8 +27,8 @@ var modelMap = map[string]string{
 }
 
 // skillOverrides defines per-skill tool-specific frontmatter fields to inject
-// when installing to a tool-specific directory. Skills not listed here get no
-// extra fields (model defaults to inherit for Claude, omitted for OpenCode).
+// when the target is not agents-only. Skills not listed here get no extra
+// fields.
 var skillOverrides = map[string]map[string]string{
 	"rpi-archive": {"model": "haiku", "disable-model-invocation": "true"},
 	"rpi-commit":  {"model": "haiku"},
@@ -43,62 +43,11 @@ func ReadAsset(path string) ([]byte, error) {
 	return assets.ReadFile("assets/" + path)
 }
 
-// Install copies all embedded workflow files into the target .claude/ directory.
+// InstallSkills copies embedded skills to skillsDir as Agent Skills-compliant
+// SKILL.md files. For non-agents-only targets, tool-specific frontmatter
+// (model, etc.) is injected into the installed copies.
 // Existing files are only overwritten when force is true.
-func Install(claudeDir string, force bool) (int, error) {
-	return InstallTo(claudeDir, TargetClaude, force)
-}
-
-// InstallTo copies embedded non-skill assets (templates) into targetDir.
-// Skills are installed separately via InstallSkills.
-// Existing files are only overwritten when force is true.
-func InstallTo(targetDir string, _ Target, force bool) (int, error) {
-	count := 0
-	err := fs.WalkDir(assets, "assets", func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		rel, _ := filepath.Rel("assets", path)
-
-		// Skip skills — they are installed via InstallSkills.
-		if rel == "skills" || strings.HasPrefix(rel, "skills/") || strings.HasPrefix(rel, "skills\\") {
-			if d.IsDir() {
-				return fs.SkipDir
-			}
-			return nil
-		}
-
-		dest := filepath.Join(targetDir, rel)
-
-		if d.IsDir() {
-			return os.MkdirAll(dest, 0755)
-		}
-
-		if _, err := os.Stat(dest); err == nil && !force {
-			return nil
-		}
-
-		data, err := assets.ReadFile(path)
-		if err != nil {
-			return err
-		}
-
-		if err := os.WriteFile(dest, data, 0644); err != nil {
-			return err
-		}
-		count++
-		return nil
-	})
-	return count, err
-}
-
-// InstallSkills copies embedded skills to both the cross-tool directory
-// (.agents/skills/) and the tool-specific directory (<toolDir>/skills/).
-// Canonical SKILL.md files (name+description only) go to agentsDir.
-// Enriched copies with tool-specific frontmatter go to toolDir/skills/.
-// For TargetAgentsOnly, only the canonical copy is installed.
-// Existing files are only overwritten when force is true.
-func InstallSkills(agentsDir, toolDir string, target Target, force bool) (int, error) {
+func InstallSkills(skillsDir string, target Target, force bool) (int, error) {
 	count := 0
 
 	entries, err := fs.ReadDir(assets, "assets/skills")
@@ -118,35 +67,22 @@ func InstallSkills(agentsDir, toolDir string, target Target, force bool) (int, e
 			return count, fmt.Errorf("read %s: %w", srcPath, err)
 		}
 
-		// Install canonical copy to .agents/skills/<name>/SKILL.md
-		canonDest := filepath.Join(agentsDir, skillName, "SKILL.md")
-		if err := os.MkdirAll(filepath.Dir(canonDest), 0755); err != nil {
-			return count, fmt.Errorf("create %s: %w", filepath.Dir(canonDest), err)
+		// Enrich with tool-specific frontmatter if applicable
+		if target != TargetAgentsOnly {
+			if overrides, ok := skillOverrides[skillName]; ok {
+				data = injectFrontmatter(data, overrides, target)
+			}
 		}
-		if _, statErr := os.Stat(canonDest); statErr != nil || force {
-			if err := os.WriteFile(canonDest, data, 0644); err != nil {
-				return count, fmt.Errorf("write %s: %w", canonDest, err)
+
+		dest := filepath.Join(skillsDir, skillName, "SKILL.md")
+		if err := os.MkdirAll(filepath.Dir(dest), 0755); err != nil {
+			return count, fmt.Errorf("create %s: %w", filepath.Dir(dest), err)
+		}
+		if _, statErr := os.Stat(dest); statErr != nil || force {
+			if err := os.WriteFile(dest, data, 0644); err != nil {
+				return count, fmt.Errorf("write %s: %w", dest, err)
 			}
 			count++
-		}
-
-		// Install enriched copy to <toolDir>/skills/<name>/SKILL.md
-		if target != TargetAgentsOnly && toolDir != "" {
-			enriched := data
-			if overrides, ok := skillOverrides[skillName]; ok {
-				enriched = injectFrontmatter(data, overrides, target)
-			}
-
-			toolDest := filepath.Join(toolDir, "skills", skillName, "SKILL.md")
-			if err := os.MkdirAll(filepath.Dir(toolDest), 0755); err != nil {
-				return count, fmt.Errorf("create %s: %w", filepath.Dir(toolDest), err)
-			}
-			if _, statErr := os.Stat(toolDest); statErr != nil || force {
-				if err := os.WriteFile(toolDest, enriched, 0644); err != nil {
-					return count, fmt.Errorf("write %s: %w", toolDest, err)
-				}
-				count++
-			}
 		}
 	}
 

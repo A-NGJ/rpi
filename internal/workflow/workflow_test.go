@@ -130,9 +130,9 @@ func TestSkillDescriptionValid(t *testing.T) {
 // --- InstallSkills tests ---
 
 func TestInstallSkills_AgentsOnly(t *testing.T) {
-	agentsDir := filepath.Join(t.TempDir(), ".agents", "skills")
+	skillsDir := filepath.Join(t.TempDir(), ".agents", "skills")
 
-	count, err := InstallSkills(agentsDir, "", TargetAgentsOnly, false)
+	count, err := InstallSkills(skillsDir, TargetAgentsOnly, false)
 	if err != nil {
 		t.Fatalf("InstallSkills error: %v", err)
 	}
@@ -141,9 +141,9 @@ func TestInstallSkills_AgentsOnly(t *testing.T) {
 	}
 
 	// Verify all 9 canonical skills exist
-	entries, err := os.ReadDir(agentsDir)
+	entries, err := os.ReadDir(skillsDir)
 	if err != nil {
-		t.Fatalf("read agents dir: %v", err)
+		t.Fatalf("read skills dir: %v", err)
 	}
 	if len(entries) != 9 {
 		t.Errorf("expected 9 skill dirs, got %d", len(entries))
@@ -151,82 +151,73 @@ func TestInstallSkills_AgentsOnly(t *testing.T) {
 
 	// Verify canonical files have no tool-specific fields
 	for _, e := range entries {
-		data, err := os.ReadFile(filepath.Join(agentsDir, e.Name(), "SKILL.md"))
+		data, err := os.ReadFile(filepath.Join(skillsDir, e.Name(), "SKILL.md"))
 		if err != nil {
 			t.Errorf("read %s: %v", e.Name(), err)
 			continue
 		}
 		fm := extractFrontmatter(string(data))
 		if strings.Contains(fm, "model:") {
-			t.Errorf("canonical %s contains model: field", e.Name())
+			t.Errorf("agents-only %s contains model: field", e.Name())
 		}
 	}
 }
 
 func TestInstallSkills_Claude(t *testing.T) {
-	dir := t.TempDir()
-	agentsDir := filepath.Join(dir, ".agents", "skills")
-	toolDir := filepath.Join(dir, ".claude")
+	skillsDir := filepath.Join(t.TempDir(), ".claude", "skills")
 
-	count, err := InstallSkills(agentsDir, toolDir, TargetClaude, false)
+	count, err := InstallSkills(skillsDir, TargetClaude, false)
 	if err != nil {
 		t.Fatalf("InstallSkills error: %v", err)
 	}
-	// 9 canonical + 9 tool-specific = 18
-	if count != 18 {
-		t.Errorf("expected 18 files installed, got %d", count)
+	if count != 9 {
+		t.Errorf("expected 9 files installed, got %d", count)
 	}
 
-	// Verify rpi-archive has model and disable-model-invocation in tool copy
-	archiveData, err := os.ReadFile(filepath.Join(toolDir, "skills", "rpi-archive", "SKILL.md"))
+	// Verify rpi-archive has model and disable-model-invocation
+	archiveData, err := os.ReadFile(filepath.Join(skillsDir, "rpi-archive", "SKILL.md"))
 	if err != nil {
-		t.Fatalf("read tool rpi-archive: %v", err)
+		t.Fatalf("read rpi-archive: %v", err)
 	}
 	archiveFM := extractFrontmatter(string(archiveData))
 	if !strings.Contains(archiveFM, "model: haiku") {
-		t.Error("tool rpi-archive should have model: haiku")
+		t.Error("rpi-archive should have model: haiku")
 	}
 	if !strings.Contains(archiveFM, "disable-model-invocation: true") {
-		t.Error("tool rpi-archive should have disable-model-invocation: true")
+		t.Error("rpi-archive should have disable-model-invocation: true")
 	}
 
-	// Verify rpi-commit has model in tool copy
-	commitData, err := os.ReadFile(filepath.Join(toolDir, "skills", "rpi-commit", "SKILL.md"))
+	// Verify rpi-commit has model
+	commitData, err := os.ReadFile(filepath.Join(skillsDir, "rpi-commit", "SKILL.md"))
 	if err != nil {
-		t.Fatalf("read tool rpi-commit: %v", err)
+		t.Fatalf("read rpi-commit: %v", err)
 	}
 	if !strings.Contains(extractFrontmatter(string(commitData)), "model: haiku") {
-		t.Error("tool rpi-commit should have model: haiku")
+		t.Error("rpi-commit should have model: haiku")
 	}
 
-	// Verify rpi-research (no overrides) — tool copy matches canonical
-	canonData, err := os.ReadFile(filepath.Join(agentsDir, "rpi-research", "SKILL.md"))
+	// Verify rpi-research (no overrides) has no model field
+	researchData, err := os.ReadFile(filepath.Join(skillsDir, "rpi-research", "SKILL.md"))
 	if err != nil {
-		t.Fatalf("read canonical rpi-research: %v", err)
+		t.Fatalf("read rpi-research: %v", err)
 	}
-	toolData, err := os.ReadFile(filepath.Join(toolDir, "skills", "rpi-research", "SKILL.md"))
-	if err != nil {
-		t.Fatalf("read tool rpi-research: %v", err)
-	}
-	if string(canonData) != string(toolData) {
-		t.Error("rpi-research without overrides: tool copy should match canonical")
+	if strings.Contains(extractFrontmatter(string(researchData)), "model:") {
+		t.Error("rpi-research should not have model field")
 	}
 }
 
 func TestInstallSkills_OpenCode(t *testing.T) {
-	dir := t.TempDir()
-	agentsDir := filepath.Join(dir, ".agents", "skills")
-	toolDir := filepath.Join(dir, ".opencode")
+	skillsDir := filepath.Join(t.TempDir(), ".opencode", "skills")
 
-	_, err := InstallSkills(agentsDir, toolDir, TargetOpenCode, false)
+	_, err := InstallSkills(skillsDir, TargetOpenCode, false)
 	if err != nil {
 		t.Fatalf("InstallSkills error: %v", err)
 	}
 
 	// Verify OpenCode translates model alias to full ID
-	archiveData, err := os.ReadFile(filepath.Join(toolDir, "skills", "rpi-archive", "SKILL.md"))
+	archiveData, err := os.ReadFile(filepath.Join(skillsDir, "rpi-archive", "SKILL.md"))
 	if err != nil {
-		t.Fatalf("read opencode rpi-archive: %v", err)
+		t.Fatalf("read rpi-archive: %v", err)
 	}
 	if !strings.Contains(string(archiveData), "model: anthropic/claude-haiku-4-5-20251001") {
 		t.Error("OpenCode rpi-archive should have full model ID")
@@ -234,15 +225,12 @@ func TestInstallSkills_OpenCode(t *testing.T) {
 }
 
 func TestInstallSkills_ContentParity(t *testing.T) {
-	// AS-11 / TC-5: body content must be identical between canonical and tool copies
-	dir := t.TempDir()
-	agentsDir := filepath.Join(dir, ".agents", "skills")
-	toolDir := filepath.Join(dir, ".claude")
+	// AS-11: body content must be identical between agents-only and enriched installs
+	agentsDir := filepath.Join(t.TempDir(), "agents")
+	claudeDir := filepath.Join(t.TempDir(), "claude")
 
-	_, err := InstallSkills(agentsDir, toolDir, TargetClaude, false)
-	if err != nil {
-		t.Fatalf("InstallSkills error: %v", err)
-	}
+	InstallSkills(agentsDir, TargetAgentsOnly, false)
+	InstallSkills(claudeDir, TargetClaude, false)
 
 	entries, err := os.ReadDir(agentsDir)
 	if err != nil {
@@ -250,43 +238,42 @@ func TestInstallSkills_ContentParity(t *testing.T) {
 	}
 
 	for _, e := range entries {
-		canonData, err := os.ReadFile(filepath.Join(agentsDir, e.Name(), "SKILL.md"))
+		agentsData, err := os.ReadFile(filepath.Join(agentsDir, e.Name(), "SKILL.md"))
 		if err != nil {
-			t.Errorf("read canonical %s: %v", e.Name(), err)
+			t.Errorf("read agents %s: %v", e.Name(), err)
 			continue
 		}
-		toolData, err := os.ReadFile(filepath.Join(toolDir, "skills", e.Name(), "SKILL.md"))
+		claudeData, err := os.ReadFile(filepath.Join(claudeDir, e.Name(), "SKILL.md"))
 		if err != nil {
-			t.Errorf("read tool %s: %v", e.Name(), err)
+			t.Errorf("read claude %s: %v", e.Name(), err)
 			continue
 		}
 
-		canonBody := extractBody(string(canonData))
-		toolBody := extractBody(string(toolData))
-		if canonBody != toolBody {
-			t.Errorf("skill %s: body content differs between canonical and tool copy", e.Name())
+		agentsBody := extractBody(string(agentsData))
+		claudeBody := extractBody(string(claudeData))
+		if agentsBody != claudeBody {
+			t.Errorf("skill %s: body differs between agents-only and claude install", e.Name())
 		}
 	}
 }
 
 func TestInstallSkills_NoOverwriteWithoutForce(t *testing.T) {
-	dir := t.TempDir()
-	agentsDir := filepath.Join(dir, ".agents", "skills")
+	skillsDir := filepath.Join(t.TempDir(), "skills")
 
 	// First install
-	_, err := InstallSkills(agentsDir, "", TargetAgentsOnly, false)
+	_, err := InstallSkills(skillsDir, TargetAgentsOnly, false)
 	if err != nil {
 		t.Fatalf("first install: %v", err)
 	}
 
 	// Modify a file
-	modPath := filepath.Join(agentsDir, "rpi-research", "SKILL.md")
+	modPath := filepath.Join(skillsDir, "rpi-research", "SKILL.md")
 	if err := os.WriteFile(modPath, []byte("custom content"), 0644); err != nil {
 		t.Fatalf("modify file: %v", err)
 	}
 
 	// Second install without force — should not overwrite
-	_, err = InstallSkills(agentsDir, "", TargetAgentsOnly, false)
+	_, err = InstallSkills(skillsDir, TargetAgentsOnly, false)
 	if err != nil {
 		t.Fatalf("second install: %v", err)
 	}
@@ -296,7 +283,7 @@ func TestInstallSkills_NoOverwriteWithoutForce(t *testing.T) {
 	}
 
 	// Third install with force — should overwrite
-	count, err := InstallSkills(agentsDir, "", TargetAgentsOnly, true)
+	count, err := InstallSkills(skillsDir, TargetAgentsOnly, true)
 	if err != nil {
 		t.Fatalf("force install: %v", err)
 	}
@@ -361,7 +348,6 @@ func TestInjectFrontmatter_NoFrontmatter(t *testing.T) {
 // --- Prompt structure tests ---
 
 func TestPromptStructure_HasRequiredSections(t *testing.T) {
-	// Pipeline skills should have Goal, Invariants, and Principles sections
 	pipelineSkills := []string{
 		"rpi-research", "rpi-propose", "rpi-plan", "rpi-implement",
 		"rpi-verify", "rpi-diagnose", "rpi-explain", "rpi-commit", "rpi-archive",
@@ -382,7 +368,6 @@ func TestPromptStructure_HasRequiredSections(t *testing.T) {
 }
 
 func TestPromptStructure_LineCount(t *testing.T) {
-	// Each pipeline skill prompt ≤50 lines excluding YAML frontmatter
 	pipelineSkills := []string{
 		"rpi-research", "rpi-propose", "rpi-plan", "rpi-implement",
 		"rpi-verify", "rpi-diagnose", "rpi-explain", "rpi-commit", "rpi-archive",
@@ -402,7 +387,6 @@ func TestPromptStructure_LineCount(t *testing.T) {
 }
 
 func TestPromptStructure_NoToolReferences(t *testing.T) {
-	// No skill should contain rpi_ (MCP tool names) or backtick-quoted rpi CLI invocations
 	entries, err := fs.ReadDir(assets, "assets/skills")
 	if err != nil {
 		t.Fatalf("read assets/skills: %v", err)
@@ -424,45 +408,6 @@ func TestPromptStructure_NoToolReferences(t *testing.T) {
 		if strings.Contains(content, "`rpi ") {
 			t.Errorf("%s contains backtick-quoted rpi CLI invocation", e.Name())
 		}
-	}
-}
-
-// --- InstallTo tests (templates only) ---
-
-func TestInstallTo_SkipsSkills(t *testing.T) {
-	dir := t.TempDir()
-
-	count, err := InstallTo(dir, TargetClaude, false)
-	if err != nil {
-		t.Fatalf("InstallTo error: %v", err)
-	}
-
-	// Should install templates but not skills
-	if _, err := os.Stat(filepath.Join(dir, "templates", "CLAUDE.md.template")); err != nil {
-		t.Error("templates should be installed")
-	}
-	if _, err := os.Stat(filepath.Join(dir, "skills")); err == nil {
-		t.Error("skills directory should not be created by InstallTo")
-	}
-	if count == 0 {
-		t.Error("expected at least template files to be installed")
-	}
-}
-
-func TestInstall_BackwardCompatible(t *testing.T) {
-	dir := t.TempDir()
-
-	count, err := Install(dir, false)
-	if err != nil {
-		t.Fatalf("Install error: %v", err)
-	}
-	if count == 0 {
-		t.Fatal("expected files to be installed")
-	}
-
-	// Should install templates
-	if _, err := os.Stat(filepath.Join(dir, "templates", "CLAUDE.md.template")); err != nil {
-		t.Error("Install() should install templates")
 	}
 }
 

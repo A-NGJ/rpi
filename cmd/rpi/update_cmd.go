@@ -92,12 +92,6 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Ensure .agents/skills/ exists
-	agentsSkillsDir := filepath.Join(targetDir, ".agents", "skills")
-	if err := os.MkdirAll(agentsSkillsDir, 0755); err != nil {
-		return fmt.Errorf("create .agents/skills/: %w", err)
-	}
-
 	// Ensure .rpi/ subdirs exist
 	rpiSubdirs := []string{
 		"research", "designs", "diagnoses",
@@ -113,28 +107,19 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Install skills to .agents/skills/ and tool-specific dir
-	toolDirPath := ""
+	// Install skills to tool-specific or .agents/ skills dir
+	var skillsDir string
 	if cfg.toolDir != "" {
-		toolDirPath = filepath.Join(targetDir, cfg.toolDir)
+		skillsDir = filepath.Join(targetDir, cfg.toolDir, "skills")
+	} else {
+		skillsDir = filepath.Join(targetDir, ".agents", "skills")
 	}
-	skillCount, err := workflow.InstallSkills(agentsSkillsDir, toolDirPath, cfg.target, updateForce)
+	skillCount, err := workflow.InstallSkills(skillsDir, cfg.target, updateForce)
 	if err != nil {
 		return fmt.Errorf("install skills: %w", err)
 	}
 	if skillCount > 0 {
 		logSuccess(w, fmt.Sprintf("Updated %d skill files", skillCount))
-	}
-
-	// Install templates to tool dir (skip for agents-only)
-	if cfg.toolDir != "" {
-		tplCount, err := workflow.InstallTo(toolDirPath, cfg.target, updateForce)
-		if err != nil {
-			return fmt.Errorf("install templates: %w", err)
-		}
-		if tplCount > 0 {
-			logSuccess(w, fmt.Sprintf("Updated %d template files in %s/", tplCount, cfg.toolDir))
-		}
 	}
 
 	// Update rules file (skip for agents-only)

@@ -54,24 +54,19 @@ func TestInitCreatesAllDirs(t *testing.T) {
 		}
 	}
 
-	// AS-1: .agents/skills/ has 9 dirs
-	agentsSkills := filepath.Join(dir, ".agents", "skills")
-	entries, err := os.ReadDir(agentsSkills)
-	if err != nil {
-		t.Fatalf(".agents/skills/ not created: %v", err)
-	}
-	if len(entries) != 9 {
-		t.Errorf("expected 9 skill dirs in .agents/skills/, got %d", len(entries))
-	}
-
-	// AS-2: .claude/skills/ has 9 dirs
+	// AS-2: .claude/skills/ has 9 skill dirs with SKILL.md files
 	claudeSkills := filepath.Join(dir, ".claude", "skills")
-	entries, err = os.ReadDir(claudeSkills)
+	entries, err := os.ReadDir(claudeSkills)
 	if err != nil {
 		t.Fatalf(".claude/skills/ not created: %v", err)
 	}
 	if len(entries) != 9 {
 		t.Errorf("expected 9 skill dirs in .claude/skills/, got %d", len(entries))
+	}
+
+	// No .agents/ directory for claude target
+	if _, err := os.Stat(filepath.Join(dir, ".agents")); err == nil {
+		t.Error(".agents/ should not be created for claude target")
 	}
 
 	// Verify .rpi/ subdirs
@@ -109,8 +104,8 @@ func TestInitCreatesAllDirs(t *testing.T) {
 	}
 
 	output := buf.String()
-	if !strings.Contains(output, "Created .agents/skills/") {
-		t.Error("output missing .agents/skills/ creation message")
+	if !strings.Contains(output, "Created .claude/skills/") {
+		t.Error("output missing .claude/skills/ creation message")
 	}
 	if !strings.Contains(output, "Created .rpi/research/") {
 		t.Error("output missing .rpi/research/ creation message")
@@ -215,8 +210,8 @@ func TestInitTargetDir(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(target, ".claude", "skills")); err != nil {
 		t.Error(".claude/skills not created in target dir")
 	}
-	if _, err := os.Stat(filepath.Join(target, ".agents", "skills")); err != nil {
-		t.Error(".agents/skills not created in target dir")
+	if _, err := os.Stat(filepath.Join(target, ".claude", "skills")); err != nil {
+		t.Error(".claude/skills not created in target dir")
 	}
 	if _, err := os.Stat(filepath.Join(target, ".rpi", "plans")); err != nil {
 		t.Error(".rpi/plans not created in target dir")
@@ -288,15 +283,12 @@ func TestInitInstallsSkills(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	// Verify skills in .agents/skills/
+	// Verify skills in .claude/skills/
 	expectedSkills := []string{
 		"rpi-research", "rpi-propose", "rpi-plan", "rpi-implement",
 		"rpi-verify", "rpi-diagnose", "rpi-explain", "rpi-commit", "rpi-archive",
 	}
 	for _, skill := range expectedSkills {
-		if _, err := os.Stat(filepath.Join(dir, ".agents", "skills", skill, "SKILL.md")); err != nil {
-			t.Errorf(".agents/skills/%s/SKILL.md not installed", skill)
-		}
 		if _, err := os.Stat(filepath.Join(dir, ".claude", "skills", skill, "SKILL.md")); err != nil {
 			t.Errorf(".claude/skills/%s/SKILL.md not installed", skill)
 		}
@@ -432,19 +424,9 @@ func TestInitOpenCode(t *testing.T) {
 		}
 	}
 
-	// AS-1: .agents/skills/ has 9 dirs
-	agentsSkills := filepath.Join(dir, ".agents", "skills")
-	entries, err := os.ReadDir(agentsSkills)
-	if err != nil {
-		t.Fatalf(".agents/skills/ not created: %v", err)
-	}
-	if len(entries) != 9 {
-		t.Errorf("expected 9 skill dirs in .agents/skills/, got %d", len(entries))
-	}
-
 	// AS-3: .opencode/skills/ has 9 dirs
 	ocSkills := filepath.Join(dir, ".opencode", "skills")
-	entries, err = os.ReadDir(ocSkills)
+	entries, err := os.ReadDir(ocSkills)
 	if err != nil {
 		t.Fatalf(".opencode/skills/ not created: %v", err)
 	}
@@ -587,17 +569,22 @@ func TestInitAgentsOnlyIdempotent(t *testing.T) {
 	}
 }
 
-func TestInitAgentsNotInGitignore(t *testing.T) {
+func TestInitAgentsOnlyNotInGitignore(t *testing.T) {
 	dir := t.TempDir()
 
-	_, err := runInitInDir(t, dir)
-	if err != nil {
+	resetInitFlags()
+	initTarget = "agents-only"
+	buf := new(bytes.Buffer)
+	cmd := initCmd
+	cmd.SetOut(buf)
+	if err := cmd.RunE(cmd, []string{dir}); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
 	data, err := os.ReadFile(filepath.Join(dir, ".gitignore"))
 	if err != nil {
-		t.Fatalf("failed to read .gitignore: %v", err)
+		// No .gitignore is fine for agents-only (no tool dir to gitignore)
+		return
 	}
 
 	// .agents/ should NOT be in .gitignore (skills should be shared)

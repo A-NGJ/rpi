@@ -103,7 +103,7 @@ func TestUpdateDoesNotOverwriteWithoutForce(t *testing.T) {
 	}
 
 	// Modify a skill file
-	skillFile := filepath.Join(dir, ".agents", "skills", "rpi-plan", "SKILL.md")
+	skillFile := filepath.Join(dir, ".claude", "skills", "rpi-plan", "SKILL.md")
 	os.WriteFile(skillFile, []byte("custom content"), 0644)
 
 	// Update without --force
@@ -135,7 +135,7 @@ func TestUpdateForceOverwritesFiles(t *testing.T) {
 	}
 
 	// Modify a skill file
-	skillFile := filepath.Join(dir, ".agents", "skills", "rpi-plan", "SKILL.md")
+	skillFile := filepath.Join(dir, ".claude", "skills", "rpi-plan", "SKILL.md")
 	os.WriteFile(skillFile, []byte("custom content"), 0644)
 
 	// Update with --force
@@ -335,11 +335,6 @@ func TestUpdatePreservesExistingCommandsDir(t *testing.T) {
 		t.Error(".claude/commands/rpi-propose.md was deleted (AS-13)")
 	} else if string(data) != "old command" {
 		t.Error(".claude/commands/rpi-propose.md was modified (AS-13)")
-	}
-
-	// .agents/skills/ should be created
-	if _, err := os.Stat(filepath.Join(dir, ".agents", "skills")); err != nil {
-		t.Error(".agents/skills/ not created during update")
 	}
 
 	// .claude/skills/ should have new skills

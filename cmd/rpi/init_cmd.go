@@ -51,11 +51,11 @@ var initCmd = &cobra.Command{
 	Long: `Initialize a project with the RPI workflow structure.
 
 Targets:
-  claude      Creates .claude/ with skills and hooks subdirectories,
-              .agents/skills/ for cross-tool compatibility,
+  claude      Creates .claude/ with skills and hooks subdirectories
               and a CLAUDE.md rules file (default)
   opencode    Creates .opencode/ with the same structure and an AGENTS.md rules file
-  agents-only Creates only .agents/skills/ — no tool-specific directory, no MCP config
+  agents-only Creates .agents/skills/ with cross-tool Agent Skills — no tool-specific
+              directory, no MCP config
 
 Also creates:
   .rpi/             Artifact directory hierarchy (research, designs, plans, etc.)
@@ -148,7 +148,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Create tool subdirs (skip for agents-only)
+	// Create tool subdirs or .agents/skills/ depending on target
 	if cfg.toolDir != "" {
 		toolDirPath := filepath.Join(targetDir, cfg.toolDir)
 		for _, d := range cfg.subdirs {
@@ -158,14 +158,13 @@ func runInit(cmd *cobra.Command, args []string) error {
 			}
 			logSuccess(w, fmt.Sprintf("Created %s/%s/", cfg.toolDir, d))
 		}
+	} else {
+		agentsSkillsDir := filepath.Join(targetDir, ".agents", "skills")
+		if err := os.MkdirAll(agentsSkillsDir, 0755); err != nil {
+			return fmt.Errorf("create .agents/skills/: %w", err)
+		}
+		logSuccess(w, "Created .agents/skills/")
 	}
-
-	// Create .agents/skills/ for all targets
-	agentsSkillsDir := filepath.Join(targetDir, ".agents", "skills")
-	if err := os.MkdirAll(agentsSkillsDir, 0755); err != nil {
-		return fmt.Errorf("create .agents/skills/: %w", err)
-	}
-	logSuccess(w, "Created .agents/skills/")
 
 	// Create .rpi/ artifact subdirs
 	rpiDir := filepath.Join(targetDir, ".rpi")
@@ -201,27 +200,18 @@ func runInit(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Install skills to .agents/skills/ and tool-specific dir
-	toolDirPath := ""
+	// Install skills to tool-specific or .agents/ skills dir
+	var skillsDir string
 	if cfg.toolDir != "" {
-		toolDirPath = filepath.Join(targetDir, cfg.toolDir)
+		skillsDir = filepath.Join(targetDir, cfg.toolDir, "skills")
+	} else {
+		skillsDir = filepath.Join(targetDir, ".agents", "skills")
 	}
-	skillCount, err := workflow.InstallSkills(agentsSkillsDir, toolDirPath, cfg.target, false)
+	skillCount, err := workflow.InstallSkills(skillsDir, cfg.target, false)
 	if err != nil {
 		return fmt.Errorf("install skills: %w", err)
 	}
-	logSuccess(w, fmt.Sprintf("Installed %d skill files to .agents/skills/", skillCount))
-
-	// Install templates to tool dir (skip for agents-only)
-	if cfg.toolDir != "" {
-		tplCount, err := workflow.InstallTo(toolDirPath, cfg.target, false)
-		if err != nil {
-			return fmt.Errorf("install templates: %w", err)
-		}
-		if tplCount > 0 {
-			logSuccess(w, fmt.Sprintf("Installed %d template files to %s/", tplCount, cfg.toolDir))
-		}
-	}
+	logSuccess(w, fmt.Sprintf("Installed %d skill files", skillCount))
 
 	// Configure MCP server (Claude only)
 	if !initNoMCP && cfg.target == workflow.TargetClaude {
