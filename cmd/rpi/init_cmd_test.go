@@ -500,6 +500,77 @@ func TestInitInvalidTarget(t *testing.T) {
 }
 
 // spec:MC-12
+func TestInitCreatesSettingsJSON(t *testing.T) {
+	dir := t.TempDir()
+	_, err := runInitInDir(t, dir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(dir, ".claude", "settings.json"))
+	if err != nil {
+		t.Fatalf("settings.json not created: %v", err)
+	}
+	if !strings.Contains(string(data), "mcp__rpi__*") {
+		t.Error("settings.json missing mcp__rpi__* permission")
+	}
+}
+
+func TestInitSettingsJSONMergesExisting(t *testing.T) {
+	dir := t.TempDir()
+	_, err := runInitInDir(t, dir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Add a custom key to settings.json
+	settingsPath := filepath.Join(dir, ".claude", "settings.json")
+	os.WriteFile(settingsPath, []byte(`{"permissions":{"allow":["mcp__rpi__*"]},"customKey":"value"}`), 0644)
+
+	// Call configureSettings again (simulating update)
+	buf := new(bytes.Buffer)
+	configureSettings(buf, filepath.Join(dir, ".claude"))
+
+	data, _ := os.ReadFile(settingsPath)
+	content := string(data)
+	if !strings.Contains(content, "mcp__rpi__*") {
+		t.Error("mcp__rpi__* permission lost after merge")
+	}
+	if !strings.Contains(content, "customKey") {
+		t.Error("existing customKey lost after merge")
+	}
+}
+
+func TestInitSettingsJSONIdempotent(t *testing.T) {
+	dir := t.TempDir()
+	_, err := runInitInDir(t, dir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Call configureSettings again
+	buf := new(bytes.Buffer)
+	configureSettings(buf, filepath.Join(dir, ".claude"))
+
+	data, _ := os.ReadFile(filepath.Join(dir, ".claude", "settings.json"))
+	count := strings.Count(string(data), "mcp__rpi__*")
+	if count != 1 {
+		t.Errorf("expected 1 mcp__rpi__* entry, got %d", count)
+	}
+}
+
+func TestInitOpenCodeNoSettingsJSON(t *testing.T) {
+	dir := t.TempDir()
+	_, err := runInitOpenCode(t, dir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if _, err := os.Stat(filepath.Join(dir, ".claude", "settings.json")); err == nil {
+		t.Error("settings.json should not be created for opencode target")
+	}
+}
+
 func TestInitNoMCPFlag(t *testing.T) {
 	flag := initCmd.Flags().Lookup("no-mcp")
 	if flag == nil {

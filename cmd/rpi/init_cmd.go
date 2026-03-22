@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -182,6 +183,11 @@ func runInit(cmd *cobra.Command, args []string) error {
 		configureMCP(w, targetDir)
 	}
 
+	// Configure settings.json with MCP tool permissions (Claude only)
+	if cfg.target == workflow.TargetClaude {
+		configureSettings(w, toolDirPath)
+	}
+
 	// Add .rpi/ to .gitignore (unless --track-rpi)
 	if !initTrackRpi {
 		if err := ensureGitignoreEntry(w, targetDir, ".rpi/"); err != nil {
@@ -264,6 +270,61 @@ func configureMCP(w io.Writer, _ string) {
 		return
 	}
 	logSuccess(w, "Configured MCP server via claude mcp add")
+}
+
+// configureSettings ensures .claude/settings.json contains the mcp__rpi__* permission.
+// It merges into any existing settings file rather than overwriting.
+func configureSettings(w io.Writer, toolDirPath string) {
+	settingsPath := filepath.Join(toolDirPath, "settings.json")
+
+	type settingsFile struct {
+		Permissions map[string][]string `json:"permissions,omitempty"`
+		Extra       map[string]json.RawMessage
+	}
+
+	// Read existing settings (if any)
+	raw := make(map[string]json.RawMessage)
+	if data, err := os.ReadFile(settingsPath); err == nil {
+		if err := json.Unmarshal(data, &raw); err != nil {
+			logWarning(w, fmt.Sprintf("Failed to parse %s: %v", settingsPath, err))
+			return
+		}
+	}
+
+	// Parse permissions
+	var allow []string
+	if permsRaw, ok := raw["permissions"]; ok {
+		var perms map[string][]string
+		if err := json.Unmarshal(permsRaw, &perms); err == nil {
+			allow = perms["allow"]
+		}
+	}
+
+	// Check if mcp__rpi__* already present
+	const rpiPattern = "mcp__rpi__*"
+	for _, entry := range allow {
+		if entry == rpiPattern {
+			return // already configured
+		}
+	}
+
+	// Add the pattern
+	allow = append(allow, rpiPattern)
+	permsMap := map[string][]string{"allow": allow}
+	permsJSON, _ := json.Marshal(permsMap)
+	raw["permissions"] = json.RawMessage(permsJSON)
+
+	// Write back with indentation
+	out, err := json.MarshalIndent(raw, "", "  ")
+	if err != nil {
+		logWarning(w, fmt.Sprintf("Failed to marshal settings: %v", err))
+		return
+	}
+	if err := os.WriteFile(settingsPath, append(out, '\n'), 0644); err != nil {
+		logWarning(w, fmt.Sprintf("Failed to write %s: %v", settingsPath, err))
+		return
+	}
+	logSuccess(w, "Configured auto-allow for RPI MCP tools in settings.json")
 }
 
 // copyDirectory copies all files and subdirectories from src to dest.

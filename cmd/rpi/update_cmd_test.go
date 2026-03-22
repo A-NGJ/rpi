@@ -242,6 +242,37 @@ func TestUpdateNoClaudeMDSkipsRulesFile(t *testing.T) {
 	}
 }
 
+func TestUpdateAddsSettingsPermission(t *testing.T) {
+	dir := t.TempDir()
+
+	// Init
+	resetInitFlags()
+	buf := new(bytes.Buffer)
+	cmd := initCmd
+	cmd.SetOut(buf)
+	if err := cmd.RunE(cmd, []string{dir}); err != nil {
+		t.Fatalf("init failed: %v", err)
+	}
+
+	// Remove the permission from settings.json
+	settingsPath := filepath.Join(dir, ".claude", "settings.json")
+	os.WriteFile(settingsPath, []byte(`{"permissions":{"allow":[]}}`), 0644)
+
+	// Update should re-add it
+	resetUpdateFlags()
+	buf = new(bytes.Buffer)
+	cmd = updateCmd
+	cmd.SetOut(buf)
+	if err := cmd.RunE(cmd, []string{dir}); err != nil {
+		t.Fatalf("update error: %v", err)
+	}
+
+	data, _ := os.ReadFile(settingsPath)
+	if !strings.Contains(string(data), "mcp__rpi__*") {
+		t.Error("update should add mcp__rpi__* permission to settings.json")
+	}
+}
+
 func TestUpdateDetectsOpenCodeTarget(t *testing.T) {
 	dir := t.TempDir()
 

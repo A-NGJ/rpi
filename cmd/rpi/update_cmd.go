@@ -126,6 +126,11 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	// Ensure settings.json has MCP tool permissions (Claude only)
+	if cfg.target == workflow.TargetClaude {
+		configureSettings(w, toolDirPath)
+	}
+
 	// Rebuild codebase index
 	logInfo(w, "Rebuilding codebase index...")
 	idx, err := index.Build(targetDir, index.BuildOptions{})
