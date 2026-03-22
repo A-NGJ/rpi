@@ -23,7 +23,6 @@ var (
 )
 
 const (
-	colorRed    = "\033[0;31m"
 	colorGreen  = "\033[0;32m"
 	colorYellow = "\033[0;33m"
 	colorReset  = "\033[0m"
@@ -35,10 +34,6 @@ func logSuccess(w io.Writer, msg string) {
 
 func logWarning(w io.Writer, msg string) {
 	fmt.Fprintf(w, "%s!%s %s\n", colorYellow, colorReset, msg)
-}
-
-func logError(w io.Writer, msg string) {
-	fmt.Fprintf(w, "%s✗%s %s\n", colorRed, colorReset, msg)
 }
 
 func logInfo(w io.Writer, msg string) {
@@ -368,64 +363,4 @@ func configureSettings(w io.Writer, toolDirPath string) {
 		return
 	}
 	logSuccess(w, "Configured auto-allow for RPI MCP tools in settings.json")
-}
-
-// copyDirectory copies all files and subdirectories from src to dest.
-// Returns the number of top-level items copied.
-func copyDirectory(src, dest string) (int, error) {
-	entries, err := os.ReadDir(src)
-	if err != nil {
-		return 0, err
-	}
-	if err := os.MkdirAll(dest, 0755); err != nil {
-		return 0, err
-	}
-	count := 0
-	for _, entry := range entries {
-		srcPath := filepath.Join(src, entry.Name())
-		destPath := filepath.Join(dest, entry.Name())
-		if entry.IsDir() {
-			if err := copyDirRecursive(srcPath, destPath); err != nil {
-				return count, err
-			}
-		} else {
-			data, err := os.ReadFile(srcPath)
-			if err != nil {
-				return count, err
-			}
-			if err := os.WriteFile(destPath, data, 0644); err != nil {
-				return count, err
-			}
-		}
-		count++
-	}
-	return count, nil
-}
-
-func copyDirRecursive(src, dest string) error {
-	if err := os.MkdirAll(dest, 0755); err != nil {
-		return err
-	}
-	entries, err := os.ReadDir(src)
-	if err != nil {
-		return err
-	}
-	for _, entry := range entries {
-		srcPath := filepath.Join(src, entry.Name())
-		destPath := filepath.Join(dest, entry.Name())
-		if entry.IsDir() {
-			if err := copyDirRecursive(srcPath, destPath); err != nil {
-				return err
-			}
-		} else {
-			data, err := os.ReadFile(srcPath)
-			if err != nil {
-				return err
-			}
-			if err := os.WriteFile(destPath, data, 0644); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
 }

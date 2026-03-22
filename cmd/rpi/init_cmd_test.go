@@ -357,35 +357,6 @@ func TestInitSucceedsWithEmptyDir(t *testing.T) {
 	}
 }
 
-func TestCopyDirectory(t *testing.T) {
-	src := t.TempDir()
-	dest := filepath.Join(t.TempDir(), "dest")
-
-	// Create test files
-	os.WriteFile(filepath.Join(src, "a.txt"), []byte("aaa"), 0644)
-	os.WriteFile(filepath.Join(src, "b.txt"), []byte("bbb"), 0644)
-	os.MkdirAll(filepath.Join(src, "sub"), 0755)
-	os.WriteFile(filepath.Join(src, "sub", "c.txt"), []byte("ccc"), 0644)
-
-	count, err := copyDirectory(src, dest)
-	if err != nil {
-		t.Fatalf("copyDirectory error: %v", err)
-	}
-	if count != 3 { // a.txt, b.txt, sub/
-		t.Errorf("expected 3 items copied, got %d", count)
-	}
-
-	// Verify content
-	data, _ := os.ReadFile(filepath.Join(dest, "a.txt"))
-	if string(data) != "aaa" {
-		t.Errorf("a.txt content: got %q, want %q", data, "aaa")
-	}
-	data, _ = os.ReadFile(filepath.Join(dest, "sub", "c.txt"))
-	if string(data) != "ccc" {
-		t.Errorf("sub/c.txt content: got %q, want %q", data, "ccc")
-	}
-}
-
 func runInitOpenCode(t *testing.T, dir string) (*bytes.Buffer, error) {
 	t.Helper()
 	resetInitFlags()
