@@ -11,6 +11,7 @@ This project follows Spec-Driven Development (SDD). Behavioral specs live in `.r
 ## Git Workflow 
 
 When committing changes, always ask the user which files/directories to include before proposing commits. Never assume all unstaged/staged changes should be committed.
+Watch for uncommitted work that should be preserved. Suggest a commit (via `/rpi-commit`) when the user moves on to a different topic with completed changes still uncommitted, or when the working diff grows large enough that it risks becoming hard to review as a single commit.
 
 ## RPI Artifacts Directory
 
