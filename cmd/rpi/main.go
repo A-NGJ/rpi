@@ -11,6 +11,12 @@ import (
 )
 
 var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
+
+var (
 	formatFlag       string
 	rpiDirFlag       string
 	templatesDirFlag string
