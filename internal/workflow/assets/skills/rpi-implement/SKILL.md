@@ -25,7 +25,7 @@ After all phases are complete and verified, announce completion and update the p
 - **Before committing**: scan staged files for sensitive content — warn and exclude if flagged
 - Present commit plan (files + message) and ask for approval before executing
 - **After hook failure**: read error, fix the issue, re-stage, create a new commit (never amend)
-- Pause for manual verification after each phase — do not proceed without user confirmation
+- If a phase's success criteria are fully covered by automated checks (tests, linting, etc.), run them and proceed automatically when they pass — only pause for manual verification when the plan includes manual verification items not covered by automated tests
 - **On mismatch**: stop, present what the plan says vs what you found, ask how to proceed
 - **On completion**: verify spec conformance for all linked specs — check each behavior (XX-N) against actual code and tests; transition spec → implemented, plan → complete
 
