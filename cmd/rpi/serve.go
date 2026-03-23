@@ -390,11 +390,7 @@ func handleScaffold(_ context.Context, _ *mcp.CallToolRequest, input scaffoldInp
 	}
 	ctx.Filename = tmpl.GenerateFilename(input.Type, ctx)
 
-	tplDir := templatesDirFlag
-	if tplDir == "" {
-		tplDir = ".rpi/templates"
-	}
-	output, err := tmpl.RenderTemplate(input.Type, ctx, tplDir)
+	output, err := tmpl.RenderTemplate(input.Type, ctx, resolveTemplatesDir())
 	if err != nil {
 		return nil, nil, err
 	}

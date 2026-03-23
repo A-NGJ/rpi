@@ -145,7 +145,7 @@ func runScaffold(cmd *cobra.Command, args []string) error {
 	ctx.Filename = tmpl.GenerateFilename(artifactType, ctx)
 
 	// Render template
-	output, err := tmpl.RenderTemplate(artifactType, ctx, templatesDirFlag)
+	output, err := tmpl.RenderTemplate(artifactType, ctx, resolveTemplatesDir())
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	tmpl "github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/template"
 	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/workflow"
@@ -56,7 +57,15 @@ func addRpiDirFlag(cmd *cobra.Command) {
 }
 
 func addTemplatesDirFlag(cmd *cobra.Command) {
-	cmd.Flags().StringVar(&templatesDirFlag, "templates-dir", ".rpi/templates", "Path to templates directory")
+	cmd.Flags().StringVar(&templatesDirFlag, "templates-dir", "", "Path to templates directory (default: <rpi-dir>/templates)")
+}
+
+// resolveTemplatesDir returns templatesDirFlag if set, otherwise rpiDirFlag + "/templates".
+func resolveTemplatesDir() string {
+	if templatesDirFlag != "" {
+		return templatesDirFlag
+	}
+	return filepath.Join(rpiDirFlag, "templates")
 }
 
 func init() {
