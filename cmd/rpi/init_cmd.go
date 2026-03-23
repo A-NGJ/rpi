@@ -9,9 +9,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/index"
-	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/templates"
-	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/workflow"
+	"github.com/A-NGJ/rpi/internal/index"
+	"github.com/A-NGJ/rpi/internal/templates"
+	"github.com/A-NGJ/rpi/internal/workflow"
 	"github.com/spf13/cobra"
 )
 

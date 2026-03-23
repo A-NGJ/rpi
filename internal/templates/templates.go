@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/workflow"
+	"github.com/A-NGJ/rpi/internal/workflow"
 )
 
 // knownTemplates maps user-facing names to their asset paths inside workflow/assets/.

@@ -28,23 +28,28 @@ AI coding assistants are powerful but unpredictable when given large tasks. They
 ### Prerequisites
 
 - [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) or [OpenCode](https://github.com/opencode-ai/opencode)
-- [Go 1.23+](https://go.dev/dl/) (to build the `rpi` binary from source)
 - Git
 
 ### Installation
 
-1. Clone this repository:
-   ```bash
-   git clone <repo-url>
-   cd ai-agent-research-plan-implement-flow
-   ```
+Install the `rpi` binary using one of these methods:
 
-2. Build and install the `rpi` binary:
-   ```bash
-   make install
-   ```
+**Quick install (recommended):**
+```bash
+curl -sSfL https://raw.githubusercontent.com/A-NGJ/rpi/main/install.sh | bash
+```
 
-3. Initialize your target project:
+Pin a specific version:
+```bash
+VERSION=v0.1.0 curl -sSfL https://raw.githubusercontent.com/A-NGJ/rpi/main/install.sh | bash
+```
+
+**From source (requires Go 1.23+):**
+```bash
+go install github.com/A-NGJ/rpi/cmd/rpi@latest
+```
+
+Then initialize your target project:
    ```bash
    rpi init /path/to/your/project                # Claude Code (default)
    rpi init /path/to/your/project --target opencode   # OpenCode

@@ -9,12 +9,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/chain"
-	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/frontmatter"
-	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/git"
-	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/index"
-	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/scanner"
-	tmpl "github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/template"
+	"github.com/A-NGJ/rpi/internal/chain"
+	"github.com/A-NGJ/rpi/internal/frontmatter"
+	"github.com/A-NGJ/rpi/internal/git"
+	"github.com/A-NGJ/rpi/internal/index"
+	"github.com/A-NGJ/rpi/internal/scanner"
+	tmpl "github.com/A-NGJ/rpi/internal/template"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/spf13/cobra"
 )

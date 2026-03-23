@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/git"
+	"github.com/A-NGJ/rpi/internal/git"
 	"github.com/spf13/cobra"
 )
 

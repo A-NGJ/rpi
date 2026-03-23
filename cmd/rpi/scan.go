@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/scanner"
+	"github.com/A-NGJ/rpi/internal/scanner"
 	"github.com/spf13/cobra"
 )
 

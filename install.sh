@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-REPO="A-NGJ/ai-agent-research-plan-implement-flow"
+REPO="A-NGJ/rpi"
 BINARY="rpi"
 
 # Detect OS

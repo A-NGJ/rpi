@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/frontmatter"
+	"github.com/A-NGJ/rpi/internal/frontmatter"
 )
 
 func writeTempFile(t *testing.T, content string) string {

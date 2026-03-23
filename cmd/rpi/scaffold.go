@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	tmpl "github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/template"
+	tmpl "github.com/A-NGJ/rpi/internal/template"
 	"github.com/spf13/cobra"
 )
 

@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/frontmatter"
+	"github.com/A-NGJ/rpi/internal/frontmatter"
 )
 
 const maxDepth = 10

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/index"
+	"github.com/A-NGJ/rpi/internal/index"
 )
 
 func setupIndexTestDir(t *testing.T) string {

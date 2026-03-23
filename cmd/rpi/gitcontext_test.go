@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/git"
+	"github.com/A-NGJ/rpi/internal/git"
 )
 
 func TestGitContextIntegration(t *testing.T) {

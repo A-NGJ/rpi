@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/frontmatter"
-	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/scanner"
+	"github.com/A-NGJ/rpi/internal/frontmatter"
+	"github.com/A-NGJ/rpi/internal/scanner"
 )
 
 func setupArchiveTestDir(t *testing.T) string {

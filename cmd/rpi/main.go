@@ -5,8 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	tmpl "github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/template"
-	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/workflow"
+	tmpl "github.com/A-NGJ/rpi/internal/template"
+	"github.com/A-NGJ/rpi/internal/workflow"
 	"github.com/spf13/cobra"
 )
 

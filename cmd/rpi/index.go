@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/A-NGJ/ai-agent-research-plan-implement-flow/internal/index"
+	"github.com/A-NGJ/rpi/internal/index"
 	"github.com/spf13/cobra"
 )
 

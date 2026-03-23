@@ -1,4 +1,4 @@
-module github.com/A-NGJ/ai-agent-research-plan-implement-flow
+module github.com/A-NGJ/rpi
 
 go 1.25.4
 
