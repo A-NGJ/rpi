@@ -164,8 +164,8 @@ func TestUpdateRegeneratesIndex(t *testing.T) {
 	}
 
 	output := buf.String()
-	if !strings.Contains(output, "Rebuilt codebase index") {
-		t.Error("output missing index rebuild message")
+	if !strings.Contains(output, "Built codebase index") {
+		t.Error("output missing index build message")
 	}
 
 	indexPath := filepath.Join(dir, ".rpi", "index.json")
@@ -174,7 +174,8 @@ func TestUpdateRegeneratesIndex(t *testing.T) {
 	}
 }
 
-func TestUpdateUpdatesRulesFile(t *testing.T) {
+// spec:IU-3
+func TestUpdatePreservesRulesFileWithoutForce(t *testing.T) {
 	dir := t.TempDir()
 
 	// Init
@@ -190,7 +191,7 @@ func TestUpdateUpdatesRulesFile(t *testing.T) {
 	claudeMD := filepath.Join(dir, "CLAUDE.md")
 	os.WriteFile(claudeMD, []byte("custom content"), 0644)
 
-	// Update
+	// Update without --force
 	resetUpdateFlags()
 	buf = new(bytes.Buffer)
 	cmd = updateCmd
@@ -199,13 +200,47 @@ func TestUpdateUpdatesRulesFile(t *testing.T) {
 		t.Fatalf("update error: %v", err)
 	}
 
+	// CLAUDE.md should be untouched
+	data, _ := os.ReadFile(claudeMD)
+	if string(data) != "custom content" {
+		t.Error("update without --force should not overwrite CLAUDE.md")
+	}
+}
+
+// spec:IU-4
+func TestUpdateForceOverwritesRulesFile(t *testing.T) {
+	dir := t.TempDir()
+
+	// Init
+	resetInitFlags()
+	buf := new(bytes.Buffer)
+	cmd := initCmd
+	cmd.SetOut(buf)
+	if err := cmd.RunE(cmd, []string{dir}); err != nil {
+		t.Fatalf("init failed: %v", err)
+	}
+
+	// Modify CLAUDE.md
+	claudeMD := filepath.Join(dir, "CLAUDE.md")
+	os.WriteFile(claudeMD, []byte("custom content"), 0644)
+
+	// Update with --force
+	resetUpdateFlags()
+	updateForce = true
+	buf = new(bytes.Buffer)
+	cmd = updateCmd
+	cmd.SetOut(buf)
+	if err := cmd.RunE(cmd, []string{dir}); err != nil {
+		t.Fatalf("update --force error: %v", err)
+	}
+
 	// CLAUDE.md should be overwritten with template
 	data, _ := os.ReadFile(claudeMD)
 	if string(data) == "custom content" {
-		t.Error("update should overwrite CLAUDE.md with template")
+		t.Error("update --force should overwrite CLAUDE.md with template")
 	}
 	if !strings.Contains(string(data), "# CLAUDE.md") {
-		t.Error("CLAUDE.md missing template header after update")
+		t.Error("CLAUDE.md missing template header after update --force")
 	}
 }
 
