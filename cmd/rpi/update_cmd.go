@@ -5,9 +5,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/A-NGJ/rpi/internal/index"
-	"github.com/A-NGJ/rpi/internal/templates"
-	"github.com/A-NGJ/rpi/internal/workflow"
 	"github.com/spf13/cobra"
 )
 
@@ -25,9 +22,8 @@ This command brings an already-initialized project up to date:
   - Creates any missing .rpi/ or tool subdirectories
   - Updates skills in .agents/skills/ and tool-specific directory
   - Rebuilds the codebase index
-  - Updates the rules file (CLAUDE.md or AGENTS.md)
 
-Workflow files (skills) are only overwritten with --force.`,
+Workflow files (skills, templates, rules file) are only overwritten with --force.`,
 	Example: `  # Update current project
   rpi update
 
@@ -66,9 +62,7 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 		targetDir = args[0]
 	}
 
-	w := cmd.OutOrStdout()
 	rpiDir := filepath.Join(targetDir, ".rpi")
-
 	if _, err := os.Stat(rpiDir); err != nil {
 		return fmt.Errorf("not initialized; run rpi init first")
 	}
@@ -78,93 +72,11 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Ensure tool subdirs exist (skip for agents-only)
-	if cfg.toolDir != "" {
-		toolDirPath := filepath.Join(targetDir, cfg.toolDir)
-		for _, d := range cfg.subdirs {
-			path := filepath.Join(toolDirPath, d)
-			if _, statErr := os.Stat(path); statErr != nil {
-				if mkErr := os.MkdirAll(path, 0755); mkErr != nil {
-					return fmt.Errorf("create %s: %w", path, mkErr)
-				}
-				logSuccess(w, fmt.Sprintf("Created %s/%s/", cfg.toolDir, d))
-			}
-		}
-	}
-
-	// Ensure .rpi/ subdirs exist
-	rpiSubdirs := []string{
-		"research", "designs", "diagnoses",
-		"plans", "specs", "reviews", "archive",
-	}
-	for _, d := range rpiSubdirs {
-		path := filepath.Join(rpiDir, d)
-		if _, statErr := os.Stat(path); statErr != nil {
-			if mkErr := os.MkdirAll(path, 0755); mkErr != nil {
-				return fmt.Errorf("create %s: %w", path, mkErr)
-			}
-			logSuccess(w, fmt.Sprintf("Created .rpi/%s/", d))
-		}
-	}
-
-	// Install skills to tool-specific or .agents/ skills dir
-	var skillsDir string
-	if cfg.toolDir != "" {
-		skillsDir = filepath.Join(targetDir, cfg.toolDir, "skills")
-	} else {
-		skillsDir = filepath.Join(targetDir, ".agents", "skills")
-	}
-	skillCount, err := workflow.InstallSkills(skillsDir, cfg.target, updateForce)
-	if err != nil {
-		return fmt.Errorf("install skills: %w", err)
-	}
-	if skillCount > 0 {
-		logSuccess(w, fmt.Sprintf("Updated %d skill files", skillCount))
-	}
-
-	// Install/update scaffold templates to .rpi/templates/
-	templatesDir := filepath.Join(rpiDir, "templates")
-	tplCount, err := workflow.InstallTemplates(templatesDir, updateForce)
-	if err != nil {
-		return fmt.Errorf("install templates: %w", err)
-	}
-	if tplCount > 0 {
-		logSuccess(w, fmt.Sprintf("Updated %d template files", tplCount))
-	}
-
-	// Update rules file (skip for agents-only)
-	if !updateNoClaudeMD && cfg.rulesFile != "" {
-		rulesPath := filepath.Join(targetDir, cfg.rulesFile)
-		content, tplErr := templates.Get(cfg.rulesFile)
-		if tplErr != nil {
-			logWarning(w, fmt.Sprintf("get %s template: %v", cfg.rulesFile, tplErr))
-		} else {
-			if writeErr := os.WriteFile(rulesPath, []byte(content), 0644); writeErr != nil {
-				logWarning(w, fmt.Sprintf("write %s: %v", cfg.rulesFile, writeErr))
-			} else {
-				logSuccess(w, fmt.Sprintf("Updated %s", cfg.rulesFile))
-			}
-		}
-	}
-
-	// Ensure settings.json has MCP tool permissions (Claude only)
-	if cfg.target == workflow.TargetClaude {
-		configureSettings(w, filepath.Join(targetDir, cfg.toolDir))
-	}
-
-	// Rebuild codebase index
-	logInfo(w, "Rebuilding codebase index...")
-	idx, err := index.Build(targetDir, index.BuildOptions{})
-	if err != nil {
-		logWarning(w, fmt.Sprintf("Index build failed: %v", err))
-	} else {
-		indexPath := filepath.Join(rpiDir, "index.json")
-		if saveErr := index.Save(idx, indexPath); saveErr != nil {
-			logWarning(w, fmt.Sprintf("Index save failed: %v", saveErr))
-		} else {
-			logSuccess(w, fmt.Sprintf("Rebuilt codebase index (%d files, %d symbols)", idx.Metadata.FileCount, idx.Metadata.SymbolCount))
-		}
-	}
-
-	return nil
+	return syncProject(syncOptions{
+		targetDir: targetDir,
+		cfg:       cfg,
+		force:     updateForce,
+		skipRules: updateNoClaudeMD,
+		w:         cmd.OutOrStdout(),
+	})
 }

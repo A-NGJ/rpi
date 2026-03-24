@@ -9,8 +9,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/A-NGJ/rpi/internal/index"
-	"github.com/A-NGJ/rpi/internal/templates"
 	"github.com/A-NGJ/rpi/internal/workflow"
 	"github.com/spf13/cobra"
 )
@@ -130,7 +128,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 
 	w := cmd.OutOrStdout()
 
-	// For agents-only, check .agents/ instead of a tool dir
+	// Guard: fail if tool dir already exists
 	if cfg.target == workflow.TargetAgentsOnly {
 		agentsPath := filepath.Join(targetDir, ".agents")
 		if _, err := os.Stat(agentsPath); err == nil {
@@ -143,7 +141,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Create tool subdirs or .agents/skills/ depending on target
+	// Create tool subdirs or .agents/skills/ (first-time creation)
 	if cfg.toolDir != "" {
 		toolDirPath := filepath.Join(targetDir, cfg.toolDir)
 		for _, d := range cfg.subdirs {
@@ -161,33 +159,6 @@ func runInit(cmd *cobra.Command, args []string) error {
 		logSuccess(w, "Created .agents/skills/")
 	}
 
-	// Create .rpi/ artifact subdirs
-	rpiDir := filepath.Join(targetDir, ".rpi")
-	rpiSubdirs := []string{
-		"research", "designs", "diagnoses",
-		"plans", "specs", "reviews", "archive",
-	}
-	for _, d := range rpiSubdirs {
-		path := filepath.Join(rpiDir, d)
-		if err := os.MkdirAll(path, 0755); err != nil {
-			return fmt.Errorf("create %s: %w", path, err)
-		}
-		logSuccess(w, fmt.Sprintf("Created .rpi/%s/", d))
-	}
-
-	// Generate rules file (skip for agents-only)
-	if !initNoClaudeMD && cfg.rulesFile != "" {
-		rulesPath := filepath.Join(targetDir, cfg.rulesFile)
-		content, err := templates.Get(cfg.rulesFile)
-		if err != nil {
-			return fmt.Errorf("get %s template: %w", cfg.rulesFile, err)
-		}
-		if err := os.WriteFile(rulesPath, []byte(content), 0644); err != nil {
-			return fmt.Errorf("write %s: %w", cfg.rulesFile, err)
-		}
-		logSuccess(w, fmt.Sprintf("Created %s", cfg.rulesFile))
-	}
-
 	// Manage .gitignore for tool dir (skip for agents-only)
 	if cfg.toolDir != "" {
 		if err := ensureGitignoreEntry(w, targetDir, cfg.toolDir+"/"); err != nil {
@@ -195,35 +166,9 @@ func runInit(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Install skills to tool-specific or .agents/ skills dir
-	var skillsDir string
-	if cfg.toolDir != "" {
-		skillsDir = filepath.Join(targetDir, cfg.toolDir, "skills")
-	} else {
-		skillsDir = filepath.Join(targetDir, ".agents", "skills")
-	}
-	skillCount, err := workflow.InstallSkills(skillsDir, cfg.target, false)
-	if err != nil {
-		return fmt.Errorf("install skills: %w", err)
-	}
-	logSuccess(w, fmt.Sprintf("Installed %d skill files", skillCount))
-
-	// Install scaffold templates to .rpi/templates/
-	templatesDir := filepath.Join(rpiDir, "templates")
-	tplCount, err := workflow.InstallTemplates(templatesDir, false)
-	if err != nil {
-		return fmt.Errorf("install templates: %w", err)
-	}
-	logSuccess(w, fmt.Sprintf("Installed %d template files", tplCount))
-
 	// Configure MCP server (Claude only)
 	if !initNoMCP && cfg.target == workflow.TargetClaude {
 		configureMCP(w, targetDir)
-	}
-
-	// Configure settings.json with MCP tool permissions (Claude only)
-	if cfg.target == workflow.TargetClaude {
-		configureSettings(w, filepath.Join(targetDir, cfg.toolDir))
 	}
 
 	// Add .rpi/ to .gitignore (unless --track-rpi)
@@ -233,26 +178,14 @@ func runInit(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Build codebase index
-	logInfo(w, "Building codebase index...")
-	idx, err := index.Build(targetDir, index.BuildOptions{})
-	if err != nil {
-		logWarning(w, fmt.Sprintf("Index build failed: %v", err))
-	} else {
-		if mkErr := os.MkdirAll(rpiDir, 0755); mkErr != nil {
-			logWarning(w, fmt.Sprintf("Create .rpi/ failed: %v", mkErr))
-		} else {
-			indexPath := filepath.Join(rpiDir, "index.json")
-			if saveErr := index.Save(idx, indexPath); saveErr != nil {
-				logWarning(w, fmt.Sprintf("Index save failed: %v", saveErr))
-			} else {
-				logSuccess(w, fmt.Sprintf("Built codebase index (%d files, %d symbols)", idx.Metadata.FileCount, idx.Metadata.SymbolCount))
-			}
-
-		}
-	}
-
-	return nil
+	// Sync shared project structure (dirs, skills, templates, rules, settings, index)
+	return syncProject(syncOptions{
+		targetDir: targetDir,
+		cfg:       cfg,
+		force:     false,
+		skipRules: initNoClaudeMD,
+		w:         w,
+	})
 }
 
 func ensureGitignoreEntry(w io.Writer, targetDir, entry string) error {
