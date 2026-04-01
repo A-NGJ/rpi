@@ -11,6 +11,8 @@ type QueryOptions struct {
 	Pattern      string
 	Kind         string
 	ExportedOnly bool
+	Signature    string
+	Package      string
 }
 
 // StatusResult holds index freshness information.
@@ -31,6 +33,8 @@ type StatusResult struct {
 func QuerySymbols(idx *Index, opts QueryOptions) []Symbol {
 	var results []Symbol
 	pattern := strings.ToLower(opts.Pattern)
+	signature := strings.ToLower(opts.Signature)
+	pkg := strings.ToLower(opts.Package)
 	for _, s := range idx.Symbols {
 		if pattern != "" && !strings.Contains(strings.ToLower(s.Name), pattern) {
 			continue
@@ -39,6 +43,12 @@ func QuerySymbols(idx *Index, opts QueryOptions) []Symbol {
 			continue
 		}
 		if opts.ExportedOnly && !s.Exported {
+			continue
+		}
+		if signature != "" && !strings.Contains(strings.ToLower(s.Signature), signature) {
+			continue
+		}
+		if pkg != "" && !strings.Contains(strings.ToLower(s.Package), pkg) {
 			continue
 		}
 		results = append(results, s)

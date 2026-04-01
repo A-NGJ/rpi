@@ -327,9 +327,11 @@ type indexBuildInput struct {
 }
 
 type indexQueryInput struct {
-	Pattern  string `json:"pattern" jsonschema:"substring pattern to match symbol names"`
-	Kind     string `json:"kind,omitempty" jsonschema:"filter by symbol kind (function, method, class, struct, interface, type_alias)"`
-	Exported bool   `json:"exported,omitempty" jsonschema:"show only exported symbols"`
+	Pattern   string `json:"pattern" jsonschema:"substring pattern to match symbol names"`
+	Kind      string `json:"kind,omitempty" jsonschema:"filter by symbol kind (function, method, class, struct, interface, type_alias)"`
+	Exported  bool   `json:"exported,omitempty" jsonschema:"show only exported symbols"`
+	Signature string `json:"signature,omitempty" jsonschema:"filter by substring in symbol signature (e.g. context.Context)"`
+	Package   string `json:"package,omitempty" jsonschema:"filter by package name (case-insensitive substring)"`
 }
 
 type indexFilesInput struct {
@@ -576,6 +578,8 @@ func handleIndexQuery(_ context.Context, _ *mcp.CallToolRequest, input indexQuer
 		Pattern:      input.Pattern,
 		Kind:         input.Kind,
 		ExportedOnly: input.Exported,
+		Signature:    input.Signature,
+		Package:      input.Package,
 	})
 	if results == nil {
 		results = []index.Symbol{}

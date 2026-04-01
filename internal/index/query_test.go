@@ -22,11 +22,11 @@ func sampleIndex() *Index {
 			{Path: "app.ts", Language: "typescript", Size: 300, Modified: time.Now()},
 		},
 		Symbols: []Symbol{
-			{Name: "HandleRequest", Kind: "function", File: "main.go", Line: 10, Exported: true},
-			{Name: "helperFunc", Kind: "function", File: "main.go", Line: 20, Exported: false},
-			{Name: "UserService", Kind: "class", File: "lib.py", Line: 5, Exported: true},
-			{Name: "get_user", Kind: "method", File: "lib.py", Line: 15, Exported: true},
-			{Name: "AppComponent", Kind: "class", File: "app.ts", Line: 3, Exported: true},
+			{Name: "HandleRequest", Kind: "function", File: "main.go", Line: 10, Package: "main", Signature: "func HandleRequest(ctx context.Context, req *Request) (*Response, error)", Exported: true},
+			{Name: "helperFunc", Kind: "function", File: "main.go", Line: 20, Package: "main", Signature: "func helperFunc()", Exported: false},
+			{Name: "UserService", Kind: "class", File: "lib.py", Line: 5, Package: "lib", Signature: "class UserService:", Exported: true},
+			{Name: "get_user", Kind: "method", File: "lib.py", Line: 15, Package: "lib", Signature: "def get_user(self, user_id):", Exported: true},
+			{Name: "AppComponent", Kind: "class", File: "app.ts", Line: 3, Package: "app", Signature: "export class AppComponent", Exported: true},
 		},
 	}
 }
@@ -120,6 +120,57 @@ func TestQueryFilesNoMatch(t *testing.T) {
 	results := QueryFiles(idx, "rust")
 	if len(results) != 0 {
 		t.Fatalf("got %d files, want 0", len(results))
+	}
+}
+
+func TestQuerySymbolsSignatureFilter(t *testing.T) {
+	idx := sampleIndex()
+
+	results := QuerySymbols(idx, QueryOptions{Signature: "context.Context"})
+	if len(results) != 1 {
+		t.Fatalf("got %d results, want 1", len(results))
+	}
+	if results[0].Name != "HandleRequest" {
+		t.Errorf("got %q, want HandleRequest", results[0].Name)
+	}
+}
+
+func TestQuerySymbolsSignatureAndPatternCompose(t *testing.T) {
+	idx := sampleIndex()
+
+	// Both match
+	results := QuerySymbols(idx, QueryOptions{Pattern: "handle", Signature: "context.Context"})
+	if len(results) != 1 {
+		t.Fatalf("got %d results, want 1", len(results))
+	}
+	if results[0].Name != "HandleRequest" {
+		t.Errorf("got %q, want HandleRequest", results[0].Name)
+	}
+
+	// Pattern doesn't match
+	results = QuerySymbols(idx, QueryOptions{Pattern: "query", Signature: "context.Context"})
+	if len(results) != 0 {
+		t.Fatalf("got %d results, want 0", len(results))
+	}
+}
+
+func TestQuerySymbolsPackageFilter(t *testing.T) {
+	idx := sampleIndex()
+
+	results := QuerySymbols(idx, QueryOptions{Package: "main"})
+	if len(results) != 2 {
+		t.Fatalf("got %d results, want 2", len(results))
+	}
+	for _, r := range results {
+		if r.Package != "main" {
+			t.Errorf("got package %q, want main", r.Package)
+		}
+	}
+
+	// Case-insensitive
+	results = QuerySymbols(idx, QueryOptions{Package: "LIB"})
+	if len(results) != 2 {
+		t.Fatalf("got %d results, want 2 (lib package)", len(results))
 	}
 }
 

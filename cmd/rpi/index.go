@@ -13,12 +13,14 @@ import (
 )
 
 var (
-	indexLangFlag     string
-	indexPathFlag     string
-	indexForceFlag    bool
-	indexKindFlag     string
-	indexExportedFlag bool
-	indexFormatFlag   string
+	indexLangFlag      string
+	indexPathFlag      string
+	indexForceFlag     bool
+	indexKindFlag      string
+	indexExportedFlag  bool
+	indexFormatFlag    string
+	indexSignatureFlag string
+	indexPackageFlag   string
 )
 
 var indexCmd = &cobra.Command{
@@ -114,6 +116,8 @@ func init() {
 
 	indexQueryCmd.Flags().StringVar(&indexKindFlag, "kind", "", "Filter by symbol kind (function, method, class, struct, interface, type_alias)")
 	indexQueryCmd.Flags().BoolVar(&indexExportedFlag, "exported", false, "Show only exported symbols")
+	indexQueryCmd.Flags().StringVar(&indexSignatureFlag, "signature", "", "Filter by substring in symbol signature")
+	indexQueryCmd.Flags().StringVar(&indexPackageFlag, "package", "", "Filter by package name")
 	indexQueryCmd.Flags().StringVar(&indexFormatFlag, "format", "json", "Output format: json, md")
 
 	indexFilesCmd.Flags().StringVar(&indexLangFlag, "lang", "", "Filter by language")
@@ -169,6 +173,8 @@ func runIndexQuery(cmd *cobra.Command, args []string) error {
 		Pattern:      args[0],
 		Kind:         indexKindFlag,
 		ExportedOnly: indexExportedFlag,
+		Signature:    indexSignatureFlag,
+		Package:      indexPackageFlag,
 	})
 
 	if results == nil {
