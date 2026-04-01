@@ -15,7 +15,7 @@ import (
 
 var (
 	initNoClaudeMD bool
-	initTrackRpi   bool
+	initNoTrack    bool
 	initTarget     string
 	initNoMCP      bool
 )
@@ -52,11 +52,11 @@ Targets:
 
 Also creates:
   .rpi/             Artifact directory hierarchy (research, designs, plans, etc.)
-  .rpi/index.json   Codebase symbol index
+  .rpi/index.json   Codebase symbol index (gitignored)
 
-Use --no-claude-md to skip rules file generation. Use --track-rpi to keep
-.rpi/ tracked in git. Use "rpi update" to sync an existing project with
-the latest workflow files.`,
+Use --no-claude-md to skip rules file generation. Use --no-track to add
+.rpi/ to .gitignore (by default, .rpi/ is tracked in git). Use "rpi update"
+to sync an existing project with the latest workflow files.`,
 	Example: `  # Initialize for Claude Code (default)
   rpi init
 
@@ -74,7 +74,7 @@ the latest workflow files.`,
 
 func init() {
 	initCmd.Flags().BoolVar(&initNoClaudeMD, "no-claude-md", false, "Skip rules file generation (CLAUDE.md or AGENTS.md)")
-	initCmd.Flags().BoolVar(&initTrackRpi, "track-rpi", false, "Do not add .rpi/ to .gitignore")
+	initCmd.Flags().BoolVar(&initNoTrack, "no-track", false, "Add .rpi/ to .gitignore (artifacts not tracked in git)")
 	initCmd.Flags().StringVar(&initTarget, "target", "claude", `AI coding tool to initialize for: "claude", "opencode", or "agents-only"`)
 	initCmd.Flags().BoolVar(&initNoMCP, "no-mcp", false, "Skip MCP server configuration")
 	rootCmd.AddCommand(initCmd)
@@ -171,11 +171,16 @@ func runInit(cmd *cobra.Command, args []string) error {
 		configureMCP(w, targetDir)
 	}
 
-	// Add .rpi/ to .gitignore (unless --track-rpi)
-	if !initTrackRpi {
+	// Add .rpi/ to .gitignore only if --no-track is set
+	if initNoTrack {
 		if err := ensureGitignoreEntry(w, targetDir, ".rpi/"); err != nil {
 			logWarning(w, fmt.Sprintf("Failed to update .gitignore: %v", err))
 		}
+	}
+
+	// Always gitignore index.json (generated file)
+	if err := ensureGitignoreEntry(w, targetDir, ".rpi/index.json"); err != nil {
+		logWarning(w, fmt.Sprintf("Failed to update .gitignore: %v", err))
 	}
 
 	// Sync shared project structure (dirs, skills, templates, rules, settings, index)

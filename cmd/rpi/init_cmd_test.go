@@ -11,7 +11,7 @@ import (
 
 func resetInitFlags() {
 	initNoClaudeMD = false
-	initTrackRpi = false
+	initNoTrack = false
 	initTarget = "claude"
 	initNoMCP = false
 }
@@ -99,8 +99,13 @@ func TestInitCreatesAllDirs(t *testing.T) {
 	if !strings.Contains(string(gitignore), ".claude/") {
 		t.Error(".gitignore missing .claude/ entry")
 	}
-	if !strings.Contains(string(gitignore), ".rpi/") {
-		t.Error(".gitignore missing .rpi/ entry")
+	// .rpi/ should NOT be gitignored by default (tracked)
+	if strings.Contains(string(gitignore), ".rpi/\n") {
+		t.Error(".rpi/ should not be in .gitignore by default")
+	}
+	// .rpi/index.json should always be gitignored
+	if !strings.Contains(string(gitignore), ".rpi/index.json") {
+		t.Error(".gitignore missing .rpi/index.json entry")
 	}
 
 	output := buf.String()
@@ -171,11 +176,11 @@ func TestInitNoClaudeMD(t *testing.T) {
 	}
 }
 
-func TestInitTrackRpi(t *testing.T) {
+func TestInitNoTrack(t *testing.T) {
 	dir := t.TempDir()
 
 	resetInitFlags()
-	initTrackRpi = true
+	initNoTrack = true
 	buf := new(bytes.Buffer)
 	cmd := initCmd
 	cmd.SetOut(buf)
@@ -189,11 +194,14 @@ func TestInitTrackRpi(t *testing.T) {
 		t.Fatalf("failed to read .gitignore: %v", err)
 	}
 
-	if strings.Contains(string(gitignore), ".rpi/") {
-		t.Error(".rpi/ should not be in .gitignore with --track-rpi")
+	if !strings.Contains(string(gitignore), ".rpi/\n") {
+		t.Error(".rpi/ should be in .gitignore with --no-track")
 	}
 	if !strings.Contains(string(gitignore), ".claude/") {
 		t.Error(".claude/ should still be in .gitignore")
+	}
+	if !strings.Contains(string(gitignore), ".rpi/index.json") {
+		t.Error(".rpi/index.json should always be in .gitignore")
 	}
 }
 
@@ -253,8 +261,11 @@ func TestInitGitignore(t *testing.T) {
 	if !strings.Contains(content, ".claude/") {
 		t.Error("missing .claude/ entry")
 	}
-	if !strings.Contains(content, ".rpi/") {
-		t.Error("missing .rpi/ entry")
+	if strings.Contains(content, ".rpi/\n") {
+		t.Error(".rpi/ should not be in .gitignore by default")
+	}
+	if !strings.Contains(content, ".rpi/index.json") {
+		t.Error("missing .rpi/index.json entry")
 	}
 }
 
@@ -300,7 +311,7 @@ func TestInitInstallsSkills(t *testing.T) {
 	}
 }
 
-func TestInitAddsRpiToGitignore(t *testing.T) {
+func TestInitAddsIndexJsonToGitignore(t *testing.T) {
 	dir := t.TempDir()
 
 	_, err := runInitInDir(t, dir)
@@ -313,8 +324,8 @@ func TestInitAddsRpiToGitignore(t *testing.T) {
 		t.Fatalf("failed to read .gitignore: %v", err)
 	}
 
-	if !strings.Contains(string(data), ".rpi/") {
-		t.Error(".gitignore missing .rpi/ entry")
+	if !strings.Contains(string(data), ".rpi/index.json") {
+		t.Error(".gitignore missing .rpi/index.json entry")
 	}
 }
 
