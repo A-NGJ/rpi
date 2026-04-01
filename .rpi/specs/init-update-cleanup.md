@@ -26,7 +26,8 @@ Ensure `rpi init` and `rpi update` share a single code path for project synchron
 
 ### Preserved init-only behaviors
 - **IU-7**: `rpi init` fails with an error if the tool directory (`.claude/`, `.opencode/`, or `.agents/`) already exists
-- **IU-8**: `rpi init` adds `.rpi/` and the tool directory to `.gitignore`
+- **IU-8**: `rpi init` adds `.rpi/index.json` and the tool directory to `.gitignore`
+- **IU-8a**: `rpi init --no-track` also adds `.rpi/` to `.gitignore`
 - **IU-9**: `rpi init` registers the MCP server via `claude mcp add` (Claude target, unless `--no-mcp`)
 - **IU-10**: `rpi init` accepts `--target` to select the AI tool
 
