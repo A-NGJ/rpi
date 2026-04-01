@@ -30,9 +30,7 @@ AI coding assistants are powerful but unpredictable when given large tasks. They
 - [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) or [OpenCode](https://github.com/opencode-ai/opencode)
 - Git
 
-### Installation
-
-Install the `rpi` binary using one of these methods:
+### 1. Install `rpi`
 
 **Quick install (recommended):**
 ```bash
@@ -49,26 +47,29 @@ VERSION=v0.1.0 curl -sSfL https://raw.githubusercontent.com/A-NGJ/rpi/main/insta
 go install github.com/A-NGJ/rpi/cmd/rpi@latest
 ```
 
-Then initialize your target project:
-   ```bash
-   rpi init /path/to/your/project                # Claude Code (default)
-   rpi init /path/to/your/project --target opencode   # OpenCode
-   ```
+### 2. Initialize your project
 
-   This creates:
-   - `.claude/` (or `.opencode/`) -- Agents, commands, skills, and templates
-   - `.rpi/` -- Directory for all pipeline artifacts (gitignored by default)
-   - `.rpi/index.json` -- Codebase symbol index
-   - `CLAUDE.md` (or `AGENTS.md`) -- Project-level instructions for the AI
-   - MCP server registration (Claude Code only) -- auto-registers `rpi serve` so the AI calls typed tools instead of shelling out
+```bash
+rpi init /path/to/your/project                     # Claude Code (default)
+rpi init /path/to/your/project --target opencode    # OpenCode
+```
 
-   To sync an existing project with the latest workflow files after updating the `rpi` binary:
-   ```bash
-   rpi update          # add missing dirs, rebuild index, update workflow files
-   rpi update --force  # also overwrite workflow files with latest versions
-   ```
+This creates:
+- `.claude/` (or `.opencode/`) -- Agents, commands, skills, and templates
+- `.rpi/` -- Directory for all pipeline artifacts (gitignored by default)
+- `.rpi/index.json` -- Codebase symbol index
+- `CLAUDE.md` (or `AGENTS.md`) -- Project-level instructions for the AI
+- MCP server registration (Claude Code only) -- auto-registers `rpi serve` so the AI calls typed tools instead of shelling out
 
-4. Start your AI coding tool in the project and use the slash commands.
+To sync an existing project with the latest workflow files after updating the `rpi` binary:
+```bash
+rpi update          # add missing dirs, rebuild index, update workflow files
+rpi update --force  # also overwrite workflow files with latest versions
+```
+
+### 3. Start coding
+
+Open your AI coding tool in the project and use the slash commands.
 
 ### The Slash Commands
 
