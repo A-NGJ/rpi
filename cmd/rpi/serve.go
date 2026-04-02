@@ -102,7 +102,7 @@ func registerTools(s *mcp.Server) {
 	// No-param tools — index status
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_index_status",
-		Description: mcpDescription(indexStatusCmd),
+		Description: mcpDescriptionWithPrefix("Quick orientation: how big is this codebase, what languages, how many symbols. Use early in exploration before diving into files.", indexStatusCmd),
 	}, handleIndexStatus)
 
 	// No-param tools — archive scan
@@ -169,32 +169,32 @@ func registerTools(s *mcp.Server) {
 	// Index (1:1 subcommand mappings)
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_index_build",
-		Description: mcpDescription(indexBuildCmd),
+		Description: mcpDescriptionWithPrefix("Rebuild the symbol index when stale or missing.", indexBuildCmd),
 	}, handleIndexBuild)
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_index_query",
-		Description: mcpDescription(indexQueryCmd),
+		Description: mcpDescriptionWithPrefix("Find where functions, classes, structs, and interfaces are defined — not just mentioned. Unlike grep, returns only definitions with file, line, kind, and export status. Prefer this when locating a definition or surveying what exists.", indexQueryCmd),
 	}, handleIndexQuery)
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_index_files",
-		Description: mcpDescription(indexFilesCmd),
+		Description: mcpDescriptionWithPrefix("Get a compact structural map of the codebase: files grouped by language with symbol counts. Faster than directory listings for understanding codebase shape.", indexFilesCmd),
 	}, handleIndexFiles)
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_index_packages",
-		Description: mcpDescription(indexPackagesCmd),
+		Description: mcpDescriptionWithPrefix("Package-level overview: what does each package export? Shows file count, symbol counts by kind. Use to understand package responsibilities before reading files.", indexPackagesCmd),
 	}, handleIndexPackages)
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_index_imports",
-		Description: mcpDescription(indexImportsCmd),
+		Description: mcpDescriptionWithPrefix("What does a file depend on? Returns all import/require/use statements with paths and aliases.", indexImportsCmd),
 	}, handleIndexImports)
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_index_importers",
-		Description: mcpDescription(indexImportersCmd),
+		Description: mcpDescriptionWithPrefix("Who depends on a package or module? Find all files that import a given path. Use to assess blast radius of changes.", indexImportersCmd),
 	}, handleIndexImporters)
 
 	// Archive (1:1 subcommand mappings)
