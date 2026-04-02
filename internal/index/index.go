@@ -40,11 +40,20 @@ type Symbol struct {
 	Exported  bool   `json:"exported"`
 }
 
+// Import describes a single import statement.
+type Import struct {
+	File       string `json:"file"`
+	ImportPath string `json:"import_path"`
+	Alias      string `json:"alias"`
+	Line       int    `json:"line"`
+}
+
 // Index is the top-level structure persisted to .rpi/index.json.
 type Index struct {
 	Metadata Metadata    `json:"metadata"`
 	Files    []FileEntry `json:"files"`
 	Symbols  []Symbol    `json:"symbols"`
+	Imports  []Import    `json:"imports"`
 }
 
 // BuildOptions controls what Build indexes.
@@ -79,6 +88,7 @@ func Build(rootPath string, opts BuildOptions) (*Index, error) {
 
 	var files []FileEntry
 	var symbols []Symbol
+	var imports []Import
 
 	err = filepath.WalkDir(absRoot, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
@@ -140,6 +150,14 @@ func Build(rootPath string, opts BuildOptions) (*Index, error) {
 		}
 		symbols = append(symbols, syms...)
 
+		imps, err := ExtractImports(path, lang)
+		if err == nil {
+			for i := range imps {
+				imps[i].File = relPath
+			}
+			imports = append(imports, imps...)
+		}
+
 		return nil
 	})
 	if err != nil {
@@ -152,6 +170,9 @@ func Build(rootPath string, opts BuildOptions) (*Index, error) {
 	if symbols == nil {
 		symbols = []Symbol{}
 	}
+	if imports == nil {
+		imports = []Import{}
+	}
 
 	idx := &Index{
 		Metadata: Metadata{
@@ -163,6 +184,7 @@ func Build(rootPath string, opts BuildOptions) (*Index, error) {
 		},
 		Files:   files,
 		Symbols: symbols,
+		Imports: imports,
 	}
 	return idx, nil
 }

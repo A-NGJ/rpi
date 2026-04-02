@@ -188,6 +188,199 @@ func isExported(lang, name, line string) bool {
 	return true
 }
 
+// Import extraction regexes.
+var (
+	// Go
+	goSingleImportRe = regexp.MustCompile(`^import\s+(?:(\w+)\s+)?"([^"]+)"`)
+	goBlockOpenRe    = regexp.MustCompile(`^import\s*\(`)
+	goBlockEntryRe   = regexp.MustCompile(`^\s+(?:(\w+)\s+)?"([^"]+)"`)
+
+	// Python
+	pyImportRe     = regexp.MustCompile(`^import\s+(\S+)`)
+	pyFromImportRe = regexp.MustCompile(`^from\s+(\S+)\s+import`)
+
+	// JS/TS
+	jsImportFromRe  = regexp.MustCompile(`^import\s+.*?\s+from\s+['"]([^'"]+)['"]`)
+	jsImportPlainRe = regexp.MustCompile(`^import\s+['"]([^'"]+)['"]`)
+	jsRequireRe     = regexp.MustCompile(`require\(['"]([^'"]+)['"]\)`)
+	jsImportMultiRe = regexp.MustCompile(`^import\s+\{`)
+
+	// Rust
+	rustUseSingleRe = regexp.MustCompile(`^(?:pub\s+)?use\s+(.+);`)
+	rustUseBlockRe  = regexp.MustCompile(`^(?:pub\s+)?use\s+(\S+?)\{`)
+	rustModRe       = regexp.MustCompile(`^(?:pub\s+)?mod\s+(\w+);`)
+)
+
+// ExtractImports scans a file and returns all import statements.
+func ExtractImports(filePath string, lang string) ([]Import, error) {
+	f, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	var imports []Import
+	scanner := bufio.NewScanner(f)
+	scanner.Buffer(make([]byte, 0, 256*1024), 1024*1024)
+	lineNum := 0
+
+	// State machine for multi-line imports.
+	type blockState struct {
+		active    bool
+		startLine int
+		lang      string
+		prefix    string // for Rust use blocks: the path prefix before {
+	}
+	var block blockState
+
+	for scanner.Scan() {
+		lineNum++
+		line := scanner.Text()
+
+		// Handle active multi-line block.
+		if block.active {
+			switch block.lang {
+			case "go":
+				trimmed := strings.TrimSpace(line)
+				if trimmed == ")" || trimmed == ");" {
+					block.active = false
+					continue
+				}
+				if m := goBlockEntryRe.FindStringSubmatch(line); m != nil {
+					imp := Import{File: filePath, ImportPath: m[2], Alias: m[1], Line: lineNum}
+					imports = append(imports, imp)
+				}
+			case "python":
+				trimmed := strings.TrimSpace(line)
+				if strings.Contains(trimmed, ")") {
+					block.active = false
+				}
+				// We already recorded the from-import on the opening line.
+			case "javascript", "typescript":
+				// Look for the closing "from 'path'" line.
+				if m := regexp.MustCompile(`from\s+['"]([^'"]+)['"]`).FindStringSubmatch(line); m != nil {
+					imp := Import{File: filePath, ImportPath: m[1], Line: block.startLine}
+					imports = append(imports, imp)
+					block.active = false
+				}
+			case "rust":
+				trimmed := strings.TrimSpace(line)
+				if strings.Contains(trimmed, "}") {
+					block.active = false
+				}
+				// We already recorded the use-block on the opening line.
+			}
+			continue
+		}
+
+		switch lang {
+		case "go":
+			if goBlockOpenRe.MatchString(line) {
+				block = blockState{active: true, startLine: lineNum, lang: "go"}
+				continue
+			}
+			if m := goSingleImportRe.FindStringSubmatch(line); m != nil {
+				imp := Import{File: filePath, ImportPath: m[2], Alias: m[1], Line: lineNum}
+				imports = append(imports, imp)
+			}
+
+		case "python":
+			if m := pyFromImportRe.FindStringSubmatch(line); m != nil {
+				imp := Import{File: filePath, ImportPath: m[1], Line: lineNum}
+				imports = append(imports, imp)
+				if strings.Contains(line, "(") && !strings.Contains(line, ")") {
+					block = blockState{active: true, startLine: lineNum, lang: "python"}
+				}
+				continue
+			}
+			if m := pyImportRe.FindStringSubmatch(line); m != nil {
+				imp := Import{File: filePath, ImportPath: m[1], Line: lineNum}
+				imports = append(imports, imp)
+			}
+
+		case "javascript", "typescript":
+			// import ... from 'path' (single line with from)
+			if m := jsImportFromRe.FindStringSubmatch(line); m != nil {
+				imp := Import{File: filePath, ImportPath: m[1], Line: lineNum}
+				imports = append(imports, imp)
+				continue
+			}
+			// import 'path' (side-effect import)
+			if m := jsImportPlainRe.FindStringSubmatch(line); m != nil {
+				imp := Import{File: filePath, ImportPath: m[1], Line: lineNum}
+				imports = append(imports, imp)
+				continue
+			}
+			// Multi-line: import { ... (no from on this line)
+			if jsImportMultiRe.MatchString(line) && !strings.Contains(line, "from") {
+				block = blockState{active: true, startLine: lineNum, lang: lang}
+				continue
+			}
+			// require('path')
+			if m := jsRequireRe.FindStringSubmatch(line); m != nil {
+				imp := Import{File: filePath, ImportPath: m[1], Line: lineNum}
+				imports = append(imports, imp)
+			}
+
+		case "rust":
+			// mod x;
+			if m := rustModRe.FindStringSubmatch(line); m != nil {
+				imp := Import{File: filePath, ImportPath: m[1], Line: lineNum}
+				imports = append(imports, imp)
+				continue
+			}
+			// Multi-line use block: use path::{  (no closing } on same line)
+			if m := rustUseBlockRe.FindStringSubmatch(line); m != nil && !strings.Contains(line, "}") {
+				// Collect the full block content.
+				prefix := m[1]
+				// Start collecting items from opening line.
+				content := strings.TrimSpace(line)
+				blockStartLine := lineNum
+				for scanner.Scan() {
+					lineNum++
+					trimmed := strings.TrimSpace(scanner.Text())
+					content += " " + trimmed
+					if strings.Contains(trimmed, "}") {
+						break
+					}
+				}
+				// Extract the full use path from collected content.
+				if idx := strings.Index(content, "{"); idx >= 0 {
+					// Get everything between { and }
+					inner := content[idx+1:]
+					if ci := strings.Index(inner, "}"); ci >= 0 {
+						inner = inner[:ci]
+					}
+					// Split by comma, trim each item, filter empties.
+					parts := strings.Split(inner, ",")
+					var cleaned []string
+					for _, p := range parts {
+						p = strings.TrimSpace(p)
+						if p != "" {
+							cleaned = append(cleaned, p)
+						}
+					}
+					importPath := prefix + "{" + strings.Join(cleaned, ", ") + "}"
+					imp := Import{File: filePath, ImportPath: importPath, Line: blockStartLine}
+					imports = append(imports, imp)
+				}
+				continue
+			}
+			// Single-line use
+			if m := rustUseSingleRe.FindStringSubmatch(line); m != nil {
+				importPath := strings.TrimSpace(m[1])
+				imp := Import{File: filePath, ImportPath: importPath, Line: lineNum}
+				imports = append(imports, imp)
+			}
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+	return imports, nil
+}
+
 // isBinary checks the first 512 bytes for null bytes.
 func isBinary(f *os.File) bool {
 	buf := make([]byte, 512)

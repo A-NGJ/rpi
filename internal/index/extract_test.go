@@ -346,6 +346,246 @@ func HandleRequest(ctx context.Context, req *Request) (*Response, error) {
 	}
 }
 
+func TestExtractImportsGo(t *testing.T) {
+	dir := t.TempDir()
+	src := `package main
+
+import "fmt"
+import "os"
+import f "fmt"
+`
+	path := writeTestFile(t, dir, "main.go", src)
+	imports, err := ExtractImports(path, "go")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	expected := []struct {
+		importPath string
+		alias      string
+		line       int
+	}{
+		{"fmt", "", 3},
+		{"os", "", 4},
+		{"fmt", "f", 5},
+	}
+
+	if len(imports) != len(expected) {
+		t.Fatalf("got %d imports, want %d: %+v", len(imports), len(expected), imports)
+	}
+
+	for i, want := range expected {
+		if imports[i].ImportPath != want.importPath {
+			t.Errorf("import[%d].ImportPath = %q, want %q", i, imports[i].ImportPath, want.importPath)
+		}
+		if imports[i].Alias != want.alias {
+			t.Errorf("import[%d].Alias = %q, want %q", i, imports[i].Alias, want.alias)
+		}
+		if imports[i].Line != want.line {
+			t.Errorf("import[%d].Line = %d, want %d", i, imports[i].Line, want.line)
+		}
+	}
+}
+
+func TestExtractImportsMultilineGoBlock(t *testing.T) {
+	dir := t.TempDir()
+	src := `package main
+
+import (
+	"fmt"
+	"os"
+
+	log "github.com/sirupsen/logrus"
+)
+`
+	path := writeTestFile(t, dir, "main.go", src)
+	imports, err := ExtractImports(path, "go")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	expected := []struct {
+		importPath string
+		alias      string
+		line       int
+	}{
+		{"fmt", "", 4},
+		{"os", "", 5},
+		{"github.com/sirupsen/logrus", "log", 7},
+	}
+
+	if len(imports) != len(expected) {
+		t.Fatalf("got %d imports, want %d: %+v", len(imports), len(expected), imports)
+	}
+
+	for i, want := range expected {
+		if imports[i].ImportPath != want.importPath {
+			t.Errorf("import[%d].ImportPath = %q, want %q", i, imports[i].ImportPath, want.importPath)
+		}
+		if imports[i].Alias != want.alias {
+			t.Errorf("import[%d].Alias = %q, want %q", i, imports[i].Alias, want.alias)
+		}
+		if imports[i].Line != want.line {
+			t.Errorf("import[%d].Line = %d, want %d", i, imports[i].Line, want.line)
+		}
+	}
+}
+
+func TestExtractImportsPython(t *testing.T) {
+	dir := t.TempDir()
+	src := `import os
+import sys
+from os.path import join
+from collections import (
+    OrderedDict,
+    defaultdict,
+)
+`
+	path := writeTestFile(t, dir, "app.py", src)
+	imports, err := ExtractImports(path, "python")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	expected := []struct {
+		importPath string
+		line       int
+	}{
+		{"os", 1},
+		{"sys", 2},
+		{"os.path", 3},
+		{"collections", 4},
+	}
+
+	if len(imports) != len(expected) {
+		t.Fatalf("got %d imports, want %d: %+v", len(imports), len(expected), imports)
+	}
+
+	for i, want := range expected {
+		if imports[i].ImportPath != want.importPath {
+			t.Errorf("import[%d].ImportPath = %q, want %q", i, imports[i].ImportPath, want.importPath)
+		}
+		if imports[i].Line != want.line {
+			t.Errorf("import[%d].Line = %d, want %d", i, imports[i].Line, want.line)
+		}
+	}
+}
+
+func TestExtractImportsJavaScript(t *testing.T) {
+	dir := t.TempDir()
+	src := `import { useState } from 'react'
+import 'dotenv/config'
+const fs = require('fs')
+import {
+  foo,
+  bar,
+} from 'baz'
+`
+	path := writeTestFile(t, dir, "app.js", src)
+	imports, err := ExtractImports(path, "javascript")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	expected := []struct {
+		importPath string
+		line       int
+	}{
+		{"react", 1},
+		{"dotenv/config", 2},
+		{"fs", 3},
+		{"baz", 4},
+	}
+
+	if len(imports) != len(expected) {
+		t.Fatalf("got %d imports, want %d: %+v", len(imports), len(expected), imports)
+	}
+
+	for i, want := range expected {
+		if imports[i].ImportPath != want.importPath {
+			t.Errorf("import[%d].ImportPath = %q, want %q", i, imports[i].ImportPath, want.importPath)
+		}
+		if imports[i].Line != want.line {
+			t.Errorf("import[%d].Line = %d, want %d", i, imports[i].Line, want.line)
+		}
+	}
+}
+
+func TestExtractImportsTypeScript(t *testing.T) {
+	dir := t.TempDir()
+	src := `import { useState } from 'react'
+import type { Config } from './config'
+import * as path from 'path'
+`
+	path := writeTestFile(t, dir, "app.ts", src)
+	imports, err := ExtractImports(path, "typescript")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	expected := []struct {
+		importPath string
+		line       int
+	}{
+		{"react", 1},
+		{"./config", 2},
+		{"path", 3},
+	}
+
+	if len(imports) != len(expected) {
+		t.Fatalf("got %d imports, want %d: %+v", len(imports), len(expected), imports)
+	}
+
+	for i, want := range expected {
+		if imports[i].ImportPath != want.importPath {
+			t.Errorf("import[%d].ImportPath = %q, want %q", i, imports[i].ImportPath, want.importPath)
+		}
+		if imports[i].Line != want.line {
+			t.Errorf("import[%d].Line = %d, want %d", i, imports[i].Line, want.line)
+		}
+	}
+}
+
+func TestExtractImportsRust(t *testing.T) {
+	dir := t.TempDir()
+	src := `use std::collections::HashMap;
+use std::io::{self, Read};
+mod config;
+use crate::{
+    foo,
+    bar,
+};
+`
+	path := writeTestFile(t, dir, "lib.rs", src)
+	imports, err := ExtractImports(path, "rust")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	expected := []struct {
+		importPath string
+		line       int
+	}{
+		{"std::collections::HashMap", 1},
+		{"std::io::{self, Read}", 2},
+		{"config", 3},
+		{"crate::{foo, bar}", 4},
+	}
+
+	if len(imports) != len(expected) {
+		t.Fatalf("got %d imports, want %d: %+v", len(imports), len(expected), imports)
+	}
+
+	for i, want := range expected {
+		if imports[i].ImportPath != want.importPath {
+			t.Errorf("import[%d].ImportPath = %q, want %q", i, imports[i].ImportPath, want.importPath)
+		}
+		if imports[i].Line != want.line {
+			t.Errorf("import[%d].Line = %d, want %d", i, imports[i].Line, want.line)
+		}
+	}
+}
+
 func TestDetectLanguage(t *testing.T) {
 	cases := []struct {
 		path string

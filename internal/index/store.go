@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	CurrentVersion   = "1"
+	CurrentVersion   = "2"
 	DefaultIndexPath = ".rpi/index.json"
 )
 
