@@ -56,6 +56,67 @@ func QuerySymbols(idx *Index, opts QueryOptions) []Symbol {
 	return results
 }
 
+// PackageSummary aggregates symbol data for a single package.
+type PackageSummary struct {
+	Name            string         `json:"name"`
+	Files           []string       `json:"files"`
+	FileCount       int            `json:"file_count"`
+	ExportedSymbols int            `json:"exported_symbols"`
+	TotalSymbols    int            `json:"total_symbols"`
+	Kinds           map[string]int `json:"kinds"`
+}
+
+// QueryPackages aggregates symbols into package-level summaries.
+// If pkg is non-empty, only packages matching (case-insensitive substring) are returned.
+func QueryPackages(idx *Index, pkg string) []PackageSummary {
+	filter := strings.ToLower(pkg)
+
+	type acc struct {
+		files    map[string]bool
+		exported int
+		total    int
+		kinds    map[string]int
+	}
+	packages := make(map[string]*acc)
+
+	for _, s := range idx.Symbols {
+		if s.Package == "" {
+			continue
+		}
+		if filter != "" && !strings.Contains(strings.ToLower(s.Package), filter) {
+			continue
+		}
+		a, ok := packages[s.Package]
+		if !ok {
+			a = &acc{files: make(map[string]bool), kinds: make(map[string]int)}
+			packages[s.Package] = a
+		}
+		a.files[s.File] = true
+		a.total++
+		if s.Exported {
+			a.exported++
+		}
+		a.kinds[s.Kind]++
+	}
+
+	results := make([]PackageSummary, 0, len(packages))
+	for name, a := range packages {
+		files := make([]string, 0, len(a.files))
+		for f := range a.files {
+			files = append(files, f)
+		}
+		results = append(results, PackageSummary{
+			Name:            name,
+			Files:           files,
+			FileCount:       len(files),
+			ExportedSymbols: a.exported,
+			TotalSymbols:    a.total,
+			Kinds:           a.kinds,
+		})
+	}
+	return results
+}
+
 // QueryFiles filters an index's files by language. Empty lang returns all files.
 func QueryFiles(idx *Index, lang string) []FileEntry {
 	if lang == "" {

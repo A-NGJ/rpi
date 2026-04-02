@@ -416,6 +416,7 @@ func TestIntegration_AllToolsRegistered(t *testing.T) {
 		"rpi_index_build",
 		"rpi_index_query",
 		"rpi_index_files",
+		"rpi_index_packages",
 		"rpi_archive_check_refs",
 		"rpi_archive_move",
 	}

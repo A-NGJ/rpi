@@ -174,6 +174,57 @@ func TestQuerySymbolsPackageFilter(t *testing.T) {
 	}
 }
 
+func TestQueryPackages(t *testing.T) {
+	idx := sampleIndex()
+
+	pkgs := QueryPackages(idx, "")
+	if len(pkgs) != 3 {
+		t.Fatalf("got %d packages, want 3", len(pkgs))
+	}
+
+	// Find the "main" package.
+	var mainPkg *PackageSummary
+	for i := range pkgs {
+		if pkgs[i].Name == "main" {
+			mainPkg = &pkgs[i]
+			break
+		}
+	}
+	if mainPkg == nil {
+		t.Fatal("missing 'main' package")
+	}
+	if mainPkg.FileCount != 1 {
+		t.Errorf("main FileCount = %d, want 1", mainPkg.FileCount)
+	}
+	if mainPkg.ExportedSymbols != 1 {
+		t.Errorf("main ExportedSymbols = %d, want 1", mainPkg.ExportedSymbols)
+	}
+	if mainPkg.TotalSymbols != 2 {
+		t.Errorf("main TotalSymbols = %d, want 2", mainPkg.TotalSymbols)
+	}
+	if mainPkg.Kinds["function"] != 2 {
+		t.Errorf("main Kinds[function] = %d, want 2", mainPkg.Kinds["function"])
+	}
+}
+
+func TestQueryPackagesFilter(t *testing.T) {
+	idx := sampleIndex()
+
+	pkgs := QueryPackages(idx, "lib")
+	if len(pkgs) != 1 {
+		t.Fatalf("got %d packages, want 1", len(pkgs))
+	}
+	if pkgs[0].Name != "lib" {
+		t.Errorf("got package %q, want lib", pkgs[0].Name)
+	}
+
+	// Case-insensitive
+	pkgs = QueryPackages(idx, "LIB")
+	if len(pkgs) != 1 {
+		t.Fatalf("got %d packages, want 1 (case-insensitive)", len(pkgs))
+	}
+}
+
 func TestStatusFresh(t *testing.T) {
 	dir := t.TempDir()
 	now := time.Now()

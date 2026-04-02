@@ -182,6 +182,11 @@ func registerTools(s *mcp.Server) {
 		Description: mcpDescription(indexFilesCmd),
 	}, handleIndexFiles)
 
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "rpi_index_packages",
+		Description: mcpDescription(indexPackagesCmd),
+	}, handleIndexPackages)
+
 	// Archive (1:1 subcommand mappings)
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_archive_check_refs",
@@ -336,6 +341,10 @@ type indexQueryInput struct {
 
 type indexFilesInput struct {
 	Lang string `json:"lang,omitempty" jsonschema:"filter by language"`
+}
+
+type indexPackagesInput struct {
+	Package string `json:"package,omitempty" jsonschema:"filter by package name (case-insensitive substring)"`
 }
 
 type archiveCheckRefsInput struct {
@@ -583,6 +592,18 @@ func handleIndexQuery(_ context.Context, _ *mcp.CallToolRequest, input indexQuer
 	})
 	if results == nil {
 		results = []index.Symbol{}
+	}
+	return jsonResult(results)
+}
+
+func handleIndexPackages(_ context.Context, _ *mcp.CallToolRequest, input indexPackagesInput) (*mcp.CallToolResult, any, error) {
+	idx, err := index.Load(index.DefaultIndexPath)
+	if err != nil {
+		return nil, nil, fmt.Errorf("no index found — run rpi_index_build first")
+	}
+	results := index.QueryPackages(idx, input.Package)
+	if results == nil {
+		results = []index.PackageSummary{}
 	}
 	return jsonResult(results)
 }

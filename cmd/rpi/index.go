@@ -109,6 +109,22 @@ and index size. Output is plain text by default; use --format json for JSON.`,
 	RunE: runIndexStatus,
 }
 
+var indexPackagesCmd = &cobra.Command{
+	Use:   "packages",
+	Short: "List package summaries from the index",
+	Long: `Aggregate symbols into package-level summaries showing file count, symbol
+counts by kind, and exported symbol count. Use --package to filter.`,
+	Example: `  # List all packages
+  rpi index packages
+
+  # Filter by package name
+  rpi index packages --package index
+
+  # Output as markdown table
+  rpi index packages --format md`,
+	RunE: runIndexPackages,
+}
+
 func init() {
 	indexBuildCmd.Flags().StringVar(&indexLangFlag, "lang", "", "Comma-separated languages to index (e.g., go,py,ts)")
 	indexBuildCmd.Flags().StringVar(&indexPathFlag, "path", ".", "Root path to index")
@@ -125,10 +141,14 @@ func init() {
 
 	indexStatusCmd.Flags().StringVar(&indexFormatFlag, "format", "text", "Output format: json, text")
 
+	indexPackagesCmd.Flags().StringVar(&indexPackageFlag, "package", "", "Filter by package name")
+	indexPackagesCmd.Flags().StringVar(&indexFormatFlag, "format", "json", "Output format: json, md")
+
 	indexCmd.AddCommand(indexBuildCmd)
 	indexCmd.AddCommand(indexQueryCmd)
 	indexCmd.AddCommand(indexFilesCmd)
 	indexCmd.AddCommand(indexStatusCmd)
+	indexCmd.AddCommand(indexPackagesCmd)
 	rootCmd.AddCommand(indexCmd)
 }
 
@@ -277,6 +297,36 @@ func runIndexStatus(cmd *cobra.Command, args []string) error {
 			langs = append(langs, fmt.Sprintf("%s: %d", l, c))
 		}
 		fmt.Fprintf(cmd.OutOrStdout(), "Languages: %s\n", strings.Join(langs, ", "))
+	}
+	return nil
+}
+
+func runIndexPackages(cmd *cobra.Command, args []string) error {
+	idx, err := loadIndex()
+	if err != nil {
+		return err
+	}
+
+	results := index.QueryPackages(idx, indexPackageFlag)
+	if results == nil {
+		results = []index.PackageSummary{}
+	}
+
+	switch indexFormatFlag {
+	case "md":
+		fmt.Fprintln(cmd.OutOrStdout(), "| Package | Files | Exported | Total | Kinds |")
+		fmt.Fprintln(cmd.OutOrStdout(), "|---|---|---|---|---|")
+		for _, p := range results {
+			kinds := make([]string, 0, len(p.Kinds))
+			for k, v := range p.Kinds {
+				kinds = append(kinds, fmt.Sprintf("%s: %d", k, v))
+			}
+			fmt.Fprintf(cmd.OutOrStdout(), "| %s | %d | %d | %d | %s |\n",
+				p.Name, p.FileCount, p.ExportedSymbols, p.TotalSymbols, strings.Join(kinds, ", "))
+		}
+	default:
+		data, _ := json.MarshalIndent(results, "", "  ")
+		fmt.Fprintln(cmd.OutOrStdout(), string(data))
 	}
 	return nil
 }
