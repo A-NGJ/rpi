@@ -125,6 +125,34 @@ counts by kind, and exported symbol count. Use --package to filter.`,
 	RunE: runIndexPackages,
 }
 
+var indexImportsCmd = &cobra.Command{
+	Use:   "imports <file>",
+	Short: "List imports for a file",
+	Long: `Show all import statements for files matching the given path (case-insensitive
+substring match). Returns import paths, aliases, and line numbers.`,
+	Example: `  # Show imports for a specific file
+  rpi index imports serve.go
+
+  # Output as markdown table
+  rpi index imports serve.go --format md`,
+	Args: cobra.ExactArgs(1),
+	RunE: runIndexImports,
+}
+
+var indexImportersCmd = &cobra.Command{
+	Use:   "importers <import_path>",
+	Short: "Find files that import a given path",
+	Long: `Find all files that import a given path (case-insensitive substring match).
+Use this to assess the blast radius of changes to a package or module.`,
+	Example: `  # Find files importing "internal/index"
+  rpi index importers internal/index
+
+  # Output as markdown table
+  rpi index importers react --format md`,
+	Args: cobra.ExactArgs(1),
+	RunE: runIndexImporters,
+}
+
 func init() {
 	indexBuildCmd.Flags().StringVar(&indexLangFlag, "lang", "", "Comma-separated languages to index (e.g., go,py,ts)")
 	indexBuildCmd.Flags().StringVar(&indexPathFlag, "path", ".", "Root path to index")
@@ -144,11 +172,17 @@ func init() {
 	indexPackagesCmd.Flags().StringVar(&indexPackageFlag, "package", "", "Filter by package name")
 	indexPackagesCmd.Flags().StringVar(&indexFormatFlag, "format", "json", "Output format: json, md")
 
+	indexImportsCmd.Flags().StringVar(&indexFormatFlag, "format", "json", "Output format: json, md")
+
+	indexImportersCmd.Flags().StringVar(&indexFormatFlag, "format", "json", "Output format: json, md")
+
 	indexCmd.AddCommand(indexBuildCmd)
 	indexCmd.AddCommand(indexQueryCmd)
 	indexCmd.AddCommand(indexFilesCmd)
 	indexCmd.AddCommand(indexStatusCmd)
 	indexCmd.AddCommand(indexPackagesCmd)
+	indexCmd.AddCommand(indexImportsCmd)
+	indexCmd.AddCommand(indexImportersCmd)
 	rootCmd.AddCommand(indexCmd)
 }
 
@@ -338,6 +372,56 @@ func loadIndex() (*index.Index, error) {
 		os.Exit(1)
 	}
 	return idx, nil
+}
+
+func runIndexImports(cmd *cobra.Command, args []string) error {
+	idx, err := loadIndex()
+	if err != nil {
+		return err
+	}
+
+	results := index.QueryImports(idx, args[0])
+	if results == nil {
+		results = []index.Import{}
+	}
+
+	switch indexFormatFlag {
+	case "md":
+		fmt.Fprintln(cmd.OutOrStdout(), "| File | Import Path | Alias | Line |")
+		fmt.Fprintln(cmd.OutOrStdout(), "|---|---|---|---|")
+		for _, imp := range results {
+			fmt.Fprintf(cmd.OutOrStdout(), "| %s | %s | %s | %d |\n", imp.File, imp.ImportPath, imp.Alias, imp.Line)
+		}
+	default:
+		data, _ := json.MarshalIndent(results, "", "  ")
+		fmt.Fprintln(cmd.OutOrStdout(), string(data))
+	}
+	return nil
+}
+
+func runIndexImporters(cmd *cobra.Command, args []string) error {
+	idx, err := loadIndex()
+	if err != nil {
+		return err
+	}
+
+	results := index.QueryImporters(idx, args[0])
+	if results == nil {
+		results = []string{}
+	}
+
+	switch indexFormatFlag {
+	case "md":
+		fmt.Fprintln(cmd.OutOrStdout(), "| File |")
+		fmt.Fprintln(cmd.OutOrStdout(), "|---|")
+		for _, f := range results {
+			fmt.Fprintf(cmd.OutOrStdout(), "| %s |\n", f)
+		}
+	default:
+		data, _ := json.MarshalIndent(results, "", "  ")
+		fmt.Fprintln(cmd.OutOrStdout(), string(data))
+	}
+	return nil
 }
 
 func printSymbolsMarkdown(cmd *cobra.Command, syms []index.Symbol) {

@@ -117,6 +117,36 @@ func QueryPackages(idx *Index, pkg string) []PackageSummary {
 	return results
 }
 
+// QueryImports returns all imports for files matching the given path (case-insensitive substring).
+func QueryImports(idx *Index, file string) []Import {
+	filter := strings.ToLower(file)
+	var results []Import
+	for _, imp := range idx.Imports {
+		if filter != "" && !strings.Contains(strings.ToLower(imp.File), filter) {
+			continue
+		}
+		results = append(results, imp)
+	}
+	return results
+}
+
+// QueryImporters returns deduplicated file paths that import the given path (case-insensitive substring).
+func QueryImporters(idx *Index, importPath string) []string {
+	filter := strings.ToLower(importPath)
+	seen := make(map[string]bool)
+	var results []string
+	for _, imp := range idx.Imports {
+		if filter != "" && !strings.Contains(strings.ToLower(imp.ImportPath), filter) {
+			continue
+		}
+		if !seen[imp.File] {
+			seen[imp.File] = true
+			results = append(results, imp.File)
+		}
+	}
+	return results
+}
+
 // QueryFiles filters an index's files by language. Empty lang returns all files.
 func QueryFiles(idx *Index, lang string) []FileEntry {
 	if lang == "" {

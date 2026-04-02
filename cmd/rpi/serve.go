@@ -187,6 +187,16 @@ func registerTools(s *mcp.Server) {
 		Description: mcpDescription(indexPackagesCmd),
 	}, handleIndexPackages)
 
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "rpi_index_imports",
+		Description: mcpDescription(indexImportsCmd),
+	}, handleIndexImports)
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "rpi_index_importers",
+		Description: mcpDescription(indexImportersCmd),
+	}, handleIndexImporters)
+
 	// Archive (1:1 subcommand mappings)
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_archive_check_refs",
@@ -345,6 +355,14 @@ type indexFilesInput struct {
 
 type indexPackagesInput struct {
 	Package string `json:"package,omitempty" jsonschema:"filter by package name (case-insensitive substring)"`
+}
+
+type indexImportsInput struct {
+	File string `json:"file" jsonschema:"file path to find imports for (case-insensitive substring match)"`
+}
+
+type indexImportersInput struct {
+	ImportPath string `json:"import_path" jsonschema:"import path to search for (case-insensitive substring match)"`
 }
 
 type archiveCheckRefsInput struct {
@@ -616,6 +634,30 @@ func handleIndexFiles(_ context.Context, _ *mcp.CallToolRequest, input indexFile
 	results := index.QueryFiles(idx, input.Lang)
 	if results == nil {
 		results = []index.FileEntry{}
+	}
+	return jsonResult(results)
+}
+
+func handleIndexImports(_ context.Context, _ *mcp.CallToolRequest, input indexImportsInput) (*mcp.CallToolResult, any, error) {
+	idx, err := index.Load(index.DefaultIndexPath)
+	if err != nil {
+		return nil, nil, fmt.Errorf("no index found — run rpi_index_build first")
+	}
+	results := index.QueryImports(idx, input.File)
+	if results == nil {
+		results = []index.Import{}
+	}
+	return jsonResult(results)
+}
+
+func handleIndexImporters(_ context.Context, _ *mcp.CallToolRequest, input indexImportersInput) (*mcp.CallToolResult, any, error) {
+	idx, err := index.Load(index.DefaultIndexPath)
+	if err != nil {
+		return nil, nil, fmt.Errorf("no index found — run rpi_index_build first")
+	}
+	results := index.QueryImporters(idx, input.ImportPath)
+	if results == nil {
+		results = []string{}
 	}
 	return jsonResult(results)
 }

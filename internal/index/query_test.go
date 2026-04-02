@@ -28,6 +28,15 @@ func sampleIndex() *Index {
 			{Name: "get_user", Kind: "method", File: "lib.py", Line: 15, Package: "lib", Signature: "def get_user(self, user_id):", Exported: true},
 			{Name: "AppComponent", Kind: "class", File: "app.ts", Line: 3, Package: "app", Signature: "export class AppComponent", Exported: true},
 		},
+		Imports: []Import{
+			{File: "main.go", ImportPath: "fmt", Line: 3},
+			{File: "main.go", ImportPath: "os", Line: 4},
+			{File: "main.go", ImportPath: "github.com/internal/index", Line: 5},
+			{File: "lib.py", ImportPath: "os", Line: 1},
+			{File: "lib.py", ImportPath: "collections", Line: 2},
+			{File: "app.ts", ImportPath: "react", Line: 1},
+			{File: "app.ts", ImportPath: "internal/index", Line: 2},
+		},
 	}
 }
 
@@ -222,6 +231,52 @@ func TestQueryPackagesFilter(t *testing.T) {
 	pkgs = QueryPackages(idx, "LIB")
 	if len(pkgs) != 1 {
 		t.Fatalf("got %d packages, want 1 (case-insensitive)", len(pkgs))
+	}
+}
+
+func TestQueryImports(t *testing.T) {
+	idx := sampleIndex()
+
+	results := QueryImports(idx, "main.go")
+	if len(results) != 3 {
+		t.Fatalf("got %d imports, want 3", len(results))
+	}
+
+	// Substring match
+	results = QueryImports(idx, "lib")
+	if len(results) != 2 {
+		t.Fatalf("got %d imports for 'lib', want 2", len(results))
+	}
+
+	// No match
+	results = QueryImports(idx, "nonexistent")
+	if len(results) != 0 {
+		t.Fatalf("got %d imports, want 0", len(results))
+	}
+}
+
+func TestQueryImporters(t *testing.T) {
+	idx := sampleIndex()
+
+	// "internal/index" is imported by main.go and app.ts
+	files := QueryImporters(idx, "internal/index")
+	if len(files) != 2 {
+		t.Fatalf("got %d importers, want 2: %v", len(files), files)
+	}
+
+	// "os" is imported by main.go and lib.py
+	files = QueryImporters(idx, "os")
+	if len(files) != 2 {
+		t.Fatalf("got %d importers for 'os', want 2: %v", len(files), files)
+	}
+
+	// "react" only in app.ts
+	files = QueryImporters(idx, "react")
+	if len(files) != 1 {
+		t.Fatalf("got %d importers for 'react', want 1: %v", len(files), files)
+	}
+	if files[0] != "app.ts" {
+		t.Errorf("got %q, want app.ts", files[0])
 	}
 }
 
