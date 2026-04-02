@@ -202,14 +202,15 @@ func hashFile(path string) (string, error) {
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 
-// IsGitignored checks if .rpi/ is in the project's .gitignore.
+// IsGitignored checks if the index file is covered by .gitignore.
 func IsGitignored(rootPath string) bool {
 	data, err := os.ReadFile(filepath.Join(rootPath, ".gitignore"))
 	if err != nil {
 		return false
 	}
 	for _, line := range strings.Split(string(data), "\n") {
-		if strings.TrimSpace(line) == ".rpi/" || strings.TrimSpace(line) == ".rpi" {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == ".rpi/" || trimmed == ".rpi" || trimmed == ".rpi/index.json" {
 			return true
 		}
 	}
