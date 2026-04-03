@@ -148,13 +148,32 @@ func TestScanArchivable(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	// prop2 (complete), r1 (superseded), s1 (implemented) = 3
+	// prop2 (complete), r1 (superseded) = 2
+	// s1 (spec, implemented) excluded — specs only archivable when superseded
 	// archive/ is skipped, so the archived file doesn't count
-	if len(results) != 3 {
-		t.Errorf("got %d results, want 3", len(results))
+	if len(results) != 2 {
+		t.Errorf("got %d results, want 2", len(results))
 		for _, r := range results {
 			t.Logf("  %s (%v)", r.Path, r.Status)
 		}
+	}
+}
+
+func TestScanArchivableSpecSuperseded(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, dir, "specs/old-spec.md",
+		"---\ntopic: \"Old Spec\"\nstatus: superseded\n---\n# Old\n")
+
+	results, err := Scan(dir, Filters{Archivable: true})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(results) != 1 {
+		t.Errorf("got %d results, want 1", len(results))
+	}
+	if len(results) > 0 && results[0].Type != "spec" {
+		t.Errorf("got type %s, want spec", results[0].Type)
 	}
 }
 

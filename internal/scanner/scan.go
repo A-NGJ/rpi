@@ -120,7 +120,11 @@ func matches(doc *frontmatter.Document, info ArtifactInfo, f Filters) bool {
 			return false
 		}
 		s := *info.Status
-		if s != "complete" && s != "superseded" && s != "implemented" {
+		if info.Type == "spec" {
+			if s != "superseded" {
+				return false
+			}
+		} else if s != "complete" && s != "superseded" && s != "implemented" {
 			return false
 		}
 	}
