@@ -1,6 +1,7 @@
 ---
+archived_date: "2026-04-04"
 date: 2026-04-02T01:21:35+02:00
-status: complete
+status: archived
 tags:
     - plan
 topic: init-gitignore-defaults

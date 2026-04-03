@@ -1,8 +1,9 @@
 ---
+archived_date: "2026-04-04"
 date: 2026-04-02T01:43:59+02:00
 design: .rpi/designs/2026-04-02-index-expansion-signature-search-package-overview-import-graph.md
 spec: .rpi/specs/index-expansion.md
-status: complete
+status: archived
 tags:
     - plan
 topic: index expansion — signature search, package overview, import graph
