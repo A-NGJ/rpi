@@ -47,15 +47,16 @@ func init() {
 
 var (
 	// Canonical type display order (alphabetical by singular name).
-	statusTypeOrder = []string{"design", "plan", "research", "review", "spec"}
+	statusTypeOrder = []string{"design", "diagnosis", "plan", "research", "review", "spec"}
 
 	// Plural display names.
 	statusTypePlurals = map[string]string{
-		"design":   "designs",
-		"plan":     "plans",
-		"research": "research",
-		"review":   "reviews",
-		"spec":     "specs",
+		"design":    "designs",
+		"diagnosis": "diagnoses",
+		"plan":      "plans",
+		"research":  "research",
+		"review":    "reviews",
+		"spec":      "specs",
 	}
 
 	// Status display order within each type row.
@@ -170,10 +171,27 @@ func renderStatusText(cmd *cobra.Command, summary map[string]map[string]int, act
 			typeCounts[a.Type]++
 		}
 		var parts []string
+		seen := make(map[string]bool)
 		for _, typ := range statusTypeOrder {
 			if c, ok := typeCounts[typ]; ok {
 				parts = append(parts, fmt.Sprintf("%d %s", c, statusTypePlurals[typ]))
+				seen[typ] = true
 			}
+		}
+		// Include any types not in statusTypeOrder (sorted for determinism)
+		var extra []string
+		for typ := range typeCounts {
+			if !seen[typ] {
+				extra = append(extra, typ)
+			}
+		}
+		sort.Strings(extra)
+		for _, typ := range extra {
+			plural := typ + "s"
+			if p, ok := statusTypePlurals[typ]; ok {
+				plural = p
+			}
+			parts = append(parts, fmt.Sprintf("%d %s", typeCounts[typ], plural))
 		}
 		fmt.Fprintf(w, "\nReady to Archive\n")
 		fmt.Fprintf(w, "  %d artifacts (%s) with 0 active references\n", len(archivable), strings.Join(parts, ", "))
