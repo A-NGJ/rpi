@@ -253,6 +253,8 @@ func InferType(path string) string {
 			return "review"
 		case "specs":
 			return "spec"
+		case "diagnoses":
+			return "diagnosis"
 		}
 	}
 	return "unknown"
