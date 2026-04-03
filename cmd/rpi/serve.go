@@ -286,7 +286,7 @@ type scanInput struct {
 }
 
 type scaffoldInput struct {
-	Type     string `json:"type" jsonschema:"artifact type: research, design, plan, verify-report, spec"`
+	Type     string `json:"type" jsonschema:"artifact type: research, design, diagnosis, plan, verify-report, spec"`
 	Topic    string `json:"topic" jsonschema:"topic or title for the artifact"`
 	Ticket   string `json:"ticket,omitempty" jsonschema:"ticket ID"`
 	Research string `json:"research,omitempty" jsonschema:"path to research document"`
@@ -410,7 +410,7 @@ func handleScaffold(_ context.Context, _ *mcp.CallToolRequest, input scaffoldInp
 
 	labels := map[string]string{
 		"research": "Research", "plan": "Plan", "design": "Design",
-		"verify-report": "Verification Report", "spec": "Spec",
+		"diagnosis": "Diagnosis", "verify-report": "Verification Report", "spec": "Spec",
 	}
 	ctx.TypeLabel = labels[input.Type]
 

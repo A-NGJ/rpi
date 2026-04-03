@@ -37,6 +37,7 @@ var typeLabels = map[string]string{
 	"research":      "Research",
 	"plan":          "Plan",
 	"design":        "Design",
+	"diagnosis":     "Diagnosis",
 	"verify-report": "Verification Report",
 	"spec":          "Spec",
 }
@@ -71,7 +72,7 @@ func GenerateFilename(artifactType string, ctx *RenderContext) string {
 	datePart := dateFromISO(ctx.Date)
 
 	switch artifactType {
-	case "research", "design":
+	case "research", "design", "diagnosis":
 		return fmt.Sprintf("%s-%s.md", datePart, slug)
 	case "plan":
 		if ctx.Ticket != "" {

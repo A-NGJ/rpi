@@ -25,13 +25,14 @@ var typeDirs = map[string]string{
 	"research":      "research",
 	"plan":          "plans",
 	"design":        "designs",
+	"diagnosis":     "diagnoses",
 	"verify-report": "reviews",
 	"spec":          "specs",
 }
 
 // validTypes lists all supported artifact types.
 var validTypes = []string{
-	"research", "design", "plan", "verify-report", "spec",
+	"research", "design", "diagnosis", "plan", "verify-report", "spec",
 }
 
 var scaffoldCmd = &cobra.Command{
@@ -42,6 +43,7 @@ var scaffoldCmd = &cobra.Command{
 Types and their subdirectories:
   research      → .rpi/research/
   design        → .rpi/designs/
+  diagnosis     → .rpi/diagnoses/
   plan          → .rpi/plans/
   verify-report → .rpi/reviews/
   spec          → .rpi/specs/
@@ -130,6 +132,7 @@ func runScaffold(cmd *cobra.Command, args []string) error {
 		"research":      "Research",
 		"plan":          "Plan",
 		"design":        "Design",
+		"diagnosis":     "Diagnosis",
 		"verify-report": "Verification Report",
 		"spec":          "Spec",
 	}
@@ -161,7 +164,7 @@ func runScaffold(cmd *cobra.Command, args []string) error {
 
 func validateRequiredFlags(artifactType string) error {
 	switch artifactType {
-	case "research", "plan", "design", "verify-report", "spec":
+	case "research", "plan", "design", "diagnosis", "verify-report", "spec":
 		if topicFlag == "" {
 			return fmt.Errorf("--topic is required for type %q", artifactType)
 		}
