@@ -86,7 +86,7 @@ func runStatus(cmd *cobra.Command, args []string) error {
 		}
 		summary[a.Type][status]++
 
-		if status == "active" && (a.Type == "plan" || a.Type == "spec") {
+		if status == "active" && a.Type == "spec" {
 			name := strings.TrimSuffix(filepath.Base(a.Path), ".md")
 			if a.Title != nil {
 				name = *a.Title
