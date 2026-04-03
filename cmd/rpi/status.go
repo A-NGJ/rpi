@@ -72,8 +72,9 @@ func runStatus(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Group by type -> status -> count
+	// Group by type -> status -> count, and collect active artifact names
 	summary := make(map[string]map[string]int)
+	activeByType := make(map[string][]string)
 	for _, a := range artifacts {
 		status := "unknown"
 		if a.Status != nil {
@@ -83,6 +84,17 @@ func runStatus(cmd *cobra.Command, args []string) error {
 			summary[a.Type] = make(map[string]int)
 		}
 		summary[a.Type][status]++
+
+		if status == "active" && (a.Type == "plan" || a.Type == "spec") {
+			name := strings.TrimSuffix(filepath.Base(a.Path), ".md")
+			if a.Title != nil {
+				name = *a.Title
+			}
+			activeByType[a.Type] = append(activeByType[a.Type], name)
+		}
+	}
+	for _, names := range activeByType {
+		sort.Strings(names)
 	}
 
 	// Staleness detection
@@ -104,13 +116,13 @@ func runStatus(cmd *cobra.Command, args []string) error {
 	case "json":
 		return renderStatusJSON(cmd, summary, stale, plans, archivable)
 	case "text":
-		return renderStatusText(cmd, summary, stale, plans, archivable)
+		return renderStatusText(cmd, summary, activeByType, stale, plans, archivable)
 	default:
 		return fmt.Errorf("unknown format: %s (expected text or json)", format)
 	}
 }
 
-func renderStatusText(cmd *cobra.Command, summary map[string]map[string]int, stale []staleArtifact, plans []activePlan, archivable []archivableArtifact) error {
+func renderStatusText(cmd *cobra.Command, summary map[string]map[string]int, activeByType map[string][]string, stale []staleArtifact, plans []activePlan, archivable []archivableArtifact) error {
 	w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
 
 	fmt.Fprintln(w, "Artifacts")
@@ -123,13 +135,7 @@ func renderStatusText(cmd *cobra.Command, summary map[string]map[string]int, sta
 		fmt.Fprintf(w, "  %s:\t%s\n", statusTypePlurals[typ], strings.Join(parts, "  "))
 	}
 
-	if len(stale) > 0 {
-		fmt.Fprintf(w, "\nStale (no update in %d+ days)\n", staleDays)
-		for _, s := range stale {
-			fmt.Fprintf(w, "  %s\t%s\t%dd ago\n", s.Path, s.Status, s.Age)
-		}
-	}
-
+	// Active Plans section (ST-10 revised: no linked artifact sub-rows)
 	if len(plans) > 0 {
 		fmt.Fprintln(w, "\nActive Plans")
 		for _, p := range plans {
@@ -139,9 +145,21 @@ func renderStatusText(cmd *cobra.Command, summary map[string]map[string]int, sta
 				progress = fmt.Sprintf("\t%d/%d (%d%%)", p.Checked, p.Total, pct)
 			}
 			fmt.Fprintf(w, "  %s\t%s%s\n", p.Topic, p.Status, progress)
-			for _, l := range p.Links {
-				fmt.Fprintf(w, "    %s:\t%s\t%s\n", l.Type, l.Name, l.Status)
-			}
+		}
+	}
+
+	// ST-19: Active Specs section
+	if names, ok := activeByType["spec"]; ok && len(names) > 0 {
+		fmt.Fprintln(w, "\nActive Specs")
+		for _, n := range names {
+			fmt.Fprintf(w, "  %s\n", n)
+		}
+	}
+
+	if len(stale) > 0 {
+		fmt.Fprintf(w, "\nStale (no update in %d+ days)\n", staleDays)
+		for _, s := range stale {
+			fmt.Fprintf(w, "  %s\t%s\t%dd ago\n", s.Path, s.Status, s.Age)
 		}
 	}
 

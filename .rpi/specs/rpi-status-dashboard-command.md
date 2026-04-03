@@ -28,9 +28,13 @@ Provide a single CLI command (`rpi status`) that aggregates all RPI artifact met
 
 ### Active Plan Chains
 - **ST-9**: For each plan with status `active` or `draft`, resolve one level of frontmatter links (the plan's direct `design`, `spec`, and other link fields).
-- **ST-10**: Display each linked artifact's path (basename), type, and status alongside the plan.
+- **ST-10**: Linked artifact sub-rows are not shown under Active Plans in text output. Links remain available in JSON output (`active_plans[].links`).
 - **ST-11**: Parse plan checkboxes (`- [ ]` / `- [x]`) and display checked/total count with percentage.
 - **ST-12**: Plans with zero checkboxes show no progress indicator (not "0/0 (0%)").
+
+### Active Artifact Sections
+- **ST-18**: When active specs exist, display an "Active Specs" section listing each by name (title from frontmatter, falling back to filename). Omit section when no active specs exist.
+- **ST-19**: Section order: Artifacts → Active Plans → Active Specs → Stale → Ready to Archive. Each section is omitted when empty.
 
 ### Archive Readiness
 - **ST-13**: List artifacts with archivable status (`complete`, `superseded`, `implemented` — or `superseded` only for specs) that have zero active references.
