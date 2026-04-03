@@ -3,7 +3,7 @@ domain: mcp-init-and-commands
 id: MC
 last_updated: 2026-03-18T00:00:00Z
 status: active
-updated_by: .rpi/proposals/2026-03-18-mcp-native-commands-and-init.md
+updated_by: .rpi/archive/2026-03/design/2026-03-18-mcp-native-commands-and-init.md
 ---
 
 # MCP Init and Commands

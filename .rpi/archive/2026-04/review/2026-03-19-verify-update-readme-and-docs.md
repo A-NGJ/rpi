@@ -1,9 +1,11 @@
 ---
+archived_date: "2026-04-04"
 date: 2026-03-19T13:08:56+01:00
-topic: "update readme and docs"
-tags: [verify]
-status: draft
 plan: .rpi/plans/2026-03-19-update-readme-and-docs.md
+status: archived
+tags:
+    - verify
+topic: update readme and docs
 ---
 
 # Verification Report: Update README and Docs

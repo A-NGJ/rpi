@@ -1,8 +1,10 @@
 ---
+archived_date: "2026-04-04"
 date: 2026-03-19T13:02:45+01:00
-topic: "update readme and docs"
-tags: [plan]
-status: draft
+status: archived
+tags:
+    - plan
+topic: update readme and docs
 ---
 
 # Update README and Docs — Implementation Plan
