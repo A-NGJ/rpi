@@ -1,6 +1,6 @@
 ---
 date: 2026-04-04T01:28:16+02:00
-status: active
+status: complete
 tags:
     - plan
 topic: add diagnosis type to rpi-scaffold
