@@ -12,7 +12,6 @@ import (
 	"github.com/A-NGJ/rpi/internal/chain"
 	"github.com/A-NGJ/rpi/internal/frontmatter"
 	"github.com/A-NGJ/rpi/internal/git"
-	"github.com/A-NGJ/rpi/internal/index"
 	"github.com/A-NGJ/rpi/internal/scanner"
 	tmpl "github.com/A-NGJ/rpi/internal/template"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -99,12 +98,6 @@ func registerTools(s *mcp.Server) {
 		Description: mcpDescriptionWithPrefix("Scan staged files for sensitive content.", gitContextCmd),
 	}, handleGitSensitiveCheck)
 
-	// No-param tools — index status
-	mcp.AddTool(s, &mcp.Tool{
-		Name:        "rpi_index_status",
-		Description: mcpDescriptionWithPrefix("Quick orientation: how big is this codebase, what languages, how many symbols. Use early in exploration before diving into files.", indexStatusCmd),
-	}, handleIndexStatus)
-
 	// No-param tools — archive scan
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_archive_scan",
@@ -166,37 +159,6 @@ func registerTools(s *mcp.Server) {
 		Description: mcpDescriptionWithPrefix("Scan for TODO/FIXME/HACK markers in source files.", verifyCmd),
 	}, handleVerifyMarkers)
 
-	// Index (1:1 subcommand mappings)
-	mcp.AddTool(s, &mcp.Tool{
-		Name:        "rpi_index_build",
-		Description: mcpDescriptionWithPrefix("Rebuild the symbol index when stale or missing.", indexBuildCmd),
-	}, handleIndexBuild)
-
-	mcp.AddTool(s, &mcp.Tool{
-		Name:        "rpi_index_query",
-		Description: mcpDescriptionWithPrefix("Find where functions, classes, structs, and interfaces are defined — not just mentioned. Unlike grep, returns only definitions with file, line, kind, and export status. Prefer this when locating a definition or surveying what exists.", indexQueryCmd),
-	}, handleIndexQuery)
-
-	mcp.AddTool(s, &mcp.Tool{
-		Name:        "rpi_index_files",
-		Description: mcpDescriptionWithPrefix("Get a compact structural map of the codebase: files grouped by language with symbol counts. Faster than directory listings for understanding codebase shape.", indexFilesCmd),
-	}, handleIndexFiles)
-
-	mcp.AddTool(s, &mcp.Tool{
-		Name:        "rpi_index_packages",
-		Description: mcpDescriptionWithPrefix("Package-level overview: what does each package export? Shows file count, symbol counts by kind. Use to understand package responsibilities before reading files.", indexPackagesCmd),
-	}, handleIndexPackages)
-
-	mcp.AddTool(s, &mcp.Tool{
-		Name:        "rpi_index_imports",
-		Description: mcpDescriptionWithPrefix("What does a file depend on? Returns all import/require/use statements with paths and aliases.", indexImportsCmd),
-	}, handleIndexImports)
-
-	mcp.AddTool(s, &mcp.Tool{
-		Name:        "rpi_index_importers",
-		Description: mcpDescriptionWithPrefix("Who depends on a package or module? Find all files that import a given path. Use to assess blast radius of changes.", indexImportersCmd),
-	}, handleIndexImporters)
-
 	// Archive (1:1 subcommand mappings)
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_archive_check_refs",
@@ -233,19 +195,6 @@ func handleGitSensitiveCheck(_ context.Context, _ *mcp.CallToolRequest, _ emptyI
 		return nil, nil, err
 	}
 	return jsonResult(matches)
-}
-
-func handleIndexStatus(_ context.Context, _ *mcp.CallToolRequest, _ emptyInput) (*mcp.CallToolResult, any, error) {
-	idx, err := index.Load(index.DefaultIndexPath)
-	if err != nil {
-		return jsonResult(map[string]bool{"exists": false})
-	}
-	result := index.Status(idx, idx.Metadata.RootPath)
-	result.IndexPath = index.DefaultIndexPath
-	if info, statErr := os.Stat(index.DefaultIndexPath); statErr == nil {
-		result.IndexSizeBytes = info.Size()
-	}
-	return jsonResult(result)
 }
 
 func handleArchiveScan(_ context.Context, _ *mcp.CallToolRequest, _ emptyInput) (*mcp.CallToolResult, any, error) {
@@ -333,36 +282,6 @@ type verifyCompletenessInput struct {
 
 type verifyMarkersInput struct {
 	FilePath string `json:"file_path,omitempty" jsonschema:"specific file to scan (omit to scan git-changed files)"`
-}
-
-type indexBuildInput struct {
-	Lang  string `json:"lang,omitempty" jsonschema:"comma-separated languages to index (e.g. go,py,ts)"`
-	Path  string `json:"path,omitempty" jsonschema:"root path to index (default: current directory)"`
-	Force bool   `json:"force,omitempty" jsonschema:"force full rebuild"`
-}
-
-type indexQueryInput struct {
-	Pattern   string `json:"pattern" jsonschema:"substring pattern to match symbol names"`
-	Kind      string `json:"kind,omitempty" jsonschema:"filter by symbol kind (function, method, class, struct, interface, type_alias)"`
-	Exported  bool   `json:"exported,omitempty" jsonschema:"show only exported symbols"`
-	Signature string `json:"signature,omitempty" jsonschema:"filter by substring in symbol signature (e.g. context.Context)"`
-	Package   string `json:"package,omitempty" jsonschema:"filter by package name (case-insensitive substring)"`
-}
-
-type indexFilesInput struct {
-	Lang string `json:"lang,omitempty" jsonschema:"filter by language"`
-}
-
-type indexPackagesInput struct {
-	Package string `json:"package,omitempty" jsonschema:"filter by package name (case-insensitive substring)"`
-}
-
-type indexImportsInput struct {
-	File string `json:"file" jsonschema:"file path to find imports for (case-insensitive substring match)"`
-}
-
-type indexImportersInput struct {
-	ImportPath string `json:"import_path" jsonschema:"import path to search for (case-insensitive substring match)"`
 }
 
 type archiveCheckRefsInput struct {
@@ -567,99 +486,6 @@ func handleVerifyMarkers(_ context.Context, _ *mcp.CallToolRequest, input verify
 		}
 	}
 	return jsonResult(result)
-}
-
-func handleIndexBuild(_ context.Context, _ *mcp.CallToolRequest, input indexBuildInput) (*mcp.CallToolResult, any, error) {
-	opts := index.BuildOptions{
-		ForceRebuild: input.Force,
-	}
-	if input.Lang != "" {
-		opts.Languages = strings.Split(input.Lang, ",")
-	}
-	path := input.Path
-	if path == "" {
-		path = "."
-	}
-	idx, err := index.Build(path, opts)
-	if err != nil {
-		return nil, nil, fmt.Errorf("build index: %w", err)
-	}
-	absPath, _ := filepath.Abs(path)
-	indexPath := filepath.Join(absPath, index.DefaultIndexPath)
-	if err := index.Save(idx, indexPath); err != nil {
-		return nil, nil, fmt.Errorf("save index: %w", err)
-	}
-	return jsonResult(map[string]any{
-		"files":   idx.Metadata.FileCount,
-		"symbols": idx.Metadata.SymbolCount,
-		"path":    index.DefaultIndexPath,
-	})
-}
-
-func handleIndexQuery(_ context.Context, _ *mcp.CallToolRequest, input indexQueryInput) (*mcp.CallToolResult, any, error) {
-	idx, err := index.Load(index.DefaultIndexPath)
-	if err != nil {
-		return nil, nil, fmt.Errorf("no index found — run rpi_index_build first")
-	}
-	results := index.QuerySymbols(idx, index.QueryOptions{
-		Pattern:      input.Pattern,
-		Kind:         input.Kind,
-		ExportedOnly: input.Exported,
-		Signature:    input.Signature,
-		Package:      input.Package,
-	})
-	if results == nil {
-		results = []index.Symbol{}
-	}
-	return jsonResult(results)
-}
-
-func handleIndexPackages(_ context.Context, _ *mcp.CallToolRequest, input indexPackagesInput) (*mcp.CallToolResult, any, error) {
-	idx, err := index.Load(index.DefaultIndexPath)
-	if err != nil {
-		return nil, nil, fmt.Errorf("no index found — run rpi_index_build first")
-	}
-	results := index.QueryPackages(idx, input.Package)
-	if results == nil {
-		results = []index.PackageSummary{}
-	}
-	return jsonResult(results)
-}
-
-func handleIndexFiles(_ context.Context, _ *mcp.CallToolRequest, input indexFilesInput) (*mcp.CallToolResult, any, error) {
-	idx, err := index.Load(index.DefaultIndexPath)
-	if err != nil {
-		return nil, nil, fmt.Errorf("no index found — run rpi_index_build first")
-	}
-	results := index.QueryFiles(idx, input.Lang)
-	if results == nil {
-		results = []index.FileEntry{}
-	}
-	return jsonResult(results)
-}
-
-func handleIndexImports(_ context.Context, _ *mcp.CallToolRequest, input indexImportsInput) (*mcp.CallToolResult, any, error) {
-	idx, err := index.Load(index.DefaultIndexPath)
-	if err != nil {
-		return nil, nil, fmt.Errorf("no index found — run rpi_index_build first")
-	}
-	results := index.QueryImports(idx, input.File)
-	if results == nil {
-		results = []index.Import{}
-	}
-	return jsonResult(results)
-}
-
-func handleIndexImporters(_ context.Context, _ *mcp.CallToolRequest, input indexImportersInput) (*mcp.CallToolResult, any, error) {
-	idx, err := index.Load(index.DefaultIndexPath)
-	if err != nil {
-		return nil, nil, fmt.Errorf("no index found — run rpi_index_build first")
-	}
-	results := index.QueryImporters(idx, input.ImportPath)
-	if results == nil {
-		results = []string{}
-	}
-	return jsonResult(results)
 }
 
 func handleArchiveCheckRefs(_ context.Context, _ *mcp.CallToolRequest, input archiveCheckRefsInput) (*mcp.CallToolResult, any, error) {

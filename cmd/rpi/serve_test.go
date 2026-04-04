@@ -76,18 +76,6 @@ func TestHandleGitSensitiveCheck_ReturnsJSON(t *testing.T) {
 	}
 }
 
-func TestHandleIndexStatus_ReturnsJSON(t *testing.T) {
-	result, _, err := handleIndexStatus(context.Background(), nil, emptyInput{})
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	text := extractText(t, result)
-	var m map[string]any
-	if err := json.Unmarshal([]byte(text), &m); err != nil {
-		t.Fatalf("invalid JSON: %v\ntext: %s", err, text)
-	}
-}
-
 func TestHandleArchiveScan_EmptyDir(t *testing.T) {
 	dir := t.TempDir()
 	oldFlag := rpiDirFlag
@@ -401,7 +389,6 @@ func TestIntegration_AllToolsRegistered(t *testing.T) {
 		"rpi_git_context",
 		"rpi_git_changed_files",
 		"rpi_git_sensitive_check",
-		"rpi_index_status",
 		"rpi_archive_scan",
 		"rpi_scan",
 		"rpi_scaffold",
@@ -413,12 +400,6 @@ func TestIntegration_AllToolsRegistered(t *testing.T) {
 		"rpi_extract_list_sections",
 		"rpi_verify_completeness",
 		"rpi_verify_markers",
-		"rpi_index_build",
-		"rpi_index_query",
-		"rpi_index_files",
-		"rpi_index_packages",
-		"rpi_index_imports",
-		"rpi_index_importers",
 		"rpi_archive_check_refs",
 		"rpi_archive_move",
 	}
