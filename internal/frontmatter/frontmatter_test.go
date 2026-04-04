@@ -157,16 +157,12 @@ func TestTransitionValid(t *testing.T) {
 		from, to string
 	}{
 		{"draft", "active"},
-		{"draft", "approved"},
 		{"draft", "superseded"},
 		{"active", "complete"},
 		{"active", "superseded"},
-		{"approved", "implemented"},
-		{"approved", "superseded"},
+		{"complete", "active"},
 		{"complete", "archived"},
 		{"complete", "superseded"},
-		{"implemented", "archived"},
-		{"implemented", "superseded"},
 	}
 
 	for _, tc := range cases {
@@ -190,16 +186,11 @@ func TestTransitionInvalid(t *testing.T) {
 	}{
 		{"draft", "complete"},
 		{"draft", "archived"},
-		{"draft", "implemented"},
+		{"draft", "approved"},
 		{"active", "draft"},
-		{"active", "approved"},
 		{"active", "archived"},
-		{"approved", "active"},
-		{"approved", "complete"},
+		{"active", "implemented"},
 		{"complete", "draft"},
-		{"complete", "active"},
-		{"implemented", "draft"},
-		{"implemented", "active"},
 	}
 
 	for _, tc := range cases {
