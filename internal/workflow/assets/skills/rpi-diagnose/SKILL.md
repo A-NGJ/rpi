@@ -23,7 +23,7 @@ When the bug is fixed and committed, announce completion. When escalation is nee
 - **Fix-iterate loop**: attempt up to 3 fix iterations autonomously; each iteration: apply fix, run relevant tests, evaluate results
 - **Revert on failure**: fully revert each failed fix attempt before trying the next — the codebase must never be left in a broken state between attempts
 - **Checkpoint after 3 failures**: stop and present what was tried, why each attempt failed, and current understanding of root cause; ask the user how to proceed (more attempts, different approach, or escalate)
-- **Commit on success**: when a fix works and tests pass, use the same commit flow as `/rpi-implement` — scan for sensitive content, present files + commit message, ask for approval
+- **Commit on success**: when a fix works and tests pass, use the same commit flow as `/rpi-implement` — scan for sensitive content, then commit automatically without manual confirmation
 - **Diagnosis artifact**: always produce an artifact in `.rpi/diagnoses/` containing bug report (expected/actual/reproduction), root cause with file:line references, investigation log (each attempt with hypothesis/change/result), and resolution status
 - **Escalation**: if the fix is too complex for inline patching, write the diagnosis artifact with resolution status "escalated" and suggest `/rpi-plan`; if the fix requires architectural changes, suggest `/rpi-propose` instead
 - Do not auto-push or auto-merge changes
