@@ -2,7 +2,7 @@
 date: 2026-04-04T01:25:00+02:00
 topic: "review artifacts have unnecessary status field"
 tags: [diagnosis]
-status: resolved
+status: complete
 ---
 
 # Diagnosis: review artifacts have unnecessary status field
