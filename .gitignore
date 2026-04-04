@@ -3,4 +3,9 @@ bin/rpi
 walkthrough.md
 .claude/
 .rpi/index.json
+.rpi/archive/
+.rpi/reviews/
+.rpi/diagnoses/
+.rpi/research/
+.rpi/prs/
 testdata/
