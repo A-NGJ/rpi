@@ -57,13 +57,12 @@ rpi init /path/to/your/project --target opencode    # OpenCode
 This creates:
 - `.claude/` (or `.opencode/`) -- Agents, commands, skills, and templates
 - `.rpi/` -- Directory for all pipeline artifacts (tracked in git by default)
-- `.rpi/index.json` -- Codebase symbol index (gitignored)
 - `CLAUDE.md` (or `AGENTS.md`) -- Project-level instructions for the AI
 - MCP server registration (Claude Code only) -- auto-registers `rpi serve` so the AI calls typed tools instead of shelling out
 
 To sync an existing project with the latest workflow files after updating the `rpi` binary:
 ```bash
-rpi update          # add missing dirs, rebuild index, update workflow files
+rpi update          # add missing dirs, update workflow files
 rpi update --force  # also overwrite workflow files with latest versions
 ```
 

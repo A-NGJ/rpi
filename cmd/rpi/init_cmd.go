@@ -34,10 +34,6 @@ func logWarning(w io.Writer, msg string) {
 	fmt.Fprintf(w, "%s!%s %s\n", colorYellow, colorReset, msg)
 }
 
-func logInfo(w io.Writer, msg string) {
-	fmt.Fprintf(w, "  %s\n", msg)
-}
-
 var initCmd = &cobra.Command{
 	Use:   "init [directory]",
 	Short: "Initialize project with workflow skills and rules file",
@@ -52,7 +48,6 @@ Targets:
 
 Also creates:
   .rpi/             Artifact directory hierarchy (research, designs, plans, etc.)
-  .rpi/index.json   Codebase symbol index (gitignored)
 
 Use --no-claude-md to skip rules file generation. Use --no-track to add
 .rpi/ to .gitignore (by default, .rpi/ is tracked in git). Use "rpi update"
@@ -178,12 +173,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Always gitignore index.json (generated file)
-	if err := ensureGitignoreEntry(w, targetDir, ".rpi/index.json"); err != nil {
-		logWarning(w, fmt.Sprintf("Failed to update .gitignore: %v", err))
-	}
-
-	// Sync shared project structure (dirs, skills, templates, rules, settings, index)
+	// Sync shared project structure (dirs, skills, templates, rules, settings)
 	return syncProject(syncOptions{
 		targetDir: targetDir,
 		cfg:       cfg,

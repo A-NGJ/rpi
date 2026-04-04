@@ -12,7 +12,6 @@ The binary handles operations that are **deterministic and error-prone for LLMs*
 - **Directory scanning and filtering** -- `rpi scan` walks `.rpi/`, parses metadata, and filters by status/type. Fast and deterministic vs. asking the LLM to shell out and parse results.
 - **Verification checks** -- `rpi verify` counts checkboxes, checks file coverage against git changes, and scans for TODO markers. Mechanical validation that should never consume context tokens.
 - **Section extraction** -- `rpi extract` pulls a single heading's content from a markdown file, so the LLM can load exactly the section it needs instead of reading an entire document.
-- **Codebase indexing** -- `rpi index` builds a regex-based symbol index (functions, classes, structs, interfaces) for Go, Python, JavaScript/TypeScript, and Rust. The LLM queries the index to locate relevant code without grepping the entire codebase.
 - **MCP server** -- `rpi serve` exposes all of the above as typed [MCP](https://modelcontextprotocol.io/) tools over stdio. The LLM calls `rpi_scaffold`, `rpi_scan`, `rpi_chain`, etc. with validated JSON schemas instead of constructing shell commands. `rpi init` auto-registers the server with Claude Code.
 
 Everything is embedded in a single binary via Go's `embed` package -- no external config repos, no dotfile dependencies. `rpi init` bootstraps any project from the binary alone.
@@ -26,7 +25,6 @@ Everything is embedded in a single binary via Go's `embed` package -- no externa
 │   ├── chain/                            # Artifact chain resolution
 │   ├── frontmatter/                      # YAML frontmatter parsing, writing, transitions
 │   ├── git/                              # Git context gathering
-│   ├── index/                            # Codebase symbol indexing
 │   ├── plan/                             # Plan progress parsing
 │   ├── scanner/                          # .rpi/ directory scanning
 │   ├── template/                         # Template resolution with user-override support
