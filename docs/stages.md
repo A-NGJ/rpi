@@ -4,16 +4,11 @@
 
 **Purpose:** Investigate the codebase -- conversational fact-finding with optional research artifact.
 
-Works for both focused questions ("how does the auth pipeline work?") and open-ended exploration ("what could we improve about error handling?"). The command spawns parallel sub-agents that use specialized skills:
-- **locate-codebase** -- Finds where files and components live
-- **codebase-analyzer** -- Understands how specific code works (traces data flow, documents patterns)
-- **find-patterns** -- Finds examples of existing patterns to model after
-- **locate-thoughts** -- Discovers relevant historical documents in `.rpi/`
-- **analyze-thoughts** -- Extracts key insights from existing documents
+Works for both focused questions ("how does the auth pipeline work?") and open-ended exploration ("what could we improve about error handling?"). The command starts with a brief interview to understand motivation, prior attempts, and constraints, then investigates the codebase at a depth proportional to the question.
 
-Research is conversational by default -- no artifact is created unless you ask. For broad queries, Claude shows you what it found in an initial scan and asks if you want to redirect focus before deep-diving.
+Research is conversational by default -- no artifact is created unless you ask or it's clearly valuable for cross-session handoff. For broad queries, Claude shows initial findings and asks if you want to redirect focus before deep-diving.
 
-Findings are always factual with concrete file:line references. When findings reveal clear pain points, opportunities, or trade-offs, an Assessment section provides an opinionated take -- clearly separated from the facts. If you want to save findings, ask Claude to write them to `.rpi/research/`. If the exploration comprehensively documents a module's behavior, it can optionally create or update a spec in `.rpi/specs/`.
+Findings include concrete file:line references. Facts are presented first; an opinionated assessment is offered only when warranted, clearly separated from the facts. If you want to save findings, ask Claude to write them to `.rpi/research/`.
 
 ## Propose (`/rpi-propose`)
 
@@ -81,6 +76,42 @@ Checks three dimensions:
 
 Can auto-detect what to verify from recent git changes and active plans, or you can point it at a specific proposal, plan, or research doc. Produces a severity-classified report. Purely advisory -- it doesn't block anything, and can be re-run after fixes.
 
+## Diagnose (`/rpi-diagnose`)
+
+**Purpose:** Iteratively diagnose and fix complex bugs through root-cause analysis.
+
+Takes a bug description, error message, or path to a failing test. The workflow:
+1. Interviews you to establish expected vs actual behavior
+2. Checks for existing diagnoses on the same topic
+3. Reproduces the bug before investigating
+4. Traces the code path with file:line references
+5. Attempts a fix (up to 3 attempts, reverting failed ones)
+6. Auto-commits on success, escalates to `/rpi-plan` or `/rpi-propose` if the bug is too complex
+
+Always produces a diagnosis artifact in `.rpi/diagnoses/` regardless of outcome -- useful as a post-mortem even if the fix requires a larger effort.
+
+## Explain (`/rpi-explain`)
+
+**Purpose:** Walk through an implemented solution with a diff-scoped explanation.
+
+Two modes, auto-detected:
+- **With artifact path** -- Resolves the full artifact chain and walks through the diff with design context. Explains *why* each change was made, citing the design or plan.
+- **No arguments** -- Auto-detects changed files from git and explains without artifact context.
+
+File-by-file walkthrough with file:line references. Straightforward changes are summarized briefly; non-obvious changes get detailed reasoning. No artifact is saved by default -- ask if you want one.
+
+## Spec Sync (`/rpi-spec-sync`)
+
+**Purpose:** Sync behavioral specs in `.rpi/specs/` to match the current codebase.
+
+Works in two phases:
+1. **Scan** -- Reads all specs and compares against the actual implementation. Detects drift, naming mismatches, orphaned specs, and stale scenarios.
+2. **Act** -- Presents a summary table of proposed actions (keep, rewrite, rename, merge, archive) and waits for approval before executing.
+
+When code and spec disagree, code is truth -- the spec gets updated, not the code. On rename or merge, all cross-references across `.rpi/` are updated automatically.
+
+Use after a batch of changes to keep specs current, or periodically as maintenance.
+
 ## Archive (`/rpi-archive`)
 
 **Purpose:** Move completed artifacts to `.rpi/archive/` to keep the active directory clean.
@@ -89,4 +120,21 @@ Two modes:
 - **Specific paths** -- `/rpi-archive .rpi/research/2026-01-15-auth-flow.md`
 - **Scan mode** -- `/rpi-archive` with no arguments scans for completed artifacts
 
-Warns before archiving anything still in `draft` or `active` status. Preserves the full directory structure inside `archive/` (e.g., `archive/research/`, `archive/designs/`).
+Warns before archiving anything still in `draft` or `active` status. Preserves the full directory structure inside `archive/` (e.g., `archive/2026-04/research/`, `archive/2026-04/designs/`).
+
+## Status (`rpi status`)
+
+**Purpose:** Single-screen dashboard of all RPI artifacts.
+
+Shows:
+- Artifact counts grouped by type and status
+- Active plan progress with checkbox completion percentages
+- Stale artifacts (non-terminal status, past a configurable threshold -- default 14 days)
+- Specs with scenario counts
+- Archive-ready artifacts with reference counts
+
+```bash
+rpi status                  # text dashboard
+rpi status --format json    # machine-readable output
+rpi status --stale-days 7   # flag artifacts stale after 7 days
+```

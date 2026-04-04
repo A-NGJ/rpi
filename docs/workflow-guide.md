@@ -119,13 +119,17 @@ You:  /rpi-research What could we improve about error handling?
 
 ## After Implementation
 
-Two optional commands help close the loop:
+Several optional commands help close the loop:
 
 - **`/rpi-verify`** -- Validates that your implementation matches the proposal artifacts. Checks completeness, correctness, and coherence. Run it after `/rpi-implement` or anytime you want a second opinion on whether the code matches the plan.
+- **`/rpi-explain`** -- Walks through the diff with a file-by-file explanation. Useful for self-review or explaining changes to a teammate.
+- **`/rpi-spec-sync`** -- Syncs specs in `.rpi/specs/` to match the current codebase. Run it after a batch of changes to detect drift, rewrite stale scenarios, rename or merge specs, and archive obsolete ones.
 - **`/rpi-archive`** -- Moves completed artifacts to `.rpi/archive/` to keep the active directory clean. Run it when a feature is fully shipped and you no longer need the research/designs/plan documents in the active directories.
+- **`rpi status`** -- Dashboard showing artifact counts, active plan progress, stale artifacts, and archive readiness. Run it anytime to see the overall state of `.rpi/`.
 
 ## Tips
 
+- **Use `/rpi-diagnose` for complex bugs.** When a bug spans multiple files or the root cause isn't obvious, `/rpi-diagnose` will iteratively trace, fix, and verify -- producing a post-mortem artifact even if the fix requires escalation to `/rpi-plan`.
 - **Start small.** Try `/rpi-plan` on a bug fix to see how the plan -> implement cycle feels before using the full pipeline.
 - **Edit the artifacts.** The `.rpi/` documents are yours. If a proposal decision is wrong, edit it before planning. If a plan phase is unnecessary, delete it.
 - **Use CLAUDE.md.** Add your project's test commands, linting setup, and conventions to `CLAUDE.md`. The pipeline stages pull verification commands from there.

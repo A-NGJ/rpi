@@ -1,8 +1,8 @@
 # The `rpi init` Command
 
-The `rpi init` command bootstraps the RPI workflow into any project. All workflow files (agents, commands, skills, scaffold templates) are embedded in the binary -- no external dotfiles or source repo needed.
+The `rpi init` command bootstraps the RPI workflow into any project. All workflow files (skills and scaffold templates) are embedded in the binary -- no external dotfiles or source repo needed.
 
-Supports two targets: **Claude Code** (default) and **OpenCode**.
+Supports three targets: **Claude Code** (default), **OpenCode**, and **agents-only**.
 
 ```bash
 # Initialize current directory (Claude Code)
@@ -18,33 +18,31 @@ rpi init ~/projects/my-app --target opencode
 # Options
 rpi init --no-claude-md     # Skip rules file generation (CLAUDE.md or AGENTS.md)
 rpi init --no-mcp           # Skip MCP server registration
-rpi init --track-rpi        # Don't gitignore .rpi/ (track in git)
+rpi init --no-track         # Add .rpi/ to .gitignore (artifacts not tracked in git)
 ```
 
 ## What it creates
 
 ### Claude Code target (default)
 
-- `.claude/agents/` -- Agent definitions (e.g., codebase-analyzer)
-- `.claude/commands/` -- Slash command definitions (rpi-plan, rpi-research, rpi-propose, etc.)
-- `.claude/skills/` -- Skill definitions (find-patterns, locate-codebase, etc.)
-- `.claude/templates/` -- Scaffold templates for plans, designs, research docs, etc.
-- `.claude/hooks/` -- Empty directory for custom hooks
+- `.claude/skills/` -- Agent Skills (rpi-research, rpi-propose, rpi-plan, rpi-implement, rpi-verify, rpi-commit, rpi-archive, rpi-diagnose, rpi-explain, rpi-spec-sync)
 - `CLAUDE.md` -- Project-level instructions for Claude Code
 - MCP server registered via `claude mcp add rpi -- rpi serve`
+- `.claude/settings.json` -- Auto-allow permissions for RPI MCP tools
 
 ### OpenCode target
 
-- `.opencode/agents/` -- Agent definitions
-- `.opencode/commands/` -- Slash command definitions
-- `.opencode/skills/` -- Skill definitions
-- `.opencode/templates/` -- Scaffold templates
-- `.opencode/hooks/` -- Empty directory for custom hooks
+- `.opencode/skills/` -- Agent Skills (same set, with provider-qualified model IDs)
 - `AGENTS.md` -- Project-level instructions for OpenCode
 
-### Shared (both targets)
+### Agents-only target
 
-- `.rpi/` -- Directory structure for pipeline artifacts (gitignored by default)
+- `.agents/skills/` -- Cross-tool Agent Skills (no tool-specific directory, no MCP config)
+
+### Shared (all targets)
+
+- `.rpi/` -- Directory structure for pipeline artifacts (tracked in git by default; use `--no-track` to gitignore)
+- `.rpi/templates/` -- Scaffold templates for plans, designs, research docs, specs, etc.
 
 ### MCP Server Configuration
 

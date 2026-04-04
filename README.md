@@ -42,7 +42,7 @@ Pin a specific version:
 VERSION=v0.1.0 curl -sSfL https://raw.githubusercontent.com/A-NGJ/rpi/main/install.sh | bash
 ```
 
-**From source (requires Go 1.23+):**
+**From source (requires Go 1.25+):**
 ```bash
 go install github.com/A-NGJ/rpi/cmd/rpi@latest
 ```
@@ -55,7 +55,7 @@ rpi init /path/to/your/project --target opencode    # OpenCode
 ```
 
 This creates:
-- `.claude/` (or `.opencode/`) -- Agents, commands, skills, and templates
+- `.claude/` (or `.opencode/`) -- Agent Skills
 - `.rpi/` -- Directory for all pipeline artifacts (tracked in git by default)
 - `CLAUDE.md` (or `AGENTS.md`) -- Project-level instructions for the AI
 - MCP server registration (Claude Code only) -- auto-registers `rpi serve` so the AI calls typed tools instead of shelling out
@@ -75,11 +75,14 @@ Open your AI coding tool in the project and use the slash commands.
 | Command | What It Does | Output |
 |---------|-------------|--------|
 | `/rpi-research` | Investigates the codebase -- conversational fact-finding | Conversation (optionally `.rpi/research/YYYY-MM-DD-topic.md`) |
-| `/rpi-propose` | Investigates, analyzes, and designs solutions with trade-offs | `.rpi/designs/YYYY-MM-DD-topic.md` |
+| `/rpi-propose` | Investigates, analyzes, and designs solutions with trade-offs | `.rpi/designs/YYYY-MM-DD-topic.md` + `.rpi/specs/feature.md` |
 | `/rpi-plan` | Creates phased implementation plan with success criteria | `.rpi/plans/YYYY-MM-DD-topic.md` |
 | `/rpi-implement` | Executes a plan phase-by-phase with verification | Code, tests, and commits |
 | `/rpi-commit` | Creates focused git commits with smart grouping | Git commits |
-| `/rpi-verify` | Validates implementation matches design artifacts | Verification report |
+| `/rpi-verify` | Validates implementation matches design artifacts | `.rpi/reviews/YYYY-MM-DD-topic.md` |
+| `/rpi-diagnose` | Iterative root-cause analysis for complex bugs | `.rpi/diagnoses/YYYY-MM-DD-topic.md` + fix |
+| `/rpi-explain` | Diff-scoped walkthrough of an implemented solution | Conversation |
+| `/rpi-spec-sync` | Syncs specs to match current codebase (detect drift, rewrite, rename, merge) | Updated `.rpi/specs/` |
 | `/rpi-archive` | Archives completed artifacts to keep `.rpi/` clean | Moves files to `.rpi/archive/` |
 
 ## Choosing Your Path
@@ -90,7 +93,9 @@ Not every task needs every stage. Match the path to your task's complexity:
 - **Medium tasks** (focused features, single-concern changes) -- use **Propose -> Plan -> Implement**. Optionally run `/rpi-research` first if the codebase is unfamiliar.
 - **Large tasks** (multi-concern features, major refactors) -- use **Propose -> Plan -> Implement**, where `/rpi-plan` decomposes the proposal into independently plannable units.
 
-Not sure where to start? Use `/rpi-research` with any question -- it handles both focused investigation and open-ended research.
+Not sure where to start? Use `/rpi-research` with any question -- it handles both focused investigation and open-ended research. For complex bugs, use `/rpi-diagnose` to iterate on root-cause analysis.
+
+Check the current state of all artifacts at any time with `rpi status`.
 
 See the [full workflow guide](docs/workflow-guide.md) for detailed examples of each path.
 

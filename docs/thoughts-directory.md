@@ -1,14 +1,16 @@
 # The `.rpi/` Directory
 
-All pipeline artifacts live in `.rpi/`, which is **gitignored by default**:
+All pipeline artifacts live in `.rpi/`, which is **tracked in git by default** (use `--no-track` during init to gitignore it instead):
 
 ```
 .rpi/
 ├── research/            # Codebase research documents
 ├── designs/             # Solution designs with trade-off analysis
+├── diagnoses/           # Bug diagnosis post-mortems
 ├── plans/               # Implementation plans with checkboxes
 ├── specs/               # Living behavioral specs for modules/domains
 ├── reviews/             # Code review and verification reports
+├── templates/           # Scaffold templates (user-overridable)
 └── archive/             # Completed artifacts (mirrors above structure)
 ```
 
@@ -19,12 +21,18 @@ Files follow the naming convention: `YYYY-MM-DD-descriptive-name.md` (specs use 
 All pipeline artifacts use a `status` field in their YAML frontmatter to track progress:
 
 ```
-draft -> active -> complete
+draft -> active -> complete -> archived
+              \        \         |
+               \        \-> active (reopen)
+                \-> superseded
+                     (from any state)
 ```
 
-- **`draft`** -- Initial state when a document is created (research, plans, tickets)
-- **`active`** -- Work is in progress (e.g., `/rpi-implement` sets the plan to `active` when it starts executing)
-- **`complete`** -- All work described in the document is finished
+- **`draft`** -- Initial state when a document is created (research, plans, tickets). Transitions to `active` or `superseded`.
+- **`active`** -- Work is in progress (e.g., `/rpi-implement` sets the plan to `active` when it starts executing). Transitions to `complete` or `superseded`.
+- **`complete`** -- All work described in the document is finished. Can transition to `active` (reopen), `archived`, or `superseded`.
+- **`archived`** -- Moved to `.rpi/archive/` for long-term storage.
+- **`superseded`** -- Replaced by a newer artifact. Reachable from `draft`, `active`, or `complete`.
 
 `/rpi-implement` manages plan status automatically. `/rpi-archive` warns before archiving documents that aren't yet `complete`.
 
@@ -40,15 +48,15 @@ This directory serves as persistent context across sessions. You can read, edit,
 
 ## Sharing `.rpi/` with Your Team
 
-By default, `.rpi/` is added to `.gitignore` -- useful when you want pipeline artifacts to stay local. But these documents can be valuable to the whole team: research captures institutional knowledge about the codebase, designs document *why* decisions were made, and plans provide a record of what was implemented and how.
+By default, `.rpi/` is tracked in git -- research captures institutional knowledge about the codebase, designs document *why* decisions were made, and plans provide a record of what was implemented and how.
 
-To track `.rpi/` in git, use the `--track-rpi` flag during initialization:
+If you want pipeline artifacts to stay local, use the `--no-track` flag during initialization:
 
 ```bash
-rpi init --track-rpi
+rpi init --no-track
 ```
 
-This skips adding `.rpi/` to `.gitignore`, so all pipeline artifacts get committed alongside your code.
+This adds `.rpi/` to `.gitignore`, so pipeline artifacts stay local to your machine.
 
 **Why share with the team:**
 - **Research documents** become searchable codebase documentation that stays current -- new team members can read them to understand how systems work instead of spelunking through code.
