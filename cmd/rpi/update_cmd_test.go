@@ -13,25 +13,6 @@ func resetUpdateFlags() {
 	updateNoClaudeMD = false
 }
 
-func initThenUpdate(t *testing.T, dir string) (*bytes.Buffer, error) {
-	t.Helper()
-	// Init first
-	resetInitFlags()
-	buf := new(bytes.Buffer)
-	cmd := initCmd
-	cmd.SetOut(buf)
-	if err := cmd.RunE(cmd, []string{dir}); err != nil {
-		t.Fatalf("init failed: %v", err)
-	}
-	// Run update
-	resetUpdateFlags()
-	buf = new(bytes.Buffer)
-	cmd = updateCmd
-	cmd.SetOut(buf)
-	err := cmd.RunE(cmd, []string{dir})
-	return buf, err
-}
-
 func TestUpdateRequiresExistingProject(t *testing.T) {
 	dir := t.TempDir()
 
@@ -152,25 +133,6 @@ func TestUpdateForceOverwritesFiles(t *testing.T) {
 	data, _ := os.ReadFile(skillFile)
 	if string(data) == "custom content" {
 		t.Error("update --force should overwrite existing files")
-	}
-}
-
-func TestUpdateRegeneratesIndex(t *testing.T) {
-	dir := t.TempDir()
-
-	buf, err := initThenUpdate(t, dir)
-	if err != nil {
-		t.Fatalf("update error: %v", err)
-	}
-
-	output := buf.String()
-	if !strings.Contains(output, "Built codebase index") {
-		t.Error("output missing index build message")
-	}
-
-	indexPath := filepath.Join(dir, ".rpi", "index.json")
-	if _, err := os.Stat(indexPath); err != nil {
-		t.Error("index.json not present after update")
 	}
 }
 

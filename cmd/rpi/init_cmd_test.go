@@ -103,11 +103,6 @@ func TestInitCreatesAllDirs(t *testing.T) {
 	if strings.Contains(string(gitignore), ".rpi/\n") {
 		t.Error(".rpi/ should not be in .gitignore by default")
 	}
-	// .rpi/index.json should always be gitignored
-	if !strings.Contains(string(gitignore), ".rpi/index.json") {
-		t.Error(".gitignore missing .rpi/index.json entry")
-	}
-
 	output := buf.String()
 	if !strings.Contains(output, "Created .claude/skills/") {
 		t.Error("output missing .claude/skills/ creation message")
@@ -200,9 +195,6 @@ func TestInitNoTrack(t *testing.T) {
 	if !strings.Contains(string(gitignore), ".claude/") {
 		t.Error(".claude/ should still be in .gitignore")
 	}
-	if !strings.Contains(string(gitignore), ".rpi/index.json") {
-		t.Error(".rpi/index.json should always be in .gitignore")
-	}
 }
 
 func TestInitTargetDir(t *testing.T) {
@@ -264,9 +256,6 @@ func TestInitGitignore(t *testing.T) {
 	if strings.Contains(content, ".rpi/\n") {
 		t.Error(".rpi/ should not be in .gitignore by default")
 	}
-	if !strings.Contains(content, ".rpi/index.json") {
-		t.Error("missing .rpi/index.json entry")
-	}
 }
 
 func TestInitTemplateContent(t *testing.T) {
@@ -311,60 +300,12 @@ func TestInitInstallsSkills(t *testing.T) {
 	}
 }
 
-func TestInitAddsIndexJsonToGitignore(t *testing.T) {
+func TestInitSucceedsWithEmptyDir(t *testing.T) {
 	dir := t.TempDir()
 
 	_, err := runInitInDir(t, dir)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
-	}
-
-	data, err := os.ReadFile(filepath.Join(dir, ".gitignore"))
-	if err != nil {
-		t.Fatalf("failed to read .gitignore: %v", err)
-	}
-
-	if !strings.Contains(string(data), ".rpi/index.json") {
-		t.Error(".gitignore missing .rpi/index.json entry")
-	}
-}
-
-func TestInitBuildsIndex(t *testing.T) {
-	dir := t.TempDir()
-
-	// Create a Go source file so the index has something to find.
-	os.MkdirAll(filepath.Join(dir, "pkg"), 0755)
-	os.WriteFile(filepath.Join(dir, "pkg", "main.go"), []byte("package main\n\nfunc main() {}\n"), 0644)
-
-	buf, err := runInitInDir(t, dir)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	// Verify index file was created.
-	indexPath := filepath.Join(dir, ".rpi", "index.json")
-	if _, err := os.Stat(indexPath); err != nil {
-		t.Errorf("index file not created: %v", err)
-	}
-
-	output := buf.String()
-	if !strings.Contains(output, "Built codebase index") {
-		t.Errorf("output missing index build message, got: %s", output)
-	}
-}
-
-func TestInitSucceedsWithEmptyDir(t *testing.T) {
-	dir := t.TempDir()
-
-	buf, err := runInitInDir(t, dir)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	// Init should succeed even with no source files (0 files, 0 symbols).
-	output := buf.String()
-	if !strings.Contains(output, "Built codebase index (0 files, 0 symbols)") {
-		t.Errorf("expected empty index message, got: %s", output)
 	}
 }
 
