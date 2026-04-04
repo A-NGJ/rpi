@@ -15,13 +15,13 @@ Provide a single CLI command (`rpi status`) that aggregates all RPI artifact met
 ## Behavior
 
 ### Artifact Summary
-- **ST-1**: Group all non-archived artifacts by type (`plan`, `design`, `research`, `review`) and status, displaying counts for each type-status combination. Specs are statusless and shown in a dedicated Specifications section instead.
+- **ST-1**: Group all non-archived artifacts by type (`plan`, `design`, `research`) and status, displaying counts for each type-status combination. Specs and reviews are statusless and excluded from the Artifacts summary.
 - **ST-2**: Omit types with zero artifacts from the summary (no empty rows).
 - **ST-3**: Exclude the `archive/` subdirectory from all scanning.
 
 ### Staleness Detection
 - **ST-4**: Flag artifacts with status `draft` or `active` whose frontmatter date exceeds the staleness threshold (default: 14 days).
-- **ST-5**: Use `date` field for plans/designs/research/reviews, `last_updated` field for specs.
+- **ST-5**: Use `date` field for plans/designs/research, `last_updated` field for specs. Reviews are excluded from staleness detection.
 - **ST-6**: Accept `--stale-days N` flag to override the default threshold.
 - **ST-7**: Skip artifacts with missing or unparseable date fields silently (no error, no false positive).
 - **ST-8**: Display each stale artifact with its path, status, and age in days.
