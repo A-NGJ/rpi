@@ -24,7 +24,7 @@ When the user approves the spec, suggest → `/rpi-plan <design-path>`.
 - Investigate the codebase before proposing — ground decisions in evidence with file:line refs
 - Get user buy-in on trade-offs before writing the design
 - Link the design to upstream research via frontmatter
-- Create a behavioral spec with 5-8 Given/When/Then scenarios describing user-observable behavior — scenarios must not reference internal structure (structs, file paths, function names); include a Constraints section for boundaries and an Out of Scope section
+- Create a behavioral spec with 5-8 Given/When/Then scenarios describing user-observable behavior — scenarios must not reference internal structure (structs, file paths, function names); include a Constraints section for boundaries and an Out of Scope section. Name the spec file after its `feature` field (e.g., `feature: rpi-status` → `rpi-status.md`)
 - Present the spec for approval — iterate until accepted
 - Transition artifacts: design → active, research → complete (if fully addressed)
 - For incremental mode: update in place, add an Update Log entry, update affected specs
