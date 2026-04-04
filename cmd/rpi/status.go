@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"sort"
 	"strings"
 	"text/tabwriter"
@@ -86,8 +85,8 @@ func runStatus(cmd *cobra.Command, args []string) error {
 				name = *a.Title
 			}
 			specs = append(specs, activeSpec{
-				Name:         name,
-				Requirements: countSpecRequirements(a.Path),
+				Name:      name,
+				Scenarios: countSpecScenarios(a.Path),
 			})
 			continue
 		}
@@ -159,7 +158,7 @@ func renderStatusText(cmd *cobra.Command, summary map[string]map[string]int, spe
 	if len(specs) > 0 {
 		fmt.Fprintln(w, "\nSpecifications")
 		for _, s := range specs {
-			fmt.Fprintf(w, "  %s\t%d requirements\n", s.Name, s.Requirements)
+			fmt.Fprintf(w, "  %s\t%d scenarios\n", s.Name, s.Scenarios)
 		}
 	}
 
@@ -328,18 +327,16 @@ type planLink struct {
 }
 
 type activeSpec struct {
-	Name         string `json:"name"`
-	Requirements int    `json:"requirements"`
+	Name      string `json:"name"`
+	Scenarios int    `json:"scenarios"`
 }
 
-var requirementPattern = regexp.MustCompile(`\*\*\w+-\d+\*\*:`)
-
-func countSpecRequirements(path string) int {
-	data, err := os.ReadFile(path)
+func countSpecScenarios(path string) int {
+	doc, err := frontmatter.Parse(path)
 	if err != nil {
 		return 0
 	}
-	return len(requirementPattern.FindAll(data, -1))
+	return len(parseScenarios(doc.Body))
 }
 
 type archivableArtifact struct {

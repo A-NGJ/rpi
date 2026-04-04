@@ -1,8 +1,7 @@
 ---
-domain: AS
-id: AS
-last_updated: 2026-03-22T23:19:52+01:00
-status: active
+domain: agent-skills-compatibility
+feature: agent-skills
+last_updated: 2026-04-04T22:30:00+02:00
 updated_by: .rpi/designs/2026-03-22-agent-skills-compatibility.md
 ---
 
@@ -10,65 +9,48 @@ updated_by: .rpi/designs/2026-03-22-agent-skills-compatibility.md
 
 ## Purpose
 
-Ensure all RPI workflow files are installable as Agent Skills-compliant SKILL.md files in `.agents/skills/`, making them discoverable by any tool that implements the Agent Skills standard.
+Ensure all RPI workflow files are installable as Agent Skills-compliant SKILL.md files, making them discoverable by any tool that implements the Agent Skills standard across multiple targets (Claude, OpenCode, agents-only).
 
-## Behavior
+## Scenarios
 
-### Installation
-- **AS-1**: `rpi init` MUST install one subdirectory per skill (9 total), each with a `SKILL.md`, to the target's skills directory
-- **AS-2**: `rpi init --target claude` MUST create `.claude/skills/` with Claude-specific frontmatter overrides
-- **AS-3**: `rpi init --target opencode` MUST create `.opencode/skills/` with OpenCode-specific frontmatter overrides
-- **AS-4**: `rpi init --target agents-only` MUST create `.agents/skills/` — no tool-specific directory, no MCP config
-- **AS-5**: `rpi update` MUST update skills in the active target's skills directory
+### Init installs skills for Claude target
+Given an empty project directory
+When the user runs `rpi init` (default Claude target)
+Then `.claude/skills/` contains 9 skill subdirectories with SKILL.md files including Claude-specific frontmatter overrides
 
-### Agent Skills Format Compliance
-- **AS-6**: Every installed `SKILL.md` MUST have `name` and `description` in YAML frontmatter
-- **AS-7**: The `name` field MUST match its parent directory name exactly
-- **AS-8**: The `name` field MUST match `^[a-z][a-z0-9]*(-[a-z0-9]+)*$` and be ≤64 characters
-- **AS-9**: The `description` field MUST be 1-1024 characters and include activation keywords
-- **AS-10**: Canonical (embedded) SKILL.md files MUST NOT contain tool-specific fields (`model`, `disable-model-invocation`, `tools`)
+### Init installs skills for agents-only target
+Given an empty project directory
+When the user runs `rpi init --target agents-only`
+Then `.agents/skills/` contains 9 skill subdirectories and no `.claude/` or `.opencode/` directory exists
 
-### Content Integrity
-- **AS-11**: Prompt body (goal, invariants, principles sections) MUST be identical between `.agents/skills/` and tool-specific copies
-- **AS-12**: All 9 pipeline skills MUST be present: rpi-research, rpi-propose, rpi-plan, rpi-implement, rpi-verify, rpi-diagnose, rpi-explain, rpi-commit, rpi-archive
+### Skills conform to Agent Skills format
+Given all embedded SKILL.md files
+When parsing their frontmatter
+Then every file has `name` and `description` fields, the name matches its parent directory, and the name matches the naming regex
 
-### Backward Compatibility
-- **AS-13**: Existing `.claude/commands/` files MUST NOT be deleted by `rpi init` or `rpi update`
-- **AS-14**: `rpi init` MUST NOT create `.claude/commands/` or `.claude/agents/` directories
+### Canonical skills have no tool-specific fields
+Given all canonical SKILL.md files in the embedded assets
+When checking their frontmatter
+Then none contain `model`, `disable-model-invocation`, or `tools` fields
+
+### Skill content is identical across targets
+Given a skill installed for both the canonical and a tool-specific target
+When comparing the markdown body content
+Then the body is identical between copies — only frontmatter differs
+
+### Init preserves existing commands directory
+Given a project with existing `.claude/commands/` files
+When the user runs `rpi update`
+Then `.claude/commands/` is left untouched and `.claude/skills/` is created or updated
 
 ## Constraints
-
-### Must
 - Follow Agent Skills naming: lowercase, hyphens, no consecutive hyphens, ≤64 chars
-- Preserve all existing prompt content unchanged
 - Support all three targets: claude, opencode, agents-only
+- Do not overwrite existing files without `--force`
+- All 9 pipeline skills must be present: rpi-research, rpi-propose, rpi-plan, rpi-implement, rpi-verify, rpi-diagnose, rpi-explain, rpi-commit, rpi-archive
 
-### Must Not
-- Add `.agents/skills/` to `.gitignore` (skills should be shared)
-- Overwrite existing files without `--force`
-
-### Out of Scope
+## Out of Scope
 - MCP server changes
 - Prompt content rewrites
 - New tool targets beyond claude/opencode
 - Agent Skills `allowed-tools` field
-
-## Test Cases
-
-### TC-1: Fresh claude init
-- **Given** empty project directory **When** `rpi init` **Then** `.agents/skills/` has 9 dirs with valid SKILL.md AND `.claude/skills/` has 9 dirs with model fields AND no `.claude/commands/` or `.claude/agents/` exists
-
-### TC-2: Fresh agents-only init
-- **Given** empty project directory **When** `rpi init --target agents-only` **Then** `.agents/skills/` has 9 dirs AND no `.claude/` or `.opencode/` directory exists
-
-### TC-3: Name validation
-- **Given** all embedded SKILL.md files **When** parsing frontmatter **Then** every `name` matches parent dir AND matches naming regex AND ≤64 chars
-
-### TC-4: No tool-specific fields in cross-tool skills
-- **Given** all canonical `skills/*/SKILL.md` **When** parsing frontmatter **Then** none contain `model`, `disable-model-invocation`, or `tools`
-
-### TC-5: Content parity
-- **Given** a skill with both canonical and override versions **When** comparing body content **Then** markdown body is identical (only frontmatter differs)
-
-### TC-6: Update with existing commands dir
-- **Given** project with `.claude/commands/rpi-propose.md` **When** `rpi update` **Then** `.agents/skills/` is created AND `.claude/commands/` is untouched AND `.claude/skills/` is created

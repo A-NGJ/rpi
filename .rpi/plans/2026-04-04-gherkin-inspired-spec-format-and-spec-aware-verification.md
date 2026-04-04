@@ -141,14 +141,15 @@ For each spec:
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] `rpi verify spec` successfully parses each migrated spec (valid JSON, 5-8 scenarios each)
+- [x] `rpi verify spec` successfully parses each migrated spec (valid JSON, 5-8 scenarios each)
+- [x] `go test ./...` passes (status command updated to count scenarios instead of requirements)
 
 #### Manual Verification:
-- [ ] Review migrated specs for behavioral coverage — no key behaviors lost from original XX-N requirements
+- [x] Review migrated specs for behavioral coverage — no key behaviors lost from original XX-N requirements
 
 ### Commit:
-- [ ] Stage: all modified `.rpi/specs/*.md` files
-- [ ] Message: `refactor(specs): migrate all specs from XX-N to scenario format`
+- [x] Stage: all modified `.rpi/specs/*.md` files, `cmd/rpi/status.go`, `cmd/rpi/status_test.go`
+- [x] Message: `refactor(specs): migrate all specs from XX-N to scenario format`
 
 ---
 

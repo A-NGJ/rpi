@@ -323,8 +323,8 @@ func TestStatusJSONOutput(t *testing.T) {
 
 func TestStatusSpecificationsSection(t *testing.T) {
 	dir := t.TempDir()
-	writeStatusFile(t, dir, "specs/s1.md", "---\ntopic: Auth Permissions\n---\n- **AP-1**: first\n- **AP-2**: second\n")
-	writeStatusFile(t, dir, "specs/s2.md", "---\ntopic: Rate Limiting\n---\n- **RL-1**: only one\n")
+	writeStatusFile(t, dir, "specs/s1.md", "---\ntopic: Auth Permissions\n---\n## Scenarios\n\n### First scenario\nGiven x\nWhen y\nThen z\n\n### Second scenario\nGiven a\nWhen b\nThen c\n")
+	writeStatusFile(t, dir, "specs/s2.md", "---\ntopic: Rate Limiting\n---\n## Scenarios\n\n### Only scenario\nGiven x\nWhen y\nThen z\n")
 	writeStatusFile(t, dir, "specs/s3.md", "---\ntopic: Old Spec\n---\n")
 
 	output := runStatusCmd(t, dir)
@@ -343,28 +343,28 @@ func TestStatusSpecificationsSection(t *testing.T) {
 	}
 }
 
-func TestStatusSpecsRequirementCount(t *testing.T) {
+func TestStatusSpecsScenarioCount(t *testing.T) {
 	dir := t.TempDir()
-	// Spec with 3 requirements
-	writeStatusFile(t, dir, "specs/s1.md", "---\ntopic: Auth Permissions\n---\n"+
-		"- **AP-1**: first requirement\n- **AP-2**: second requirement\n- **AP-3**: third requirement\n")
-	// Spec with 0 requirements
-	writeStatusFile(t, dir, "specs/s2.md", "---\ntopic: Empty Spec\n---\nNo requirements here.\n")
+	// Spec with 3 scenarios
+	writeStatusFile(t, dir, "specs/s1.md", "---\ntopic: Auth Permissions\n---\n## Scenarios\n\n"+
+		"### First scenario\nGiven x\nWhen y\nThen z\n\n### Second scenario\nGiven a\nWhen b\nThen c\n\n### Third scenario\nGiven d\nWhen e\nThen f\n")
+	// Spec with 0 scenarios
+	writeStatusFile(t, dir, "specs/s2.md", "---\ntopic: Empty Spec\n---\nNo scenarios here.\n")
 
 	output := runStatusCmd(t, dir)
 
-	if !strings.Contains(output, "Auth Permissions") || !strings.Contains(output, "3 requirements") {
-		t.Errorf("expected 'Auth Permissions' with '3 requirements', got:\n%s", output)
+	if !strings.Contains(output, "Auth Permissions") || !strings.Contains(output, "3 scenarios") {
+		t.Errorf("expected 'Auth Permissions' with '3 scenarios', got:\n%s", output)
 	}
-	if !strings.Contains(output, "Empty Spec") || !strings.Contains(output, "0 requirements") {
-		t.Errorf("expected 'Empty Spec' with '0 requirements', got:\n%s", output)
+	if !strings.Contains(output, "Empty Spec") || !strings.Contains(output, "0 scenarios") {
+		t.Errorf("expected 'Empty Spec' with '0 scenarios', got:\n%s", output)
 	}
 }
 
-func TestStatusSpecsRequirementCountJSON(t *testing.T) {
+func TestStatusSpecsScenarioCountJSON(t *testing.T) {
 	dir := t.TempDir()
-	writeStatusFile(t, dir, "specs/s1.md", "---\ntopic: Auth Permissions\n---\n"+
-		"- **AP-1**: first\n- **AP-2**: second\n")
+	writeStatusFile(t, dir, "specs/s1.md", "---\ntopic: Auth Permissions\n---\n## Scenarios\n\n"+
+		"### First scenario\nGiven x\nWhen y\nThen z\n\n### Second scenario\nGiven a\nWhen b\nThen c\n")
 
 	output := runStatusCmdWithFormat(t, dir, "json")
 
@@ -378,8 +378,8 @@ func TestStatusSpecsRequirementCountJSON(t *testing.T) {
 	if result.Specs[0].Name != "Auth Permissions" {
 		t.Errorf("expected name 'Auth Permissions', got %q", result.Specs[0].Name)
 	}
-	if result.Specs[0].Requirements != 2 {
-		t.Errorf("expected 2 requirements, got %d", result.Specs[0].Requirements)
+	if result.Specs[0].Scenarios != 2 {
+		t.Errorf("expected 2 scenarios, got %d", result.Specs[0].Scenarios)
 	}
 }
 
