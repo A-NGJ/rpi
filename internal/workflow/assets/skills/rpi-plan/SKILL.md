@@ -25,7 +25,7 @@ When the user confirms the plan, suggest → `/rpi-implement <plan-path>`.
 - Break changes into ordered phases — each leaves the codebase working and testable
 - Include tests in the same phase as the code they test
 - Each phase has: tasks with file paths, success criteria (automated + manual), and a commit step
-- Map phases to spec behavior IDs (XX-N) where applicable
+- Map phases to spec scenarios where applicable
 - Get buy-in on proposed phases before writing the full plan
 - **Pipeline mode**: after writing, verify the plan covers all design decisions — nothing silently dropped; transition design → complete
 - Scaffold and save the plan artifact, linking to upstream design and spec

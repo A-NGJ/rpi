@@ -27,7 +27,7 @@ After all phases are complete and verified, announce completion and update the p
 - **After hook failure**: read error, fix the issue, re-stage, create a new commit (never amend)
 - If a phase's success criteria are fully covered by automated checks (tests, linting, etc.), run them and proceed automatically when they pass — only pause for manual verification when the plan includes manual verification items not covered by automated tests
 - **On mismatch**: stop, present what the plan says vs what you found, ask how to proceed
-- **On completion**: verify spec conformance for all linked specs — check each behavior (XX-N) against actual code and tests; plan → complete
+- **On completion**: verify spec conformance for all linked specs — use `rpi_verify_spec` MCP tool to extract scenarios, then check each scenario against actual code and tests; plan → complete
 
 ## Principles
 
