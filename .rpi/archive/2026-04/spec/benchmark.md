@@ -1,7 +1,9 @@
 ---
+archived_date: "2026-04-04"
 domain: RPI Benchmark Project
 feature: benchmark
 last_updated: 2026-04-04T22:30:00+02:00
+status: archived
 updated_by: .rpi/designs/2026-04-03-benchmark-project-for-rpi-flow-quality-testing.md
 ---
 

@@ -1,6 +1,6 @@
 ---
 domain: spec-format
-feature: gherkin-specs
+feature: spec-format
 last_updated: 2026-04-04T22:16:33+02:00
 updated_by: .rpi/designs/2026-04-04-gherkin-inspired-spec-format-and-spec-aware-verification.md
 ---

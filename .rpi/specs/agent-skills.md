@@ -16,12 +16,12 @@ Ensure all RPI workflow files are installable as Agent Skills-compliant SKILL.md
 ### Init installs skills for Claude target
 Given an empty project directory
 When the user runs `rpi init` (default Claude target)
-Then `.claude/skills/` contains 9 skill subdirectories with SKILL.md files including Claude-specific frontmatter overrides
+Then `.claude/skills/` contains 10 skill subdirectories with SKILL.md files including Claude-specific frontmatter overrides
 
 ### Init installs skills for agents-only target
 Given an empty project directory
 When the user runs `rpi init --target agents-only`
-Then `.agents/skills/` contains 9 skill subdirectories and no `.claude/` or `.opencode/` directory exists
+Then `.agents/skills/` contains 10 skill subdirectories and no `.claude/` or `.opencode/` directory exists
 
 ### Skills conform to Agent Skills format
 Given all embedded SKILL.md files
@@ -47,7 +47,7 @@ Then `.claude/commands/` is left untouched and `.claude/skills/` is created or u
 - Follow Agent Skills naming: lowercase, hyphens, no consecutive hyphens, ≤64 chars
 - Support all three targets: claude, opencode, agents-only
 - Do not overwrite existing files without `--force`
-- All 9 pipeline skills must be present: rpi-research, rpi-propose, rpi-plan, rpi-implement, rpi-verify, rpi-diagnose, rpi-explain, rpi-commit, rpi-archive
+- All 10 pipeline skills must be present: rpi-research, rpi-propose, rpi-plan, rpi-implement, rpi-verify, rpi-diagnose, rpi-explain, rpi-commit, rpi-archive, rpi-spec-sync
 
 ## Out of Scope
 - MCP server changes

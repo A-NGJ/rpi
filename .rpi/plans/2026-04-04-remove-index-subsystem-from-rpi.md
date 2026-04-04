@@ -1,7 +1,7 @@
 ---
 date: 2026-04-04T21:12:30+02:00
 design: .rpi/designs/2026-04-04-remove-index-subsystem-from-rpi.md
-spec: .rpi/specs/index-removal.md
+spec: .rpi/archive/2026-04/spec/index-removal.md
 status: complete
 tags:
     - plan
@@ -18,7 +18,7 @@ Remove the entire index subsystem: MCP tools, CLI commands, Go package, and docu
 
 ## Source Documents
 - **Design**: .rpi/designs/2026-04-04-remove-index-subsystem-from-rpi.md
-- **Spec**: .rpi/specs/index-removal.md
+- **Spec**: .rpi/archive/2026-04/spec/index-removal.md
 
 ## Phase 1: Strip index from MCP server [IR-3, IR-4, IR-5]
 
@@ -136,4 +136,4 @@ Remove index references from init command and all documentation.
 
 ## References
 - Design: .rpi/designs/2026-04-04-remove-index-subsystem-from-rpi.md
-- Spec: .rpi/specs/index-removal.md
+- Spec: .rpi/archive/2026-04/spec/index-removal.md

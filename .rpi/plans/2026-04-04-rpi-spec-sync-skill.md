@@ -1,8 +1,8 @@
 ---
 date: 2026-04-04T22:54:16+02:00
 design: .rpi/designs/2026-04-04-rpi-spec-sync-skill-for-syncing-specs-to-codebase.md
-spec: .rpi/specs/rpi-spec-sync-skill.md
-status: active
+spec: .rpi/specs/spec-sync.md
+status: complete
 tags:
     - plan
 topic: rpi-spec-sync skill
@@ -18,7 +18,7 @@ Create the `/rpi-spec-sync` skill that syncs specs to the codebase. Skill-only â
 
 ## Source Documents
 - **Design**: .rpi/designs/2026-04-04-rpi-spec-sync-skill-for-syncing-specs-to-codebase.md
-- **Spec**: .rpi/specs/rpi-spec-sync-skill.md
+- **Spec**: .rpi/specs/spec-sync.md
 
 ---
 
@@ -58,4 +58,4 @@ Create the `rpi-spec-sync` SKILL.md in both embedded assets and installed locati
 
 ## References
 - Design: .rpi/designs/2026-04-04-rpi-spec-sync-skill-for-syncing-specs-to-codebase.md
-- Spec: .rpi/specs/rpi-spec-sync-skill.md
+- Spec: .rpi/specs/spec-sync.md
