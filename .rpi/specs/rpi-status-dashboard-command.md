@@ -33,7 +33,7 @@ Provide a single CLI command (`rpi status`) that aggregates all RPI artifact met
 - **ST-12**: Plans with zero checkboxes show no progress indicator (not "0/0 (0%)").
 
 ### Active Artifact Sections
-- **ST-18**: When active specs exist, display an "Active Specs" section listing each by name (title from frontmatter, falling back to filename). Omit section when no active specs exist.
+- **ST-18**: When active specs exist, display an "Active Specs" section listing each by name (title from frontmatter, falling back to filename) with its requirement count (number of `**XX-N**:` patterns in the file body). Omit section when no active specs exist.
 - **ST-19**: Section order: Artifacts → Active Plans → Active Specs → Stale → Ready to Archive. Each section is omitted when empty.
 
 ### Archive Readiness

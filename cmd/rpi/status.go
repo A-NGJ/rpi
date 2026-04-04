@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"text/tabwriter"
@@ -75,7 +76,7 @@ func runStatus(cmd *cobra.Command, args []string) error {
 
 	// Group by type -> status -> count, and collect active artifact names
 	summary := make(map[string]map[string]int)
-	activeByType := make(map[string][]string)
+	activeByType := make(map[string][]activeSpec)
 	for _, a := range artifacts {
 		status := "unknown"
 		if a.Status != nil {
@@ -91,11 +92,16 @@ func runStatus(cmd *cobra.Command, args []string) error {
 			if a.Title != nil {
 				name = *a.Title
 			}
-			activeByType[a.Type] = append(activeByType[a.Type], name)
+			activeByType[a.Type] = append(activeByType[a.Type], activeSpec{
+				Name:         name,
+				Requirements: countSpecRequirements(a.Path),
+			})
 		}
 	}
-	for _, names := range activeByType {
-		sort.Strings(names)
+	for _, specs := range activeByType {
+		sort.Slice(specs, func(i, j int) bool {
+			return specs[i].Name < specs[j].Name
+		})
 	}
 
 	// Staleness detection
@@ -115,7 +121,7 @@ func runStatus(cmd *cobra.Command, args []string) error {
 
 	switch format {
 	case "json":
-		return renderStatusJSON(cmd, summary, stale, plans, archivable)
+		return renderStatusJSON(cmd, summary, activeByType, stale, plans, archivable)
 	case "text":
 		return renderStatusText(cmd, summary, activeByType, stale, plans, archivable)
 	default:
@@ -123,7 +129,7 @@ func runStatus(cmd *cobra.Command, args []string) error {
 	}
 }
 
-func renderStatusText(cmd *cobra.Command, summary map[string]map[string]int, activeByType map[string][]string, stale []staleArtifact, plans []activePlan, archivable []archivableArtifact) error {
+func renderStatusText(cmd *cobra.Command, summary map[string]map[string]int, activeByType map[string][]activeSpec, stale []staleArtifact, plans []activePlan, archivable []archivableArtifact) error {
 	w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
 
 	fmt.Fprintln(w, "Artifacts")
@@ -149,11 +155,11 @@ func renderStatusText(cmd *cobra.Command, summary map[string]map[string]int, act
 		}
 	}
 
-	// ST-19: Active Specs section
-	if names, ok := activeByType["spec"]; ok && len(names) > 0 {
+	// ST-18/ST-19: Active Specs section with requirement counts
+	if specs, ok := activeByType["spec"]; ok && len(specs) > 0 {
 		fmt.Fprintln(w, "\nActive Specs")
-		for _, n := range names {
-			fmt.Fprintf(w, "  %s\n", n)
+		for _, s := range specs {
+			fmt.Fprintf(w, "  %s\t%d requirements\n", s.Name, s.Requirements)
 		}
 	}
 
@@ -201,11 +207,12 @@ func renderStatusText(cmd *cobra.Command, summary map[string]map[string]int, act
 	return nil
 }
 
-func renderStatusJSON(cmd *cobra.Command, summary map[string]map[string]int, stale []staleArtifact, plans []activePlan, archivable []archivableArtifact) error {
+func renderStatusJSON(cmd *cobra.Command, summary map[string]map[string]int, activeByType map[string][]activeSpec, stale []staleArtifact, plans []activePlan, archivable []archivableArtifact) error {
 	out := statusOutput{
 		Summary:     summary,
 		Stale:       stale,
 		ActivePlans: plans,
+		ActiveSpecs: activeByType["spec"],
 		Archivable:  archivable,
 	}
 	if out.Stale == nil {
@@ -213,6 +220,9 @@ func renderStatusJSON(cmd *cobra.Command, summary map[string]map[string]int, sta
 	}
 	if out.ActivePlans == nil {
 		out.ActivePlans = []activePlan{}
+	}
+	if out.ActiveSpecs == nil {
+		out.ActiveSpecs = []activeSpec{}
 	}
 	if out.Archivable == nil {
 		out.Archivable = []archivableArtifact{}
@@ -321,6 +331,21 @@ type planLink struct {
 	Status string `json:"status"`
 }
 
+type activeSpec struct {
+	Name         string `json:"name"`
+	Requirements int    `json:"requirements"`
+}
+
+var requirementPattern = regexp.MustCompile(`\*\*\w+-\d+\*\*:`)
+
+func countSpecRequirements(path string) int {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return 0
+	}
+	return len(requirementPattern.FindAll(data, -1))
+}
+
 type archivableArtifact struct {
 	Path   string `json:"path"`
 	Type   string `json:"type"`
@@ -331,6 +356,7 @@ type statusOutput struct {
 	Summary     map[string]map[string]int `json:"summary"`
 	Stale       []staleArtifact           `json:"stale"`
 	ActivePlans []activePlan              `json:"active_plans"`
+	ActiveSpecs []activeSpec              `json:"active_specs"`
 	Archivable  []archivableArtifact      `json:"archivable"`
 }
 

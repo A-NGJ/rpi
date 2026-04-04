@@ -323,8 +323,8 @@ func TestStatusJSONOutput(t *testing.T) {
 
 func TestStatusActiveSpecsSection(t *testing.T) {
 	dir := t.TempDir()
-	writeStatusFile(t, dir, "specs/s1.md", "---\nstatus: active\ntopic: Auth Permissions\n---\n")
-	writeStatusFile(t, dir, "specs/s2.md", "---\nstatus: active\ntopic: Rate Limiting\n---\n")
+	writeStatusFile(t, dir, "specs/s1.md", "---\nstatus: active\ntopic: Auth Permissions\n---\n- **AP-1**: first\n- **AP-2**: second\n")
+	writeStatusFile(t, dir, "specs/s2.md", "---\nstatus: active\ntopic: Rate Limiting\n---\n- **RL-1**: only one\n")
 	writeStatusFile(t, dir, "specs/s3.md", "---\nstatus: superseded\ntopic: Old Spec\n---\n")
 
 	output := runStatusCmd(t, dir)
@@ -340,6 +340,46 @@ func TestStatusActiveSpecsSection(t *testing.T) {
 	}
 	if strings.Contains(output, "Old Spec") {
 		t.Errorf("should not list superseded spec name, got:\n%s", output)
+	}
+}
+
+func TestStatusActiveSpecsRequirementCount(t *testing.T) {
+	dir := t.TempDir()
+	// Spec with 3 requirements
+	writeStatusFile(t, dir, "specs/s1.md", "---\nstatus: active\ntopic: Auth Permissions\n---\n"+
+		"- **AP-1**: first requirement\n- **AP-2**: second requirement\n- **AP-3**: third requirement\n")
+	// Spec with 0 requirements
+	writeStatusFile(t, dir, "specs/s2.md", "---\nstatus: active\ntopic: Empty Spec\n---\nNo requirements here.\n")
+
+	output := runStatusCmd(t, dir)
+
+	if !strings.Contains(output, "Auth Permissions") || !strings.Contains(output, "3 requirements") {
+		t.Errorf("expected 'Auth Permissions' with '3 requirements', got:\n%s", output)
+	}
+	if !strings.Contains(output, "Empty Spec") || !strings.Contains(output, "0 requirements") {
+		t.Errorf("expected 'Empty Spec' with '0 requirements', got:\n%s", output)
+	}
+}
+
+func TestStatusActiveSpecsRequirementCountJSON(t *testing.T) {
+	dir := t.TempDir()
+	writeStatusFile(t, dir, "specs/s1.md", "---\nstatus: active\ntopic: Auth Permissions\n---\n"+
+		"- **AP-1**: first\n- **AP-2**: second\n")
+
+	output := runStatusCmdWithFormat(t, dir, "json")
+
+	var result statusOutput
+	if err := json.Unmarshal([]byte(output), &result); err != nil {
+		t.Fatalf("invalid JSON: %v\noutput: %s", err, output)
+	}
+	if len(result.ActiveSpecs) != 1 {
+		t.Fatalf("expected 1 active spec, got %d", len(result.ActiveSpecs))
+	}
+	if result.ActiveSpecs[0].Name != "Auth Permissions" {
+		t.Errorf("expected name 'Auth Permissions', got %q", result.ActiveSpecs[0].Name)
+	}
+	if result.ActiveSpecs[0].Requirements != 2 {
+		t.Errorf("expected 2 requirements, got %d", result.ActiveSpecs[0].Requirements)
 	}
 }
 
