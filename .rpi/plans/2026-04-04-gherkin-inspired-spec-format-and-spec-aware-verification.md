@@ -101,13 +101,13 @@ Add scenario parsing to `rpi verify`, register as MCP tool, and add tests. This 
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] `go test ./...` passes (all new and existing tests)
-- [ ] `go build ./cmd/rpi` compiles
-- [ ] `rpi verify spec .rpi/specs/gherkin-inspired-spec-format-and-spec-aware-verification.md` outputs valid JSON with 8 scenarios
+- [x] `go test ./...` passes (all new and existing tests)
+- [x] `go build ./cmd/rpi` compiles
+- [x] `rpi verify spec .rpi/specs/gherkin-inspired-spec-format-and-spec-aware-verification.md` outputs valid JSON with 8 scenarios
 
 ### Commit:
-- [ ] Stage: `cmd/rpi/verify.go`, `cmd/rpi/verify_test.go`, `cmd/rpi/serve.go`
-- [ ] Message: `feat(verify): add spec subcommand for scenario parsing`
+- [x] Stage: `cmd/rpi/verify.go`, `cmd/rpi/verify_test.go`, `cmd/rpi/serve.go`, `cmd/rpi/serve_test.go`, `internal/template/render_test.go`, `internal/workflow/assets/skills/rpi-verify/SKILL.md`, `internal/workflow/assets/skills/rpi-implement/SKILL.md`
+- [x] Message: `feat(verify): add spec subcommand for scenario parsing`
 
 ---
 

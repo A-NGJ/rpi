@@ -400,6 +400,7 @@ func TestIntegration_AllToolsRegistered(t *testing.T) {
 		"rpi_extract_list_sections",
 		"rpi_verify_completeness",
 		"rpi_verify_markers",
+		"rpi_verify_spec",
 		"rpi_archive_check_refs",
 		"rpi_archive_move",
 	}

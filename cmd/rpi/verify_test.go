@@ -176,3 +176,94 @@ func TestScanMarkersMultipleTypes(t *testing.T) {
 		t.Errorf("expected 1 HACK, got %d", counts["HACK"])
 	}
 }
+
+func TestParseScenarios(t *testing.T) {
+	content := `## Scenarios
+
+### User creates a new project
+Given no project exists in the current directory
+When the user runs ` + "`rpi init`" + `
+Then a .rpi/ directory is created with default templates
+
+### User lists artifacts
+Given the .rpi/ directory contains 3 plans and 2 designs
+When the user runs ` + "`rpi status`" + `
+Then output shows artifacts grouped by type
+
+### User archives a completed plan
+Given a plan with status complete
+When the user runs ` + "`rpi archive`" + `
+Then the plan is moved to the archive directory`
+
+	scenarios := parseScenarios(content)
+	if len(scenarios) != 3 {
+		t.Fatalf("expected 3 scenarios, got %d", len(scenarios))
+	}
+
+	s := scenarios[0]
+	if s.Title != "User creates a new project" {
+		t.Errorf("expected title 'User creates a new project', got '%s'", s.Title)
+	}
+	if s.Given != "no project exists in the current directory" {
+		t.Errorf("expected given 'no project exists in the current directory', got '%s'", s.Given)
+	}
+	if s.When != "the user runs `rpi init`" {
+		t.Errorf("expected when 'the user runs `rpi init`', got '%s'", s.When)
+	}
+	if s.Then != "a .rpi/ directory is created with default templates" {
+		t.Errorf("expected then 'a .rpi/ directory is created with default templates', got '%s'", s.Then)
+	}
+
+	s2 := scenarios[2]
+	if s2.Title != "User archives a completed plan" {
+		t.Errorf("expected title 'User archives a completed plan', got '%s'", s2.Title)
+	}
+}
+
+func TestParseScenariosMultiLine(t *testing.T) {
+	content := `## Scenarios
+
+### Multi-line scenario
+Given a spec file with a Scenarios section
+and the section contains multiple scenario blocks
+When the user runs the verify command
+and passes the spec path as argument
+Then the CLI outputs structured JSON
+and each scenario has title, given, when, then fields`
+
+	scenarios := parseScenarios(content)
+	if len(scenarios) != 1 {
+		t.Fatalf("expected 1 scenario, got %d", len(scenarios))
+	}
+
+	s := scenarios[0]
+	if s.Given != "a spec file with a Scenarios section and the section contains multiple scenario blocks" {
+		t.Errorf("unexpected given: '%s'", s.Given)
+	}
+	if s.When != "the user runs the verify command and passes the spec path as argument" {
+		t.Errorf("unexpected when: '%s'", s.When)
+	}
+	if s.Then != "the CLI outputs structured JSON and each scenario has title, given, when, then fields" {
+		t.Errorf("unexpected then: '%s'", s.Then)
+	}
+}
+
+func TestParseScenariosEmpty(t *testing.T) {
+	content := `## Scenarios
+`
+	scenarios := parseScenarios(content)
+	if len(scenarios) != 0 {
+		t.Errorf("expected 0 scenarios, got %d", len(scenarios))
+	}
+}
+
+func TestParseScenariosNoSection(t *testing.T) {
+	content := `## Behavior
+### Sub-concern A
+- **XX-1**: First requirement`
+
+	scenarios := parseScenarios(content)
+	if len(scenarios) != 0 {
+		t.Errorf("expected 0 scenarios, got %d", len(scenarios))
+	}
+}

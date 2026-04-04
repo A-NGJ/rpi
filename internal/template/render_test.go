@@ -200,7 +200,7 @@ func TestRenderAllTemplates(t *testing.T) {
 		{"plan", []string{"# cli-007: Test Topic", "ticket: \"cli-007\"", `spec: ".rpi/specs/test.md"`}},
 		{"design", []string{"# Design: Test Topic"}},
 		{"verify-report", []string{"# Verification Report: Test Topic", "## Completeness"}},
-		{"spec", []string{"domain: Test Topic", "## Purpose", "## Behavior", "## Constraints", "## Test Cases", "id:"}},
+		{"spec", []string{"domain: Test Topic", "## Purpose", "## Scenarios", "## Constraints", "## Out of Scope", "feature:"}},
 	}
 
 	for _, tt := range templates {

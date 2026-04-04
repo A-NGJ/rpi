@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/A-NGJ/rpi/internal/frontmatter"
 	"github.com/A-NGJ/rpi/internal/git"
 	"github.com/spf13/cobra"
 )
@@ -14,7 +15,7 @@ import (
 var verifyCmd = &cobra.Command{
 	Use:   "verify <action> [file-path]",
 	Short: "Deterministic verification checks",
-	Long: `Run deterministic verification checks on plans and source files.
+	Long: `Run deterministic verification checks on plans, specs, and source files.
 
 Actions:
   completeness <plan-path>  Parse a plan file for checkboxes (- [ ] / - [x])
@@ -25,6 +26,8 @@ Actions:
   markers [file-path]       Scan for TODO/FIXME/HACK markers. Without a file
                             argument, scans git-changed files (excluding .tmpl/.tpl
                             templates).
+  spec <spec-path>          Parse a spec file's ## Scenarios section and extract
+                            Given/When/Then scenario blocks as structured JSON.
 
 Output is JSON by default.`,
 	Example: `  # Check plan progress and file coverage
@@ -36,7 +39,11 @@ Output is JSON by default.`,
   # → {"markers": [...], "count": {"TODO": 2}}
 
   # Scan a specific file
-  rpi verify markers cmd/rpi/scan.go`,
+  rpi verify markers cmd/rpi/scan.go
+
+  # Parse spec scenarios
+  rpi verify spec .rpi/specs/my-feature.md
+  # → {"spec": "...", "feature": "...", "scenarios": [...], "total": 6}`,
 	Args: cobra.RangeArgs(1, 2),
 	RunE: runVerify,
 }
@@ -137,8 +144,13 @@ func runVerify(cmd *cobra.Command, args []string) error {
 		return runVerifyCompleteness(filePath, format)
 	case "markers":
 		return runVerifyMarkers(filePath, format)
+	case "spec":
+		if filePath == "" {
+			return fmt.Errorf("spec requires a spec path: rpi verify spec <spec-path>")
+		}
+		return runVerifySpec(filePath, format)
 	default:
-		return fmt.Errorf("unknown action: %s (expected completeness or markers)", action)
+		return fmt.Errorf("unknown action: %s (expected completeness, markers, or spec)", action)
 	}
 }
 
@@ -321,4 +333,98 @@ func scanMarkers(filename, content string) []Marker {
 		}
 	}
 	return markers
+}
+
+// Spec verification types and functions
+
+type Scenario struct {
+	Title string `json:"title"`
+	Given string `json:"given"`
+	When  string `json:"when"`
+	Then  string `json:"then"`
+}
+
+type SpecResult struct {
+	Spec      string     `json:"spec"`
+	Feature   string     `json:"feature"`
+	Scenarios []Scenario `json:"scenarios"`
+	Total     int        `json:"total"`
+}
+
+func runVerifySpec(specPath, format string) error {
+	doc, err := frontmatter.Parse(specPath)
+	if err != nil {
+		return fmt.Errorf("reading spec: %w", err)
+	}
+
+	feature, _ := doc.Frontmatter["feature"].(string)
+
+	scenarios := parseScenarios(doc.Body)
+
+	result := SpecResult{
+		Spec:      specPath,
+		Feature:   feature,
+		Scenarios: scenarios,
+		Total:     len(scenarios),
+	}
+
+	switch format {
+	case "json":
+		data, _ := json.MarshalIndent(result, "", "  ")
+		fmt.Println(string(data))
+	default:
+		return fmt.Errorf("unknown format: %s (expected json)", format)
+	}
+	return nil
+}
+
+// parseScenarios extracts scenario blocks from a ## Scenarios section.
+// Each scenario starts with a ### heading and contains Given/When/Then steps.
+// Continuation lines (without a keyword) are appended to the current step.
+func parseScenarios(body string) []Scenario {
+	section, ok := frontmatter.ExtractSection(body, "Scenarios")
+	if !ok {
+		return []Scenario{}
+	}
+
+	var scenarios []Scenario
+	var current *Scenario
+	var step *string // points to the field currently being appended to
+
+	for _, line := range strings.Split(section, "\n") {
+		trimmed := strings.TrimSpace(line)
+
+		if strings.HasPrefix(trimmed, "### ") {
+			if current != nil {
+				scenarios = append(scenarios, *current)
+			}
+			current = &Scenario{Title: strings.TrimPrefix(trimmed, "### ")}
+			step = nil
+			continue
+		}
+
+		if current == nil {
+			continue
+		}
+
+		lower := strings.ToLower(trimmed)
+		if strings.HasPrefix(lower, "given ") {
+			current.Given = trimmed[len("Given "):]
+			step = &current.Given
+		} else if strings.HasPrefix(lower, "when ") {
+			current.When = trimmed[len("When "):]
+			step = &current.When
+		} else if strings.HasPrefix(lower, "then ") {
+			current.Then = trimmed[len("Then "):]
+			step = &current.Then
+		} else if trimmed != "" && step != nil {
+			*step += " " + trimmed
+		}
+	}
+
+	if current != nil {
+		scenarios = append(scenarios, *current)
+	}
+
+	return scenarios
 }

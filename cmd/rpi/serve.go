@@ -148,7 +148,7 @@ func registerTools(s *mcp.Server) {
 		Description: mcpDescriptionWithPrefix("List all section headings in a markdown file.", extractCmd),
 	}, handleExtractListSections)
 
-	// Verify (1 Cobra cmd → 2 MCP tools)
+	// Verify (1 Cobra cmd → 3 MCP tools)
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_verify_completeness",
 		Description: mcpDescriptionWithPrefix("Check plan progress: checkbox counts and file coverage.", verifyCmd),
@@ -158,6 +158,11 @@ func registerTools(s *mcp.Server) {
 		Name:        "rpi_verify_markers",
 		Description: mcpDescriptionWithPrefix("Scan for TODO/FIXME/HACK markers in source files.", verifyCmd),
 	}, handleVerifyMarkers)
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "rpi_verify_spec",
+		Description: mcpDescriptionWithPrefix("Parse spec scenarios into structured JSON with feature name, scenario titles, and Given/When/Then steps.", verifyCmd),
+	}, handleVerifySpec)
 
 	// Archive (1:1 subcommand mappings)
 	mcp.AddTool(s, &mcp.Tool{
@@ -282,6 +287,10 @@ type verifyCompletenessInput struct {
 
 type verifyMarkersInput struct {
 	FilePath string `json:"file_path,omitempty" jsonschema:"specific file to scan (omit to scan git-changed files)"`
+}
+
+type verifySpecInput struct {
+	SpecPath string `json:"spec_path" jsonschema:"path to the spec file"`
 }
 
 type archiveCheckRefsInput struct {
@@ -484,6 +493,22 @@ func handleVerifyMarkers(_ context.Context, _ *mcp.CallToolRequest, input verify
 		for _, m := range markers {
 			result.Count[m.Type]++
 		}
+	}
+	return jsonResult(result)
+}
+
+func handleVerifySpec(_ context.Context, _ *mcp.CallToolRequest, input verifySpecInput) (*mcp.CallToolResult, any, error) {
+	doc, err := frontmatter.Parse(input.SpecPath)
+	if err != nil {
+		return nil, nil, fmt.Errorf("reading spec: %w", err)
+	}
+	feature, _ := doc.Frontmatter["feature"].(string)
+	scenarios := parseScenarios(doc.Body)
+	result := SpecResult{
+		Spec:      input.SpecPath,
+		Feature:   feature,
+		Scenarios: scenarios,
+		Total:     len(scenarios),
 	}
 	return jsonResult(result)
 }

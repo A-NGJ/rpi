@@ -17,7 +17,7 @@ If no path provided, auto-detect from recent git changes. If artifacts found, an
 - Check `.rpi/specs/` for relevant specs and get the list of changed files
 - Read actual implementation files — never trust summaries or checkboxes
 - **Completeness**: check all plan phases/tasks done, tests exist, all planned files created/modified, scan for TODO/FIXME/HACK markers
-- **Correctness**: use the `rpi_verify_spec` MCP tool to extract scenarios from linked specs, then verify each scenario against actual code and tests with pass/fail per scenario and file:line references; check API contracts match design, flag silent deviations
+- **Correctness**: extract scenarios from linked specs using the verify spec tool, then verify each scenario against actual code and tests with pass/fail per scenario and file:line references; check API contracts match design, flag silent deviations
 - **Coherence**: verify naming conventions, error handling, code organization follow existing patterns; check for unnecessary dependencies
 - Classify each finding as: blocker (must fix), warning (should fix), or note (consider fixing)
 - Scaffold a verification report, fill in findings grouped by dimension and severity
