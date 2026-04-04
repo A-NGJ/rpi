@@ -339,8 +339,8 @@ func TestUpdatePreservesExistingCommandsDir(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read .claude/skills/: %v", err)
 	}
-	if len(entries) != 9 {
-		t.Errorf("expected 9 skill dirs in .claude/skills/, got %d", len(entries))
+	if len(entries) != 10 {
+		t.Errorf("expected 10 skill dirs in .claude/skills/, got %d", len(entries))
 	}
 }
 
@@ -371,8 +371,8 @@ func TestUpdateDetectsAgentsOnlyTarget(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read .agents/skills/: %v", err)
 	}
-	if len(entries) != 9 {
-		t.Errorf("expected 9 skill dirs, got %d", len(entries))
+	if len(entries) != 10 {
+		t.Errorf("expected 10 skill dirs, got %d", len(entries))
 	}
 
 	// No tool-specific dirs should be created

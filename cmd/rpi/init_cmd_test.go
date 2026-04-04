@@ -60,8 +60,8 @@ func TestInitCreatesAllDirs(t *testing.T) {
 	if err != nil {
 		t.Fatalf(".claude/skills/ not created: %v", err)
 	}
-	if len(entries) != 9 {
-		t.Errorf("expected 9 skill dirs in .claude/skills/, got %d", len(entries))
+	if len(entries) != 10 {
+		t.Errorf("expected 10 skill dirs in .claude/skills/, got %d", len(entries))
 	}
 
 	// No .agents/ directory for claude target
@@ -353,8 +353,8 @@ func TestInitOpenCode(t *testing.T) {
 	if err != nil {
 		t.Fatalf(".opencode/skills/ not created: %v", err)
 	}
-	if len(entries) != 9 {
-		t.Errorf("expected 9 skill dirs in .opencode/skills/, got %d", len(entries))
+	if len(entries) != 10 {
+		t.Errorf("expected 10 skill dirs in .opencode/skills/, got %d", len(entries))
 	}
 
 	// Verify AGENTS.md generated, CLAUDE.md absent
@@ -442,8 +442,8 @@ func TestInitAgentsOnly(t *testing.T) {
 	if err != nil {
 		t.Fatalf(".agents/skills/ not created: %v", err)
 	}
-	if len(entries) != 9 {
-		t.Errorf("expected 9 skill dirs, got %d", len(entries))
+	if len(entries) != 10 {
+		t.Errorf("expected 10 skill dirs, got %d", len(entries))
 	}
 
 	// No .claude/ or .opencode/ directories

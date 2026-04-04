@@ -16,6 +16,7 @@ func TestAllSkillsPresent(t *testing.T) {
 	expected := []string{
 		"rpi-research", "rpi-propose", "rpi-plan", "rpi-implement",
 		"rpi-verify", "rpi-diagnose", "rpi-explain", "rpi-commit", "rpi-archive",
+		"rpi-spec-sync",
 	}
 
 	entries, err := fs.ReadDir(assets, "assets/skills")
@@ -136,8 +137,8 @@ func TestInstallSkills_AgentsOnly(t *testing.T) {
 	if err != nil {
 		t.Fatalf("InstallSkills error: %v", err)
 	}
-	if count != 9 {
-		t.Errorf("expected 9 files installed, got %d", count)
+	if count != 10 {
+		t.Errorf("expected 10 files installed, got %d", count)
 	}
 
 	// Verify all 9 canonical skills exist
@@ -145,8 +146,8 @@ func TestInstallSkills_AgentsOnly(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read skills dir: %v", err)
 	}
-	if len(entries) != 9 {
-		t.Errorf("expected 9 skill dirs, got %d", len(entries))
+	if len(entries) != 10 {
+		t.Errorf("expected 10 skill dirs, got %d", len(entries))
 	}
 
 	// Verify canonical files have no tool-specific fields
@@ -170,8 +171,8 @@ func TestInstallSkills_Claude(t *testing.T) {
 	if err != nil {
 		t.Fatalf("InstallSkills error: %v", err)
 	}
-	if count != 9 {
-		t.Errorf("expected 9 files installed, got %d", count)
+	if count != 10 {
+		t.Errorf("expected 10 files installed, got %d", count)
 	}
 
 	// Verify rpi-archive has model and disable-model-invocation
@@ -287,8 +288,8 @@ func TestInstallSkills_NoOverwriteWithoutForce(t *testing.T) {
 	if err != nil {
 		t.Fatalf("force install: %v", err)
 	}
-	if count != 9 {
-		t.Errorf("force install: expected 9 files, got %d", count)
+	if count != 10 {
+		t.Errorf("force install: expected 10 files, got %d", count)
 	}
 	data, _ = os.ReadFile(modPath)
 	if string(data) == "custom content" {
@@ -351,6 +352,7 @@ func TestPromptStructure_HasRequiredSections(t *testing.T) {
 	pipelineSkills := []string{
 		"rpi-research", "rpi-propose", "rpi-plan", "rpi-implement",
 		"rpi-verify", "rpi-diagnose", "rpi-explain", "rpi-commit", "rpi-archive",
+		"rpi-spec-sync",
 	}
 
 	for _, skill := range pipelineSkills {
@@ -371,6 +373,7 @@ func TestPromptStructure_LineCount(t *testing.T) {
 	pipelineSkills := []string{
 		"rpi-research", "rpi-propose", "rpi-plan", "rpi-implement",
 		"rpi-verify", "rpi-diagnose", "rpi-explain", "rpi-commit", "rpi-archive",
+		"rpi-spec-sync",
 	}
 
 	for _, skill := range pipelineSkills {
