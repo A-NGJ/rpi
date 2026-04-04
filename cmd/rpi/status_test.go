@@ -44,8 +44,8 @@ func TestStatusArtifactSummary(t *testing.T) {
 
 	output := runStatusCmd(t, dir)
 
-	if !strings.Contains(output, "specs:") || !strings.Contains(output, "2 active") {
-		t.Errorf("expected specs with 2 active, got:\n%s", output)
+	if strings.Contains(output, "specs:") {
+		t.Errorf("specs should not appear in Artifacts section, got:\n%s", output)
 	}
 	if !strings.Contains(output, "plans:") || !strings.Contains(output, "1 draft") {
 		t.Errorf("expected plans with 1 draft, got:\n%s", output)
@@ -79,8 +79,8 @@ func TestStatusExcludesArchive(t *testing.T) {
 	if strings.Contains(output, "archived") {
 		t.Errorf("should not contain archived artifacts, got:\n%s", output)
 	}
-	if !strings.Contains(output, "1 active") {
-		t.Errorf("expected 1 active spec, got:\n%s", output)
+	if !strings.Contains(output, "Specifications") {
+		t.Errorf("expected Specifications section for non-archived spec, got:\n%s", output)
 	}
 }
 
@@ -141,9 +141,9 @@ func TestStatusStaleMissingDate(t *testing.T) {
 
 	output := runStatusCmd(t, dir)
 
-	// Should appear in summary
-	if !strings.Contains(output, "specs:") {
-		t.Errorf("expected specs in summary, got:\n%s", output)
+	// Should appear in Specifications section
+	if !strings.Contains(output, "Specifications") {
+		t.Errorf("expected Specifications section, got:\n%s", output)
 	}
 	// Should NOT appear in Stale section
 	if strings.Contains(output, "Stale") {
@@ -188,11 +188,11 @@ func TestStatusActivePlanChain(t *testing.T) {
 	}
 	// Should NOT show linked artifact sub-rows under Active Plans (ST-10 revised)
 	activePlansIdx := strings.Index(output, "Active Plans")
-	activeSpecsIdx := strings.Index(output, "Active Specs")
+	specsIdx := strings.Index(output, "Specifications")
 	if activePlansIdx >= 0 {
 		end := len(output)
-		if activeSpecsIdx > activePlansIdx {
-			end = activeSpecsIdx
+		if specsIdx > activePlansIdx {
+			end = specsIdx
 		}
 		activePlansSection := output[activePlansIdx:end]
 		if strings.Contains(activePlansSection, "design:") {
@@ -202,9 +202,9 @@ func TestStatusActivePlanChain(t *testing.T) {
 			t.Errorf("should not show spec link under Active Plans, got:\n%s", activePlansSection)
 		}
 	}
-	// Active Specs section should list the active spec
-	if !strings.Contains(output, "Active Specs") {
-		t.Errorf("expected Active Specs section, got:\n%s", output)
+	// Specifications section should list the spec
+	if !strings.Contains(output, "Specifications") {
+		t.Errorf("expected Specifications section, got:\n%s", output)
 	}
 	if !strings.Contains(output, "My Spec") {
 		t.Errorf("expected active spec name in Active Specs section, got:\n%s", output)
@@ -315,41 +315,41 @@ func TestStatusJSONOutput(t *testing.T) {
 		t.Error("expected archivable key in JSON")
 	}
 
-	// Verify summary content
-	if result.Summary["spec"]["active"] != 1 {
-		t.Errorf("expected 1 active spec in summary, got %v", result.Summary)
+	// Specs should not appear in summary (specs are statusless)
+	if _, ok := result.Summary["spec"]; ok {
+		t.Errorf("specs should not appear in summary, got %v", result.Summary)
 	}
 }
 
-func TestStatusActiveSpecsSection(t *testing.T) {
+func TestStatusSpecificationsSection(t *testing.T) {
 	dir := t.TempDir()
-	writeStatusFile(t, dir, "specs/s1.md", "---\nstatus: active\ntopic: Auth Permissions\n---\n- **AP-1**: first\n- **AP-2**: second\n")
-	writeStatusFile(t, dir, "specs/s2.md", "---\nstatus: active\ntopic: Rate Limiting\n---\n- **RL-1**: only one\n")
-	writeStatusFile(t, dir, "specs/s3.md", "---\nstatus: superseded\ntopic: Old Spec\n---\n")
+	writeStatusFile(t, dir, "specs/s1.md", "---\ntopic: Auth Permissions\n---\n- **AP-1**: first\n- **AP-2**: second\n")
+	writeStatusFile(t, dir, "specs/s2.md", "---\ntopic: Rate Limiting\n---\n- **RL-1**: only one\n")
+	writeStatusFile(t, dir, "specs/s3.md", "---\ntopic: Old Spec\n---\n")
 
 	output := runStatusCmd(t, dir)
 
-	if !strings.Contains(output, "Active Specs") {
-		t.Fatalf("expected Active Specs section, got:\n%s", output)
+	if !strings.Contains(output, "Specifications") {
+		t.Fatalf("expected Specifications section, got:\n%s", output)
 	}
 	if !strings.Contains(output, "Auth Permissions") {
-		t.Errorf("expected active spec name 'Auth Permissions', got:\n%s", output)
+		t.Errorf("expected spec name 'Auth Permissions', got:\n%s", output)
 	}
 	if !strings.Contains(output, "Rate Limiting") {
-		t.Errorf("expected active spec name 'Rate Limiting', got:\n%s", output)
+		t.Errorf("expected spec name 'Rate Limiting', got:\n%s", output)
 	}
-	if strings.Contains(output, "Old Spec") {
-		t.Errorf("should not list superseded spec name, got:\n%s", output)
+	if !strings.Contains(output, "Old Spec") {
+		t.Errorf("expected spec name 'Old Spec', got:\n%s", output)
 	}
 }
 
-func TestStatusActiveSpecsRequirementCount(t *testing.T) {
+func TestStatusSpecsRequirementCount(t *testing.T) {
 	dir := t.TempDir()
 	// Spec with 3 requirements
-	writeStatusFile(t, dir, "specs/s1.md", "---\nstatus: active\ntopic: Auth Permissions\n---\n"+
+	writeStatusFile(t, dir, "specs/s1.md", "---\ntopic: Auth Permissions\n---\n"+
 		"- **AP-1**: first requirement\n- **AP-2**: second requirement\n- **AP-3**: third requirement\n")
 	// Spec with 0 requirements
-	writeStatusFile(t, dir, "specs/s2.md", "---\nstatus: active\ntopic: Empty Spec\n---\nNo requirements here.\n")
+	writeStatusFile(t, dir, "specs/s2.md", "---\ntopic: Empty Spec\n---\nNo requirements here.\n")
 
 	output := runStatusCmd(t, dir)
 
@@ -361,9 +361,9 @@ func TestStatusActiveSpecsRequirementCount(t *testing.T) {
 	}
 }
 
-func TestStatusActiveSpecsRequirementCountJSON(t *testing.T) {
+func TestStatusSpecsRequirementCountJSON(t *testing.T) {
 	dir := t.TempDir()
-	writeStatusFile(t, dir, "specs/s1.md", "---\nstatus: active\ntopic: Auth Permissions\n---\n"+
+	writeStatusFile(t, dir, "specs/s1.md", "---\ntopic: Auth Permissions\n---\n"+
 		"- **AP-1**: first\n- **AP-2**: second\n")
 
 	output := runStatusCmdWithFormat(t, dir, "json")
@@ -372,32 +372,30 @@ func TestStatusActiveSpecsRequirementCountJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(output), &result); err != nil {
 		t.Fatalf("invalid JSON: %v\noutput: %s", err, output)
 	}
-	if len(result.ActiveSpecs) != 1 {
-		t.Fatalf("expected 1 active spec, got %d", len(result.ActiveSpecs))
+	if len(result.Specs) != 1 {
+		t.Fatalf("expected 1 spec, got %d", len(result.Specs))
 	}
-	if result.ActiveSpecs[0].Name != "Auth Permissions" {
-		t.Errorf("expected name 'Auth Permissions', got %q", result.ActiveSpecs[0].Name)
+	if result.Specs[0].Name != "Auth Permissions" {
+		t.Errorf("expected name 'Auth Permissions', got %q", result.Specs[0].Name)
 	}
-	if result.ActiveSpecs[0].Requirements != 2 {
-		t.Errorf("expected 2 requirements, got %d", result.ActiveSpecs[0].Requirements)
+	if result.Specs[0].Requirements != 2 {
+		t.Errorf("expected 2 requirements, got %d", result.Specs[0].Requirements)
 	}
 }
 
 func TestStatusNoActiveSectionWhenEmpty(t *testing.T) {
 	dir := t.TempDir()
-	// Only draft and complete designs — no active ones
+	// Only draft and complete designs — no active ones, no specs
 	writeStatusFile(t, dir, "designs/d1.md", "---\nstatus: draft\ntopic: Draft Design\n---\n")
 	writeStatusFile(t, dir, "designs/d2.md", "---\nstatus: complete\ntopic: Done Design\n---\n")
-	// Only superseded specs
-	writeStatusFile(t, dir, "specs/s1.md", "---\nstatus: superseded\ntopic: Old Spec\n---\n")
 
 	output := runStatusCmd(t, dir)
 
 	if strings.Contains(output, "Active Designs") {
 		t.Errorf("should not show Active Designs when none active, got:\n%s", output)
 	}
-	if strings.Contains(output, "Active Specs") {
-		t.Errorf("should not show Active Specs when none active, got:\n%s", output)
+	if strings.Contains(output, "Specifications") {
+		t.Errorf("should not show Specifications when no specs exist, got:\n%s", output)
 	}
 	if strings.Contains(output, "Active Plans") {
 		t.Errorf("should not show Active Plans when none active, got:\n%s", output)

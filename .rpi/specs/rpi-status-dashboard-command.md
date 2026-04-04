@@ -15,7 +15,7 @@ Provide a single CLI command (`rpi status`) that aggregates all RPI artifact met
 ## Behavior
 
 ### Artifact Summary
-- **ST-1**: Group all non-archived artifacts by type (`spec`, `plan`, `design`, `research`, `review`) and status, displaying counts for each type-status combination.
+- **ST-1**: Group all non-archived artifacts by type (`plan`, `design`, `research`, `review`) and status, displaying counts for each type-status combination. Specs are statusless and shown in a dedicated Specifications section instead.
 - **ST-2**: Omit types with zero artifacts from the summary (no empty rows).
 - **ST-3**: Exclude the `archive/` subdirectory from all scanning.
 
@@ -33,8 +33,8 @@ Provide a single CLI command (`rpi status`) that aggregates all RPI artifact met
 - **ST-12**: Plans with zero checkboxes show no progress indicator (not "0/0 (0%)").
 
 ### Active Artifact Sections
-- **ST-18**: When active specs exist, display an "Active Specs" section listing each by name (title from frontmatter, falling back to filename) with its requirement count (number of `**XX-N**:` patterns in the file body). Omit section when no active specs exist.
-- **ST-19**: Section order: Artifacts → Active Plans → Active Specs → Stale → Ready to Archive. Each section is omitted when empty.
+- **ST-18**: When specs exist, display a "Specifications" section listing each by name (title from frontmatter, falling back to filename) with its requirement count (number of `**XX-N**:` patterns in the file body). Omit section when no specs exist.
+- **ST-19**: Section order: Artifacts → Active Plans → Specifications → Stale → Ready to Archive. Each section is omitted when empty.
 
 ### Archive Readiness
 - **ST-13**: List artifacts with archivable status (`complete`, `superseded`, `implemented` — or `superseded` only for specs) that have zero active references.
@@ -69,7 +69,7 @@ Provide a single CLI command (`rpi status`) that aggregates all RPI artifact met
 ## Test Cases
 
 ### ST-1: Artifact summary grouping
-- **Given** `.rpi/` contains 2 active specs, 1 draft plan, and 1 complete design **When** `rpi status` is run **Then** output shows `specs: 2 active`, `plans: 1 draft`, `designs: 1 complete`
+- **Given** `.rpi/` contains 2 specs, 1 draft plan, and 1 complete design **When** `rpi status` is run **Then** output shows `plans: 1 draft`, `designs: 1 complete` (specs appear in Specifications section, not Artifacts)
 
 ### ST-2: Empty types omitted
 - **Given** `.rpi/` contains only specs and plans (no designs, research, reviews) **When** `rpi status` is run **Then** output contains no `designs`, `research`, or `reviews` rows

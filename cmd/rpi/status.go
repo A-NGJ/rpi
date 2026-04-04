@@ -48,7 +48,8 @@ func init() {
 
 var (
 	// Canonical type display order (alphabetical by singular name).
-	statusTypeOrder = []string{"design", "diagnosis", "plan", "research", "review", "spec"}
+	// Specs are statusless and shown in a dedicated section, not here.
+	statusTypeOrder = []string{"design", "diagnosis", "plan", "research", "review"}
 
 	// Plural display names.
 	statusTypePlurals = map[string]string{
@@ -57,7 +58,6 @@ var (
 		"plan":      "plans",
 		"research":  "research",
 		"review":    "reviews",
-		"spec":      "specs",
 	}
 
 	// Status display order within each type row.
@@ -74,10 +74,21 @@ func runStatus(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Group by type -> status -> count, and collect active artifact names
+	// Group by type -> status -> count; collect specs separately (specs are statusless)
 	summary := make(map[string]map[string]int)
-	activeByType := make(map[string][]activeSpec)
+	var specs []activeSpec
 	for _, a := range artifacts {
+		if a.Type == "spec" {
+			name := strings.TrimSuffix(filepath.Base(a.Path), ".md")
+			if a.Title != nil {
+				name = *a.Title
+			}
+			specs = append(specs, activeSpec{
+				Name:         name,
+				Requirements: countSpecRequirements(a.Path),
+			})
+			continue
+		}
 		status := "unknown"
 		if a.Status != nil {
 			status = *a.Status
@@ -86,23 +97,10 @@ func runStatus(cmd *cobra.Command, args []string) error {
 			summary[a.Type] = make(map[string]int)
 		}
 		summary[a.Type][status]++
-
-		if status == "active" && a.Type == "spec" {
-			name := strings.TrimSuffix(filepath.Base(a.Path), ".md")
-			if a.Title != nil {
-				name = *a.Title
-			}
-			activeByType[a.Type] = append(activeByType[a.Type], activeSpec{
-				Name:         name,
-				Requirements: countSpecRequirements(a.Path),
-			})
-		}
 	}
-	for _, specs := range activeByType {
-		sort.Slice(specs, func(i, j int) bool {
-			return specs[i].Name < specs[j].Name
-		})
-	}
+	sort.Slice(specs, func(i, j int) bool {
+		return specs[i].Name < specs[j].Name
+	})
 
 	// Staleness detection
 	stale := findStaleArtifacts(artifacts, nowFunc(), staleDays)
@@ -121,15 +119,15 @@ func runStatus(cmd *cobra.Command, args []string) error {
 
 	switch format {
 	case "json":
-		return renderStatusJSON(cmd, summary, activeByType, stale, plans, archivable)
+		return renderStatusJSON(cmd, summary, specs, stale, plans, archivable)
 	case "text":
-		return renderStatusText(cmd, summary, activeByType, stale, plans, archivable)
+		return renderStatusText(cmd, summary, specs, stale, plans, archivable)
 	default:
 		return fmt.Errorf("unknown format: %s (expected text or json)", format)
 	}
 }
 
-func renderStatusText(cmd *cobra.Command, summary map[string]map[string]int, activeByType map[string][]activeSpec, stale []staleArtifact, plans []activePlan, archivable []archivableArtifact) error {
+func renderStatusText(cmd *cobra.Command, summary map[string]map[string]int, specs []activeSpec, stale []staleArtifact, plans []activePlan, archivable []archivableArtifact) error {
 	w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
 
 	fmt.Fprintln(w, "Artifacts")
@@ -155,9 +153,9 @@ func renderStatusText(cmd *cobra.Command, summary map[string]map[string]int, act
 		}
 	}
 
-	// ST-18/ST-19: Active Specs section with requirement counts
-	if specs, ok := activeByType["spec"]; ok && len(specs) > 0 {
-		fmt.Fprintln(w, "\nActive Specs")
+	// ST-18/ST-19: Specifications section with requirement counts
+	if len(specs) > 0 {
+		fmt.Fprintln(w, "\nSpecifications")
 		for _, s := range specs {
 			fmt.Fprintf(w, "  %s\t%d requirements\n", s.Name, s.Requirements)
 		}
@@ -207,12 +205,12 @@ func renderStatusText(cmd *cobra.Command, summary map[string]map[string]int, act
 	return nil
 }
 
-func renderStatusJSON(cmd *cobra.Command, summary map[string]map[string]int, activeByType map[string][]activeSpec, stale []staleArtifact, plans []activePlan, archivable []archivableArtifact) error {
+func renderStatusJSON(cmd *cobra.Command, summary map[string]map[string]int, specs []activeSpec, stale []staleArtifact, plans []activePlan, archivable []archivableArtifact) error {
 	out := statusOutput{
 		Summary:     summary,
 		Stale:       stale,
 		ActivePlans: plans,
-		ActiveSpecs: activeByType["spec"],
+		Specs:       specs,
 		Archivable:  archivable,
 	}
 	if out.Stale == nil {
@@ -221,8 +219,8 @@ func renderStatusJSON(cmd *cobra.Command, summary map[string]map[string]int, act
 	if out.ActivePlans == nil {
 		out.ActivePlans = []activePlan{}
 	}
-	if out.ActiveSpecs == nil {
-		out.ActiveSpecs = []activeSpec{}
+	if out.Specs == nil {
+		out.Specs = []activeSpec{}
 	}
 	if out.Archivable == nil {
 		out.Archivable = []archivableArtifact{}
@@ -247,8 +245,8 @@ func findStaleArtifacts(artifacts []scanner.ArtifactInfo, now time.Time, thresho
 	var stale []staleArtifact
 
 	for _, a := range artifacts {
-		if a.Status == nil {
-			continue
+		if a.Type == "spec" || a.Status == nil {
+			continue // specs are statusless; nil-status artifacts have no staleness
 		}
 		status := *a.Status
 		if terminalStatuses[status] {
@@ -260,11 +258,7 @@ func findStaleArtifacts(artifacts []scanner.ArtifactInfo, now time.Time, thresho
 			continue
 		}
 
-		// ST-5: specs use last_updated, others use date
 		dateKey := "date"
-		if a.Type == "spec" {
-			dateKey = "last_updated"
-		}
 
 		artifactDate, ok := getDateFromFrontmatter(doc.Frontmatter, dateKey)
 		if !ok {
@@ -356,7 +350,7 @@ type statusOutput struct {
 	Summary     map[string]map[string]int `json:"summary"`
 	Stale       []staleArtifact           `json:"stale"`
 	ActivePlans []activePlan              `json:"active_plans"`
-	ActiveSpecs []activeSpec              `json:"active_specs"`
+	Specs       []activeSpec              `json:"specs"`
 	Archivable  []archivableArtifact      `json:"archivable"`
 }
 
