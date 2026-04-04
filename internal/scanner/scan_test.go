@@ -34,7 +34,7 @@ func setupTestDir(t *testing.T) string {
 	writeFile(t, dir, "research/r1.md",
 		"---\ntopic: \"Research One\"\nstatus: superseded\n---\n# R1\nReferences designs/prop1.md in body.\n")
 	writeFile(t, dir, "specs/s1.md",
-		"---\ntopic: \"Spec One\"\nstatus: implemented\n---\n# S1\n")
+		"---\ntopic: \"Spec One\"\n---\n# S1\n")
 	writeFile(t, dir, "archive/designs/old.md",
 		"---\ntopic: \"Archived\"\nstatus: archived\n---\n# Old\n")
 
@@ -149,7 +149,7 @@ func TestScanArchivable(t *testing.T) {
 	}
 
 	// prop2 (complete), r1 (superseded) = 2
-	// s1 (spec, implemented) excluded — specs only archivable when superseded
+	// s1 (spec) excluded — specs are never archivable via scanner
 	// archive/ is skipped, so the archived file doesn't count
 	if len(results) != 2 {
 		t.Errorf("got %d results, want 2", len(results))
@@ -159,21 +159,25 @@ func TestScanArchivable(t *testing.T) {
 	}
 }
 
-func TestScanArchivableSpecSuperseded(t *testing.T) {
+func TestScanArchivableSpecNever(t *testing.T) {
 	dir := t.TempDir()
+	// Even superseded specs are not surfaced by archivable scanner
 	writeFile(t, dir, "specs/old-spec.md",
 		"---\ntopic: \"Old Spec\"\nstatus: superseded\n---\n# Old\n")
+	// Spec with no status also not surfaced
+	writeFile(t, dir, "specs/living-spec.md",
+		"---\ntopic: \"Living Spec\"\n---\n# Living\n")
 
 	results, err := Scan(dir, Filters{Archivable: true})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if len(results) != 1 {
-		t.Errorf("got %d results, want 1", len(results))
-	}
-	if len(results) > 0 && results[0].Type != "spec" {
-		t.Errorf("got type %s, want spec", results[0].Type)
+	if len(results) != 0 {
+		t.Errorf("got %d results, want 0 (specs are never archivable via scanner)", len(results))
+		for _, r := range results {
+			t.Logf("  %s (%v)", r.Path, r.Status)
+		}
 	}
 }
 
