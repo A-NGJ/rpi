@@ -59,7 +59,6 @@ The rendered file contains YAML frontmatter and section headings from the templa
   date: 2026-03-15T10:00:00+01:00
   topic: "auth flow"
   tags: [research]
-  status: draft
   ---
 
   # Research: auth flow

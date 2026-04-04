@@ -48,8 +48,8 @@ func init() {
 
 var (
 	// Canonical type display order (alphabetical by singular name).
-	// Specs are statusless and shown in a dedicated section, not here.
-	statusTypeOrder = []string{"design", "diagnosis", "plan", "research", "review"}
+	// Specs and reviews are statusless and not shown here.
+	statusTypeOrder = []string{"design", "diagnosis", "plan", "research"}
 
 	// Plural display names.
 	statusTypePlurals = map[string]string{
@@ -57,7 +57,6 @@ var (
 		"diagnosis": "diagnoses",
 		"plan":      "plans",
 		"research":  "research",
-		"review":    "reviews",
 	}
 
 	// Status display order within each type row.
@@ -74,10 +73,13 @@ func runStatus(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Group by type -> status -> count; collect specs separately (specs are statusless)
+	// Group by type -> status -> count; collect specs separately (specs and reviews are statusless)
 	summary := make(map[string]map[string]int)
 	var specs []activeSpec
 	for _, a := range artifacts {
+		if a.Type == "review" {
+			continue // reviews are statusless — skip entirely
+		}
 		if a.Type == "spec" {
 			name := strings.TrimSuffix(filepath.Base(a.Path), ".md")
 			if a.Title != nil {
@@ -245,8 +247,8 @@ func findStaleArtifacts(artifacts []scanner.ArtifactInfo, now time.Time, thresho
 	var stale []staleArtifact
 
 	for _, a := range artifacts {
-		if a.Type == "spec" || a.Status == nil {
-			continue // specs are statusless; nil-status artifacts have no staleness
+		if a.Type == "spec" || a.Type == "review" || a.Status == nil {
+			continue // specs and reviews are statusless; nil-status artifacts have no staleness
 		}
 		status := *a.Status
 		if terminalStatuses[status] {

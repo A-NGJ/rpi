@@ -116,7 +116,7 @@ func matches(doc *frontmatter.Document, info ArtifactInfo, f Filters) bool {
 	}
 
 	if f.Archivable {
-		if info.Type == "spec" {
+		if info.Type == "spec" || info.Type == "review" {
 			return false
 		}
 		if info.Status == nil {
