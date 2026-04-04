@@ -61,7 +61,7 @@ var (
 	}
 
 	// Status display order within each type row.
-	statusDisplayOrder = []string{"active", "draft", "complete", "implemented", "superseded"}
+	statusDisplayOrder = []string{"active", "draft", "complete", "superseded"}
 )
 
 func runStatus(cmd *cobra.Command, args []string) error {

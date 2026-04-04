@@ -274,7 +274,7 @@ func TestResolveSpecLink(t *testing.T) {
 	dir := t.TempDir()
 
 	specPath := writeFile(t, dir, ".rpi/specs/test-spec.md",
-		"---\ndomain: \"Test Spec\"\nstatus: approved\n---\n# Test Spec\n")
+		"---\ndomain: \"Test Spec\"\n---\n# Test Spec\n")
 
 	planPath := writeFile(t, dir, ".rpi/plans/test-plan.md",
 		"---\ntopic: \"Test Plan\"\nstatus: draft\nspec: "+specPath+"\n---\n# Plan\n")
