@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/A-NGJ/rpi/internal/index"
 	"github.com/A-NGJ/rpi/internal/templates"
 	"github.com/A-NGJ/rpi/internal/workflow"
 )
@@ -98,20 +97,6 @@ func syncProject(opts syncOptions) error {
 	// Configure settings.json (Claude only)
 	if opts.cfg.target == workflow.TargetClaude {
 		configureSettings(opts.w, filepath.Join(opts.targetDir, opts.cfg.toolDir))
-	}
-
-	// Build codebase index
-	logInfo(opts.w, "Building codebase index...")
-	idx, err := index.Build(opts.targetDir, index.BuildOptions{})
-	if err != nil {
-		logWarning(opts.w, fmt.Sprintf("Index build failed: %v", err))
-	} else {
-		indexPath := filepath.Join(rpiDir, "index.json")
-		if saveErr := index.Save(idx, indexPath); saveErr != nil {
-			logWarning(opts.w, fmt.Sprintf("Index save failed: %v", saveErr))
-		} else {
-			logSuccess(opts.w, fmt.Sprintf("Built codebase index (%d files, %d symbols)", idx.Metadata.FileCount, idx.Metadata.SymbolCount))
-		}
 	}
 
 	return nil
