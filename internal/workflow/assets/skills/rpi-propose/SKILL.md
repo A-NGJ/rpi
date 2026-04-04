@@ -26,7 +26,7 @@ When the user approves the spec, suggest → `/rpi-plan <design-path>`.
 - Link the design to upstream research via frontmatter
 - Create a behavioral spec with prefixed IDs (XX-N), constraints (must/must-not/out-of-scope), and test cases (given/when/then)
 - Present the spec for approval — iterate until accepted
-- Transition artifacts: design → active, spec → approved, research → complete (if fully addressed)
+- Transition artifacts: design → active, research → complete (if fully addressed)
 - For incremental mode: update in place, add an Update Log entry, update affected specs
 
 ## Principles
@@ -34,4 +34,4 @@ When the user approves the spec, suggest → `/rpi-plan <design-path>`.
 - Be opinionated — recommend with clear reasoning grounded in codebase evidence
 - Be interactive — checkpoint before major decisions; a design that surprises during review means the process failed
 - Scale effort to complexity — a focused decision needs less investigation than a new subsystem
-- Specs are the contract — every design culminates in an approved spec
+- Specs are the contract — every design culminates in a spec

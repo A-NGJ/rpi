@@ -7,7 +7,7 @@ description: Implement technical plans from .rpi/plans with verification
 
 ## Goal
 
-Execute an approved plan from `.rpi/plans/` phase by phase. Plans come in two forms: pipeline plans (reference designs and research) or standalone plans (self-contained).
+Execute an active plan from `.rpi/plans/` phase by phase. Plans come in two forms: pipeline plans (reference designs and research) or standalone plans (self-contained).
 
 After all phases are complete and verified, announce completion and update the plan status.
 
@@ -27,7 +27,7 @@ After all phases are complete and verified, announce completion and update the p
 - **After hook failure**: read error, fix the issue, re-stage, create a new commit (never amend)
 - If a phase's success criteria are fully covered by automated checks (tests, linting, etc.), run them and proceed automatically when they pass — only pause for manual verification when the plan includes manual verification items not covered by automated tests
 - **On mismatch**: stop, present what the plan says vs what you found, ask how to proceed
-- **On completion**: verify spec conformance for all linked specs — check each behavior (XX-N) against actual code and tests; transition spec → implemented, plan → complete
+- **On completion**: verify spec conformance for all linked specs — check each behavior (XX-N) against actual code and tests; plan → complete
 
 ## Principles
 
