@@ -2,7 +2,7 @@
 archived_date: "2026-04-02"
 date: 2026-03-24T00:55:02+01:00
 design: .rpi/designs/2026-03-24-init-update-cleanup.md
-spec: .rpi/specs/init-update-cleanup.md
+spec: .rpi/specs/init-update.md
 status: archived
 tags:
     - plan
@@ -19,7 +19,7 @@ Extract shared sync logic from `init` and `update` into `syncProject()`, fix rul
 
 ## Source Documents
 - **Design**: .rpi/designs/2026-03-24-init-update-cleanup.md
-- **Spec**: .rpi/specs/init-update-cleanup.md
+- **Spec**: .rpi/specs/init-update.md
 
 ## Phase 1: Extract syncProject and wire into both commands
 
@@ -98,4 +98,4 @@ Fix the one test that asserts the old rules-file-always-overwrite behavior, add 
 
 ## References
 - Design: .rpi/designs/2026-03-24-init-update-cleanup.md
-- Spec: .rpi/specs/init-update-cleanup.md
+- Spec: .rpi/specs/init-update.md

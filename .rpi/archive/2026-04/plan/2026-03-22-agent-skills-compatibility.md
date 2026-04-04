@@ -2,7 +2,7 @@
 archived_date: "2026-04-02"
 date: 2026-03-22T23:32:57+01:00
 design: .rpi/designs/2026-03-22-agent-skills-compatibility.md
-spec: .rpi/specs/agent-skills-compatibility.md
+spec: .rpi/specs/agent-skills.md
 status: archived
 tags:
     - plan
@@ -19,7 +19,7 @@ Restructure all 14 RPI workflow files into Agent Skills-compliant `skills/*/SKIL
 
 ## Source Documents
 - **Design**: .rpi/designs/2026-03-22-agent-skills-compatibility.md
-- **Spec**: .rpi/specs/agent-skills-compatibility.md
+- **Spec**: .rpi/specs/agent-skills.md
 
 ---
 
@@ -226,4 +226,4 @@ Cross-check each AS-* behavior ID against test coverage:
 
 ## References
 - Design: .rpi/designs/2026-03-22-agent-skills-compatibility.md
-- Spec: .rpi/specs/agent-skills-compatibility.md
+- Spec: .rpi/specs/agent-skills.md

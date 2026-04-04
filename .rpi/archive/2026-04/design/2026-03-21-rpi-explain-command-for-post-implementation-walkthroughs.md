@@ -1,7 +1,7 @@
 ---
 archived_date: "2026-04-02"
 date: 2026-03-21T23:53:36+01:00
-spec: .rpi/specs/rpi-explain-command.md
+spec: .rpi/specs/rpi-explain.md
 status: archived
 tags:
     - design

@@ -58,7 +58,7 @@ All replacements are correct and read naturally in context:
 - **docs/architecture.md:16** -- MCP server bullet matches serve.go implementation
 - **docs/architecture.md:24** -- Project structure comment updated
 
-**Spec cross-check** (`.rpi/specs/mcp-init-and-commands.md`):
+**Spec cross-check** (`.rpi/specs/mcp-init.md`):
 - MC-1 (init writes MCP config): documented in rpi-init.md
 - MC-2 (warn if rpi not in PATH): documented ("Warns and continues")
 - MC-5 (`--no-mcp` skips): documented in options and MCP section
@@ -95,5 +95,5 @@ None.
 
 - Plan: `.rpi/plans/2026-03-19-update-readme-and-docs.md`
 - MCP server spec: `.rpi/specs/mcp-server.md`
-- MCP init spec: `.rpi/specs/mcp-init-and-commands.md`
+- MCP init spec: `.rpi/specs/mcp-init.md`
 - Commits: `993a599`, `3c3269b`

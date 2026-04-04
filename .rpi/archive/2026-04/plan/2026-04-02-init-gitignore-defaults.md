@@ -63,7 +63,7 @@ Update the init-update-cleanup spec (IU-8) and README to reflect the new default
 ### Tasks:
 
 #### 1. Update spec
-**File**: `.rpi/specs/init-update-cleanup.md`
+**File**: `.rpi/specs/init-update.md`
 **Changes**:
 - Update IU-8: `rpi init` adds `.rpi/index.json` and the tool directory to `.gitignore` (not `.rpi/`)
 - Add IU-8a: `rpi init --no-track` also adds `.rpi/` to `.gitignore`
@@ -80,11 +80,11 @@ Update the init-update-cleanup spec (IU-8) and README to reflect the new default
 - [x] `go test ./cmd/rpi/...` still passes (no regressions)
 
 ### Commit:
-- [x] Stage: `.rpi/specs/init-update-cleanup.md`, `README.md`
+- [x] Stage: `.rpi/specs/init-update.md`, `README.md`
 - [x] Message: `docs: update spec and README for new gitignore defaults`
 
 ---
 
 ## References
-- Spec: `.rpi/specs/init-update-cleanup.md` (IU-8)
+- Spec: `.rpi/specs/init-update.md` (IU-8)
 - Current implementation: `cmd/rpi/init_cmd.go:174-179`

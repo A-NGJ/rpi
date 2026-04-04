@@ -2,7 +2,7 @@
 archived_date: "2026-04-04"
 date: 2026-04-02T01:43:59+02:00
 design: .rpi/designs/2026-04-02-index-expansion-signature-search-package-overview-import-graph.md
-spec: .rpi/specs/index-expansion.md
+spec: .rpi/specs/index-expansion.md (deleted)
 status: archived
 tags:
     - plan
@@ -19,7 +19,7 @@ Expand the codebase index with three capabilities: signature-based symbol search
 
 ## Source Documents
 - **Design**: .rpi/designs/2026-04-02-index-expansion-signature-search-package-overview-import-graph.md
-- **Spec**: .rpi/specs/index-expansion.md
+- **Spec**: .rpi/specs/index-expansion.md (deleted)
 
 ## Phase 1: Signature + Package Filters on Existing Query
 
@@ -271,4 +271,4 @@ Update all index MCP tool descriptions to use `mcpDescriptionWithPrefix` with ac
 
 ## References
 - Design: .rpi/designs/2026-04-02-index-expansion-signature-search-package-overview-import-graph.md
-- Spec: .rpi/specs/index-expansion.md
+- Spec: .rpi/specs/index-expansion.md (deleted)

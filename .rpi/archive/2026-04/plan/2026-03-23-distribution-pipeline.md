@@ -2,7 +2,7 @@
 archived_date: "2026-04-02"
 date: 2026-03-23T00:00:00Z
 design: .rpi/designs/2026-03-22-distribution-pipeline.md
-spec: .rpi/specs/distribution-pipeline.md
+spec: .rpi/specs/distribution.md
 status: archived
 tags:
     - plan

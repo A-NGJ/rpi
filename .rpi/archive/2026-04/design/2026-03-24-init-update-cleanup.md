@@ -1,7 +1,7 @@
 ---
 archived_date: "2026-04-02"
 date: 2026-03-24T00:47:14+01:00
-spec: .rpi/specs/init-update-cleanup.md
+spec: .rpi/specs/init-update.md
 status: archived
 tags:
     - design

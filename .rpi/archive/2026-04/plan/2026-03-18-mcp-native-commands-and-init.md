@@ -2,7 +2,7 @@
 archived_date: "2026-04-02"
 date: 2026-03-18T21:50:00+01:00
 proposal: .rpi/proposals/2026-03-18-mcp-native-commands-and-init.md
-spec: .rpi/specs/mcp-init-and-commands.md
+spec: .rpi/specs/mcp-init.md
 status: archived
 tags:
     - plan
@@ -19,7 +19,7 @@ Update `rpi init` to auto-configure the MCP server in `.claude/settings.local.js
 
 ## Source Documents
 - **Proposal**: .rpi/proposals/2026-03-18-mcp-native-commands-and-init.md
-- **Spec**: .rpi/specs/mcp-init-and-commands.md
+- **Spec**: .rpi/specs/mcp-init.md
 
 ## Deviation from Proposal
 
@@ -326,6 +326,6 @@ After both phases are done:
 
 ## References
 - Proposal: .rpi/proposals/2026-03-18-mcp-native-commands-and-init.md
-- Spec: .rpi/specs/mcp-init-and-commands.md
+- Spec: .rpi/specs/mcp-init.md
 - MCP server: cmd/rpi/serve.go (tool names at lines 69-178)
 - Init implementation: cmd/rpi/init_cmd.go

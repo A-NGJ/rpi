@@ -1,6 +1,6 @@
 ---
 date: 2026-04-04T22:16:33+02:00
-status: active
+status: complete
 tags:
     - design
 topic: gherkin-inspired spec format and spec-aware verification

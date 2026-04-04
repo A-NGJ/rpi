@@ -126,6 +126,6 @@ The project now has an MCP server (`rpi serve`) exposing 21 tools and `rpi init`
 ## References
 
 - `.rpi/specs/mcp-server.md` — MCP server behavioral spec
-- `.rpi/specs/mcp-init-and-commands.md` — MCP init and commands spec
+- `.rpi/specs/mcp-init.md` — MCP init and commands spec
 - `cmd/rpi/serve.go` — MCP server implementation
 - `cmd/rpi/init_cmd.go` — Init with MCP auto-configuration

@@ -1,8 +1,8 @@
 ---
 date: 2026-04-04T22:20:27+02:00
 design: .rpi/designs/2026-04-04-gherkin-inspired-spec-format-and-spec-aware-verification.md
-spec: .rpi/specs/gherkin-inspired-spec-format-and-spec-aware-verification.md
-status: active
+spec: .rpi/specs/spec-format.md
+status: complete
 tags:
     - plan
 topic: gherkin-inspired spec format and spec-aware verification
@@ -18,7 +18,7 @@ Replace XX-N requirement specs with Gherkin-inspired scenario format, add `rpi v
 
 ## Source Documents
 - **Design**: .rpi/designs/2026-04-04-gherkin-inspired-spec-format-and-spec-aware-verification.md
-- **Spec**: .rpi/specs/gherkin-inspired-spec-format-and-spec-aware-verification.md
+- **Spec**: .rpi/specs/spec-format.md
 
 ---
 
@@ -103,7 +103,7 @@ Add scenario parsing to `rpi verify`, register as MCP tool, and add tests. This 
 #### Automated Verification:
 - [x] `go test ./...` passes (all new and existing tests)
 - [x] `go build ./cmd/rpi` compiles
-- [x] `rpi verify spec .rpi/specs/gherkin-inspired-spec-format-and-spec-aware-verification.md` outputs valid JSON with 8 scenarios
+- [x] `rpi verify spec .rpi/specs/spec-format.md` outputs valid JSON with 8 scenarios
 
 ### Commit:
 - [x] Stage: `cmd/rpi/verify.go`, `cmd/rpi/verify_test.go`, `cmd/rpi/serve.go`, `cmd/rpi/serve_test.go`, `internal/template/render_test.go`, `internal/workflow/assets/skills/rpi-verify/SKILL.md`, `internal/workflow/assets/skills/rpi-implement/SKILL.md`
@@ -155,4 +155,4 @@ For each spec:
 
 ## References
 - Design: .rpi/designs/2026-04-04-gherkin-inspired-spec-format-and-spec-aware-verification.md
-- Spec: .rpi/specs/gherkin-inspired-spec-format-and-spec-aware-verification.md
+- Spec: .rpi/specs/spec-format.md
