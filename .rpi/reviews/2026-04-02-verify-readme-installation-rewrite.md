@@ -2,7 +2,6 @@
 date: 2026-04-02T01:12:51+02:00
 topic: "readme-installation-rewrite"
 tags: [verify]
-status: draft
 ---
 
 # Verification Report: readme-installation-rewrite

@@ -2,7 +2,6 @@
 date: 2026-03-23
 topic: "agent-skills-compatibility"
 tags: [review]
-status: draft
 design: .rpi/designs/2026-03-22-agent-skills-compatibility.md
 spec: .rpi/specs/agent-skills-compatibility.md
 ---

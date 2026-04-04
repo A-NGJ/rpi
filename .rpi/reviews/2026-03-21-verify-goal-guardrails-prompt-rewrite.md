@@ -2,7 +2,6 @@
 date: 2026-03-21T23:18:23+01:00
 topic: "goal-guardrails-prompt-rewrite"
 tags: [verify]
-status: draft
 design: .rpi/designs/2026-03-21-goal-guardrails-prompt-rewrite.md
 plan: .rpi/plans/2026-03-21-goal-guardrails-prompt-rewrite.md
 spec: .rpi/specs/goal-guardrails-prompt-rewrite.md
