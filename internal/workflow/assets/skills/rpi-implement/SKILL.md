@@ -32,14 +32,21 @@ After all phases are complete and verified, announce completion and update the p
 
 ## Worktree Mode
 
-If the worktree implementation agent is available:
-- After pre-review approval, spawn the agent in a worktree with the full context bundle (plan content, spec scenarios, design constraints, file paths to read)
-- On agent completion, spawn the verification agent to check the worktree branch
-- If verification passes and no manual verification items exist in the plan, merge the worktree branch automatically
-- If manual verification items exist, present the diff and wait for user approval before merging
-- After merge, update plan status to complete
+Use worktree isolation for implementation. Spawn an agent using the Agent tool with `isolation: "worktree"` and include the full context bundle in the prompt:
+- Plan content with remaining phases and tasks
+- Spec scenarios the implementation must satisfy
+- Design constraints and decisions
+- List of key files to read before starting
 
-If agents are not available, implement in-place on the current branch (default behavior above).
+The agent prompt must instruct it to: execute each remaining phase, write tests first for new code, run success criteria after each phase, commit with descriptive messages matching repo style, and update plan checkboxes.
+
+After the agent completes:
+- Spawn the verification agent (`subagent_type: "rpi-verify"`) to check the worktree branch
+- If verification passes and no manual verification items exist in the plan, squash-merge the worktree branch automatically
+- If manual verification items exist, present the diff and wait for user approval before squash-merging
+- After merge, remove the worktree and its branch, then update plan status to complete
+
+If worktree mode fails, fall back to in-place implementation on the current branch.
 
 ## Principles
 

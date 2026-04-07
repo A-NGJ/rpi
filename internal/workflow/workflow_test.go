@@ -496,16 +496,14 @@ func TestInstallAgents_InstallsAllAgents(t *testing.T) {
 	if err != nil {
 		t.Fatalf("InstallAgents error: %v", err)
 	}
-	if count != 2 {
-		t.Errorf("expected 2 agent files installed, got %d", count)
+	if count != 1 {
+		t.Errorf("expected 1 agent file installed, got %d", count)
 	}
 
-	// Verify both agent files exist
-	for _, name := range []string{"rpi-verify.md", "rpi-implement-worktree.md"} {
-		path := filepath.Join(agentsDir, name)
-		if _, err := os.Stat(path); err != nil {
-			t.Errorf("agent file %s not installed: %v", name, err)
-		}
+	// Verify agent file exists
+	path := filepath.Join(agentsDir, "rpi-verify.md")
+	if _, err := os.Stat(path); err != nil {
+		t.Errorf("agent file rpi-verify.md not installed: %v", err)
 	}
 }
 

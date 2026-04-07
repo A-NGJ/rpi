@@ -308,14 +308,12 @@ func TestInitInstallsAgents(t *testing.T) {
 
 	// Verify agent files in .claude/agents/
 	agentsDir := filepath.Join(dir, ".claude", "agents")
-	for _, name := range []string{"rpi-verify.md", "rpi-implement-worktree.md"} {
-		if _, err := os.Stat(filepath.Join(agentsDir, name)); err != nil {
-			t.Errorf(".claude/agents/%s not installed", name)
-		}
+	if _, err := os.Stat(filepath.Join(agentsDir, "rpi-verify.md")); err != nil {
+		t.Errorf(".claude/agents/rpi-verify.md not installed")
 	}
 
 	output := buf.String()
-	if !strings.Contains(output, "Installed 2 agent files") {
+	if !strings.Contains(output, "Installed 1 agent file") {
 		t.Error("output missing agent install confirmation")
 	}
 }
