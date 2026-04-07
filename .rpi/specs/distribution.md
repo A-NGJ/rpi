@@ -43,6 +43,16 @@ Given an unsupported OS or architecture
 When the install script runs
 Then it exits with a clear "Unsupported OS" error message
 
+### Upgrade command updates binary to latest release
+Given a newer version is available on GitHub Releases
+When the user runs `rpi upgrade`
+Then the correct binary is downloaded, checksum-verified, and replaces the current one
+
+### Upgrade command reports when already up to date
+Given the installed version matches the latest GitHub Release
+When the user runs `rpi upgrade`
+Then the output says the binary is already up to date without modifying it
+
 ## Constraints
 - All binaries statically linked (CGO_ENABLED=0)
 - SHA256 checksums for every artifact
