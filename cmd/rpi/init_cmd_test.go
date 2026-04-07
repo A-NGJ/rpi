@@ -813,7 +813,7 @@ func TestConfigureHooksAddsAllHooks(t *testing.T) {
 		[]byte(`{"permissions":{"allow":["mcp__rpi__*"]}}`), 0644)
 
 	buf := new(bytes.Buffer)
-	configureHooks(buf, claudeDir, false)
+	configureHooks(buf, claudeDir)
 
 	data, err := os.ReadFile(filepath.Join(claudeDir, "settings.json"))
 	if err != nil {
@@ -879,8 +879,8 @@ func TestConfigureHooksIdempotent(t *testing.T) {
 	os.WriteFile(filepath.Join(claudeDir, "settings.json"), []byte(`{}`), 0644)
 
 	buf := new(bytes.Buffer)
-	configureHooks(buf, claudeDir, false)
-	configureHooks(buf, claudeDir, false)
+	configureHooks(buf, claudeDir)
+	configureHooks(buf, claudeDir)
 
 	data, _ := os.ReadFile(filepath.Join(claudeDir, "settings.json"))
 	content := string(data)
@@ -904,7 +904,7 @@ func TestConfigureHooksMergesExisting(t *testing.T) {
 		[]byte(`{"hooks":{"PreToolUse":[{"type":"command","command":"echo pre"}]}}`), 0644)
 
 	buf := new(bytes.Buffer)
-	configureHooks(buf, claudeDir, false)
+	configureHooks(buf, claudeDir)
 
 	data, _ := os.ReadFile(filepath.Join(claudeDir, "settings.json"))
 	content := string(data)
@@ -922,7 +922,7 @@ func TestConfigureHooksMergesExisting(t *testing.T) {
 	}
 }
 
-func TestConfigureHooksForceReplacesOldFormat(t *testing.T) {
+func TestConfigureHooksReplacesOldFormat(t *testing.T) {
 	dir := t.TempDir()
 	claudeDir := filepath.Join(dir, ".claude")
 	os.MkdirAll(claudeDir, 0755)
@@ -932,14 +932,14 @@ func TestConfigureHooksForceReplacesOldFormat(t *testing.T) {
 		[]byte(`{"hooks":{"PostCompact":[{"type":"command","command":"cat <<'HOOK_EOF'\nrpi_context_essentials\nHOOK_EOF"}]}}`), 0644)
 
 	buf := new(bytes.Buffer)
-	configureHooks(buf, claudeDir, true)
+	configureHooks(buf, claudeDir)
 
 	data, _ := os.ReadFile(filepath.Join(claudeDir, "settings.json"))
 	content := string(data)
 
 	// Old entry should be replaced with correct structure
 	if !strings.Contains(content, `"matcher"`) {
-		t.Error("force should replace old-format entry with matcher+hooks structure")
+		t.Error("should replace old-format entry with matcher+hooks structure")
 	}
 	// Marker should appear exactly once (not duplicated)
 	if count := strings.Count(content, "rpi_context_essentials"); count != 1 {

@@ -9,7 +9,6 @@ import (
 )
 
 func resetUpdateFlags() {
-	updateForce = false
 	updateNoClaudeMD = false
 }
 
@@ -71,7 +70,7 @@ func TestUpdateCreatesMissingDirs(t *testing.T) {
 	}
 }
 
-func TestUpdateDoesNotOverwriteWithoutForce(t *testing.T) {
+func TestUpdateBacksUpModifiedFiles(t *testing.T) {
 	dir := t.TempDir()
 
 	// Init
@@ -87,57 +86,32 @@ func TestUpdateDoesNotOverwriteWithoutForce(t *testing.T) {
 	skillFile := filepath.Join(dir, ".claude", "skills", "rpi-plan", "SKILL.md")
 	os.WriteFile(skillFile, []byte("custom content"), 0644)
 
-	// Update without --force
+	// Update — should overwrite and create backup
 	resetUpdateFlags()
 	buf = new(bytes.Buffer)
 	cmd = updateCmd
 	cmd.SetOut(buf)
 	if err := cmd.RunE(cmd, []string{dir}); err != nil {
 		t.Fatalf("update error: %v", err)
-	}
-
-	// File should NOT be overwritten
-	data, _ := os.ReadFile(skillFile)
-	if string(data) != "custom content" {
-		t.Error("update without --force should not overwrite existing files")
-	}
-}
-
-func TestUpdateForceOverwritesFiles(t *testing.T) {
-	dir := t.TempDir()
-
-	// Init
-	resetInitFlags()
-	buf := new(bytes.Buffer)
-	cmd := initCmd
-	cmd.SetOut(buf)
-	if err := cmd.RunE(cmd, []string{dir}); err != nil {
-		t.Fatalf("init failed: %v", err)
-	}
-
-	// Modify a skill file
-	skillFile := filepath.Join(dir, ".claude", "skills", "rpi-plan", "SKILL.md")
-	os.WriteFile(skillFile, []byte("custom content"), 0644)
-
-	// Update with --force
-	resetUpdateFlags()
-	updateForce = true
-	buf = new(bytes.Buffer)
-	cmd = updateCmd
-	cmd.SetOut(buf)
-	if err := cmd.RunE(cmd, []string{dir}); err != nil {
-		t.Fatalf("update --force error: %v", err)
 	}
 
 	// File should be overwritten
 	data, _ := os.ReadFile(skillFile)
 	if string(data) == "custom content" {
-		t.Error("update --force should overwrite existing files")
+		t.Error("update should overwrite modified files")
+	}
+
+	// Backup should exist with original content
+	bakData, err := os.ReadFile(skillFile + ".bak")
+	if err != nil {
+		t.Fatal("backup file not created")
+	}
+	if string(bakData) != "custom content" {
+		t.Error("backup should contain original custom content")
 	}
 }
 
-// spec:IU-3
-func TestUpdatePreservesRulesFileWithoutForce(t *testing.T) {
+func TestUpdateSkipsIdenticalFiles(t *testing.T) {
 	dir := t.TempDir()
 
 	// Init
@@ -149,11 +123,7 @@ func TestUpdatePreservesRulesFileWithoutForce(t *testing.T) {
 		t.Fatalf("init failed: %v", err)
 	}
 
-	// Modify CLAUDE.md
-	claudeMD := filepath.Join(dir, "CLAUDE.md")
-	os.WriteFile(claudeMD, []byte("custom content"), 0644)
-
-	// Update without --force
+	// Update with no modifications — should not create backups
 	resetUpdateFlags()
 	buf = new(bytes.Buffer)
 	cmd = updateCmd
@@ -162,15 +132,14 @@ func TestUpdatePreservesRulesFileWithoutForce(t *testing.T) {
 		t.Fatalf("update error: %v", err)
 	}
 
-	// CLAUDE.md should be untouched
-	data, _ := os.ReadFile(claudeMD)
-	if string(data) != "custom content" {
-		t.Error("update without --force should not overwrite CLAUDE.md")
+	// No .bak files should exist
+	skillBak := filepath.Join(dir, ".claude", "skills", "rpi-plan", "SKILL.md.bak")
+	if _, err := os.Stat(skillBak); err == nil {
+		t.Error("no backup should be created for identical files")
 	}
 }
 
-// spec:IU-4
-func TestUpdateForceOverwritesRulesFile(t *testing.T) {
+func TestUpdateBacksUpModifiedRulesFile(t *testing.T) {
 	dir := t.TempDir()
 
 	// Init
@@ -186,23 +155,31 @@ func TestUpdateForceOverwritesRulesFile(t *testing.T) {
 	claudeMD := filepath.Join(dir, "CLAUDE.md")
 	os.WriteFile(claudeMD, []byte("custom content"), 0644)
 
-	// Update with --force
+	// Update — should overwrite and create backup
 	resetUpdateFlags()
-	updateForce = true
 	buf = new(bytes.Buffer)
 	cmd = updateCmd
 	cmd.SetOut(buf)
 	if err := cmd.RunE(cmd, []string{dir}); err != nil {
-		t.Fatalf("update --force error: %v", err)
+		t.Fatalf("update error: %v", err)
 	}
 
 	// CLAUDE.md should be overwritten with template
 	data, _ := os.ReadFile(claudeMD)
 	if string(data) == "custom content" {
-		t.Error("update --force should overwrite CLAUDE.md with template")
+		t.Error("update should overwrite CLAUDE.md with template")
 	}
 	if !strings.Contains(string(data), "# CLAUDE.md") {
-		t.Error("CLAUDE.md missing template header after update --force")
+		t.Error("CLAUDE.md missing template header after update")
+	}
+
+	// Backup should exist
+	bakData, err := os.ReadFile(claudeMD + ".bak")
+	if err != nil {
+		t.Fatal("CLAUDE.md.bak not created")
+	}
+	if string(bakData) != "custom content" {
+		t.Error("backup should contain original custom content")
 	}
 }
 
@@ -318,7 +295,6 @@ func TestUpdatePreservesExistingCommandsDir(t *testing.T) {
 
 	// Run update
 	resetUpdateFlags()
-	updateForce = true
 	buf := new(bytes.Buffer)
 	cmd := updateCmd
 	cmd.SetOut(buf)

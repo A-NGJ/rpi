@@ -133,7 +133,7 @@ func TestSkillDescriptionValid(t *testing.T) {
 func TestInstallSkills_AgentsOnly(t *testing.T) {
 	skillsDir := filepath.Join(t.TempDir(), ".agents", "skills")
 
-	count, err := InstallSkills(skillsDir, TargetAgentsOnly, false)
+	count, _, err := InstallSkills(skillsDir, TargetAgentsOnly)
 	if err != nil {
 		t.Fatalf("InstallSkills error: %v", err)
 	}
@@ -169,7 +169,7 @@ func TestInstallSkills_AgentsOnly(t *testing.T) {
 func TestInstallSkills_Claude(t *testing.T) {
 	skillsDir := filepath.Join(t.TempDir(), ".claude", "skills")
 
-	count, err := InstallSkills(skillsDir, TargetClaude, false)
+	count, _, err := InstallSkills(skillsDir, TargetClaude)
 	if err != nil {
 		t.Fatalf("InstallSkills error: %v", err)
 	}
@@ -251,7 +251,7 @@ func TestInstallSkills_Claude(t *testing.T) {
 func TestInstallSkills_OpenCode(t *testing.T) {
 	skillsDir := filepath.Join(t.TempDir(), ".opencode", "skills")
 
-	_, err := InstallSkills(skillsDir, TargetOpenCode, false)
+	_, _, err := InstallSkills(skillsDir, TargetOpenCode)
 	if err != nil {
 		t.Fatalf("InstallSkills error: %v", err)
 	}
@@ -271,8 +271,8 @@ func TestInstallSkills_ContentParity(t *testing.T) {
 	agentsDir := filepath.Join(t.TempDir(), "agents")
 	claudeDir := filepath.Join(t.TempDir(), "claude")
 
-	InstallSkills(agentsDir, TargetAgentsOnly, false)
-	InstallSkills(claudeDir, TargetClaude, false)
+	InstallSkills(agentsDir, TargetAgentsOnly)
+	InstallSkills(claudeDir, TargetClaude)
 
 	entries, err := os.ReadDir(agentsDir)
 	if err != nil {
@@ -299,11 +299,11 @@ func TestInstallSkills_ContentParity(t *testing.T) {
 	}
 }
 
-func TestInstallSkills_NoOverwriteWithoutForce(t *testing.T) {
+func TestInstallSkills_BacksUpModifiedFiles(t *testing.T) {
 	skillsDir := filepath.Join(t.TempDir(), "skills")
 
 	// First install
-	_, err := InstallSkills(skillsDir, TargetAgentsOnly, false)
+	_, _, err := InstallSkills(skillsDir, TargetAgentsOnly)
 	if err != nil {
 		t.Fatalf("first install: %v", err)
 	}
@@ -314,27 +314,59 @@ func TestInstallSkills_NoOverwriteWithoutForce(t *testing.T) {
 		t.Fatalf("modify file: %v", err)
 	}
 
-	// Second install without force — should not overwrite
-	_, err = InstallSkills(skillsDir, TargetAgentsOnly, false)
+	// Second install — should overwrite and create backup
+	installed, backedUp, err := InstallSkills(skillsDir, TargetAgentsOnly)
 	if err != nil {
 		t.Fatalf("second install: %v", err)
 	}
-	data, _ := os.ReadFile(modPath)
-	if string(data) != "custom content" {
-		t.Error("file should not be overwritten without force")
+	if installed != 1 {
+		t.Errorf("expected 1 file installed (modified one), got %d", installed)
+	}
+	if backedUp != 1 {
+		t.Errorf("expected 1 backup, got %d", backedUp)
 	}
 
-	// Third install with force — should overwrite
-	count, err := InstallSkills(skillsDir, TargetAgentsOnly, true)
+	// Original content should be in .bak
+	bakData, err := os.ReadFile(modPath + ".bak")
 	if err != nil {
-		t.Fatalf("force install: %v", err)
+		t.Fatal("backup file not created")
 	}
-	if count != 10 {
-		t.Errorf("force install: expected 10 files, got %d", count)
+	if string(bakData) != "custom content" {
+		t.Error("backup should contain original custom content")
 	}
-	data, _ = os.ReadFile(modPath)
+
+	// File should now have embedded content
+	data, _ := os.ReadFile(modPath)
 	if string(data) == "custom content" {
-		t.Error("file should be overwritten with force")
+		t.Error("file should be overwritten with embedded version")
+	}
+}
+
+func TestInstallSkills_SkipsIdenticalFiles(t *testing.T) {
+	skillsDir := filepath.Join(t.TempDir(), "skills")
+
+	// First install
+	_, _, err := InstallSkills(skillsDir, TargetAgentsOnly)
+	if err != nil {
+		t.Fatalf("first install: %v", err)
+	}
+
+	// Second install with no modifications — should skip all
+	installed, backedUp, err := InstallSkills(skillsDir, TargetAgentsOnly)
+	if err != nil {
+		t.Fatalf("second install: %v", err)
+	}
+	if installed != 0 {
+		t.Errorf("expected 0 files installed (all identical), got %d", installed)
+	}
+	if backedUp != 0 {
+		t.Errorf("expected 0 backups (all identical), got %d", backedUp)
+	}
+
+	// No .bak files should exist
+	bakPath := filepath.Join(skillsDir, "rpi-research", "SKILL.md.bak")
+	if _, err := os.Stat(bakPath); err == nil {
+		t.Error("no backup should be created for identical files")
 	}
 }
 
@@ -460,7 +492,7 @@ func TestPromptStructure_NoToolReferences(t *testing.T) {
 func TestInstallAgents_InstallsAllAgents(t *testing.T) {
 	agentsDir := filepath.Join(t.TempDir(), ".claude", "agents")
 
-	count, err := InstallAgents(agentsDir, false)
+	count, _, err := InstallAgents(agentsDir)
 	if err != nil {
 		t.Fatalf("InstallAgents error: %v", err)
 	}
@@ -477,11 +509,11 @@ func TestInstallAgents_InstallsAllAgents(t *testing.T) {
 	}
 }
 
-func TestInstallAgents_NoOverwriteWithoutForce(t *testing.T) {
+func TestInstallAgents_BacksUpModifiedFiles(t *testing.T) {
 	agentsDir := filepath.Join(t.TempDir(), "agents")
 
 	// First install
-	_, err := InstallAgents(agentsDir, false)
+	_, _, err := InstallAgents(agentsDir)
 	if err != nil {
 		t.Fatalf("first install: %v", err)
 	}
@@ -492,43 +524,51 @@ func TestInstallAgents_NoOverwriteWithoutForce(t *testing.T) {
 		t.Fatalf("modify file: %v", err)
 	}
 
-	// Second install without force — should not overwrite
-	_, err = InstallAgents(agentsDir, false)
+	// Second install — should overwrite and create backup
+	installed, backedUp, err := InstallAgents(agentsDir)
 	if err != nil {
 		t.Fatalf("second install: %v", err)
 	}
+	if installed != 1 {
+		t.Errorf("expected 1 file installed, got %d", installed)
+	}
+	if backedUp != 1 {
+		t.Errorf("expected 1 backup, got %d", backedUp)
+	}
+
+	bakData, err := os.ReadFile(modPath + ".bak")
+	if err != nil {
+		t.Fatal("backup file not created")
+	}
+	if string(bakData) != "custom content" {
+		t.Error("backup should contain original custom content")
+	}
+
 	data, _ := os.ReadFile(modPath)
-	if string(data) != "custom content" {
-		t.Error("file should not be overwritten without force")
+	if string(data) == "custom content" {
+		t.Error("file should be overwritten with embedded version")
 	}
 }
 
-func TestInstallAgents_ForceOverwrites(t *testing.T) {
+func TestInstallAgents_SkipsIdenticalFiles(t *testing.T) {
 	agentsDir := filepath.Join(t.TempDir(), "agents")
 
 	// First install
-	_, err := InstallAgents(agentsDir, false)
+	_, _, err := InstallAgents(agentsDir)
 	if err != nil {
 		t.Fatalf("first install: %v", err)
 	}
 
-	// Modify a file
-	modPath := filepath.Join(agentsDir, "rpi-verify.md")
-	if err := os.WriteFile(modPath, []byte("custom content"), 0644); err != nil {
-		t.Fatalf("modify file: %v", err)
-	}
-
-	// Install with force — should overwrite
-	count, err := InstallAgents(agentsDir, true)
+	// Second install — all identical
+	installed, backedUp, err := InstallAgents(agentsDir)
 	if err != nil {
-		t.Fatalf("force install: %v", err)
+		t.Fatalf("second install: %v", err)
 	}
-	if count != 2 {
-		t.Errorf("force install: expected 2 files, got %d", count)
+	if installed != 0 {
+		t.Errorf("expected 0 files installed, got %d", installed)
 	}
-	data, _ := os.ReadFile(modPath)
-	if string(data) == "custom content" {
-		t.Error("file should be overwritten with force")
+	if backedUp != 0 {
+		t.Errorf("expected 0 backups, got %d", backedUp)
 	}
 }
 
