@@ -344,6 +344,64 @@ func TestUpdatePreservesExistingCommandsDir(t *testing.T) {
 	}
 }
 
+func TestUpdateSyncsAgents(t *testing.T) {
+	dir := t.TempDir()
+
+	// Init
+	resetInitFlags()
+	buf := new(bytes.Buffer)
+	cmd := initCmd
+	cmd.SetOut(buf)
+	if err := cmd.RunE(cmd, []string{dir}); err != nil {
+		t.Fatalf("init failed: %v", err)
+	}
+
+	// Delete an agent file
+	os.Remove(filepath.Join(dir, ".claude", "agents", "rpi-verify.md"))
+
+	// Update should restore it
+	resetUpdateFlags()
+	buf = new(bytes.Buffer)
+	cmd = updateCmd
+	cmd.SetOut(buf)
+	if err := cmd.RunE(cmd, []string{dir}); err != nil {
+		t.Fatalf("update error: %v", err)
+	}
+
+	if _, err := os.Stat(filepath.Join(dir, ".claude", "agents", "rpi-verify.md")); err != nil {
+		t.Error("rpi-verify.md not restored by update")
+	}
+}
+
+func TestUpdateAgentsOnlyNoAgents(t *testing.T) {
+	dir := t.TempDir()
+
+	// Init with agents-only
+	resetInitFlags()
+	initTarget = "agents-only"
+	buf := new(bytes.Buffer)
+	cmd := initCmd
+	cmd.SetOut(buf)
+	if err := cmd.RunE(cmd, []string{dir}); err != nil {
+		t.Fatalf("init failed: %v", err)
+	}
+
+	// Update
+	resetUpdateFlags()
+	buf = new(bytes.Buffer)
+	cmd = updateCmd
+	cmd.SetOut(buf)
+	if err := cmd.RunE(cmd, []string{dir}); err != nil {
+		t.Fatalf("update error: %v", err)
+	}
+
+	// No agent definitions should be created
+	agentsDir := filepath.Join(dir, ".agents", "agents")
+	if _, err := os.Stat(agentsDir); err == nil {
+		t.Error("agents-only update should not create agent definitions")
+	}
+}
+
 func TestUpdateDetectsAgentsOnlyTarget(t *testing.T) {
 	dir := t.TempDir()
 

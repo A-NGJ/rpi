@@ -87,7 +87,7 @@ func resolveTargetConfig(t string) (targetConfig, error) {
 	case "claude":
 		return targetConfig{
 			toolDir:   ".claude",
-			subdirs:   []string{"skills", "hooks"},
+			subdirs:   []string{"skills", "hooks", "agents"},
 			rulesFile: "CLAUDE.md",
 			target:    workflow.TargetClaude,
 		}, nil

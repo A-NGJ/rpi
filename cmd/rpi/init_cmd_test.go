@@ -35,15 +35,13 @@ func TestInitCreatesAllDirs(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	// AS-14: no .claude/commands/ or .claude/agents/
-	for _, d := range []string{"commands", "agents"} {
-		if _, err := os.Stat(filepath.Join(dir, ".claude", d)); err == nil {
-			t.Errorf(".claude/%s should not be created (AS-14)", d)
-		}
+	// AS-14: no .claude/commands/
+	if _, err := os.Stat(filepath.Join(dir, ".claude", "commands")); err == nil {
+		t.Error(".claude/commands should not be created (AS-14)")
 	}
 
-	// Verify .claude/ subdirs (skills, hooks only)
-	for _, d := range []string{"skills", "hooks"} {
+	// Verify .claude/ subdirs (skills, hooks, agents)
+	for _, d := range []string{"skills", "hooks", "agents"} {
 		path := filepath.Join(dir, ".claude", d)
 		info, err := os.Stat(path)
 		if err != nil {
@@ -301,6 +299,46 @@ func TestInitInstallsSkills(t *testing.T) {
 	}
 }
 
+func TestInitInstallsAgents(t *testing.T) {
+	dir := t.TempDir()
+	buf, err := runInitInDir(t, dir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Verify agent files in .claude/agents/
+	agentsDir := filepath.Join(dir, ".claude", "agents")
+	for _, name := range []string{"rpi-verify.md", "rpi-implement-worktree.md"} {
+		if _, err := os.Stat(filepath.Join(agentsDir, name)); err != nil {
+			t.Errorf(".claude/agents/%s not installed", name)
+		}
+	}
+
+	output := buf.String()
+	if !strings.Contains(output, "Installed 2 agent files") {
+		t.Error("output missing agent install confirmation")
+	}
+}
+
+func TestInitAgentsOnlyNoAgentDefs(t *testing.T) {
+	dir := t.TempDir()
+
+	resetInitFlags()
+	initTarget = "agents-only"
+	buf := new(bytes.Buffer)
+	cmd := initCmd
+	cmd.SetOut(buf)
+	if err := cmd.RunE(cmd, []string{dir}); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// No agent definitions should exist for agents-only target
+	agentsDir := filepath.Join(dir, ".agents", "agents")
+	if _, err := os.Stat(agentsDir); err == nil {
+		t.Error("agents-only target should not have agent definitions")
+	}
+}
+
 func TestInitSucceedsWithEmptyDir(t *testing.T) {
 	dir := t.TempDir()
 
@@ -328,7 +366,7 @@ func TestInitOpenCode(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	// AS-14: no commands/ or agents/ dirs
+	// No commands/ or agents/ for opencode (agents are Claude-only)
 	for _, d := range []string{"commands", "agents"} {
 		if _, err := os.Stat(filepath.Join(dir, ".opencode", d)); err == nil {
 			t.Errorf(".opencode/%s should not be created", d)

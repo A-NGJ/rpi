@@ -66,6 +66,18 @@ func syncProject(opts syncOptions) error {
 		logSuccess(opts.w, fmt.Sprintf("Installed %d skill files", skillCount))
 	}
 
+	// Install agent definitions (Claude target only)
+	if opts.cfg.target == workflow.TargetClaude {
+		agentsDir := filepath.Join(opts.targetDir, opts.cfg.toolDir, "agents")
+		agentCount, err := workflow.InstallAgents(agentsDir, opts.force)
+		if err != nil {
+			return fmt.Errorf("install agents: %w", err)
+		}
+		if agentCount > 0 {
+			logSuccess(opts.w, fmt.Sprintf("Installed %d agent files", agentCount))
+		}
+	}
+
 	// Install scaffold templates
 	templatesDir := filepath.Join(rpiDir, "templates")
 	tplCount, err := workflow.InstallTemplates(templatesDir, opts.force)
