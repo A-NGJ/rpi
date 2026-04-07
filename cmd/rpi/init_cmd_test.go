@@ -764,7 +764,7 @@ func TestInitMCPAddCommandShape(t *testing.T) {
 	}
 }
 
-func TestConfigureHooksAddsPostCompact(t *testing.T) {
+func TestConfigureHooksAddsAllHooks(t *testing.T) {
 	dir := t.TempDir()
 	claudeDir := filepath.Join(dir, ".claude")
 	os.MkdirAll(claudeDir, 0755)
@@ -781,12 +781,24 @@ func TestConfigureHooksAddsPostCompact(t *testing.T) {
 		t.Fatalf("read settings.json: %v", err)
 	}
 	content := string(data)
-	if !strings.Contains(content, "PostCompact") {
-		t.Error("settings.json missing PostCompact hook")
+
+	// All three hooks should be present
+	for _, check := range []struct {
+		event  string
+		marker string
+	}{
+		{"PostCompact", "rpi_context_essentials"},
+		{"SessionStart", "rpi_session_resume"},
+		{"Stop", "rpi_suggest_next"},
+	} {
+		if !strings.Contains(content, check.event) {
+			t.Errorf("settings.json missing %s hook", check.event)
+		}
+		if !strings.Contains(content, check.marker) {
+			t.Errorf("%s hook missing %s reference", check.event, check.marker)
+		}
 	}
-	if !strings.Contains(content, "rpi_context_essentials") {
-		t.Error("PostCompact hook missing rpi_context_essentials reference")
-	}
+
 	// Verify permissions weren't clobbered
 	if !strings.Contains(content, "mcp__rpi__*") {
 		t.Error("permissions lost after configureHooks")
@@ -804,9 +816,14 @@ func TestConfigureHooksIdempotent(t *testing.T) {
 	configureHooks(buf, claudeDir)
 
 	data, _ := os.ReadFile(filepath.Join(claudeDir, "settings.json"))
-	count := strings.Count(string(data), "rpi_context_essentials")
-	if count != 1 {
-		t.Errorf("expected 1 rpi_context_essentials reference, got %d", count)
+	content := string(data)
+
+	// Each marker should appear exactly once
+	for _, marker := range []string{"rpi_context_essentials", "rpi_session_resume", "rpi_suggest_next"} {
+		count := strings.Count(content, marker)
+		if count != 1 {
+			t.Errorf("expected 1 %s reference, got %d", marker, count)
+		}
 	}
 }
 
@@ -829,5 +846,11 @@ func TestConfigureHooksMergesExisting(t *testing.T) {
 	}
 	if !strings.Contains(content, "PostCompact") {
 		t.Error("PostCompact hook not added")
+	}
+	if !strings.Contains(content, "SessionStart") {
+		t.Error("SessionStart hook not added")
+	}
+	if !strings.Contains(content, "Stop") {
+		t.Error("Stop hook not added")
 	}
 }

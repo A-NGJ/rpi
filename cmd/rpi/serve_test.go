@@ -401,9 +401,11 @@ func TestIntegration_AllToolsRegistered(t *testing.T) {
 		"rpi_verify_completeness",
 		"rpi_verify_markers",
 		"rpi_verify_spec",
+		"rpi_context_essentials",
+		"rpi_session_resume",
+		"rpi_suggest_next",
 		"rpi_archive_check_refs",
 		"rpi_archive_move",
-		"rpi_context_essentials",
 	}
 
 	if len(res.Tools) != len(expectedTools) {

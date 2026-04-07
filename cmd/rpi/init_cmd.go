@@ -293,9 +293,38 @@ func configureSettings(w io.Writer, toolDirPath string) {
 	logSuccess(w, "Configured auto-allow for RPI MCP tools in settings.json")
 }
 
-// configureHooks ensures .claude/settings.json contains a PostCompact hook
-// that reminds the assistant to call rpi_context_essentials after compaction.
-// It merges into any existing settings/hooks rather than overwriting.
+// hookDef defines a hook to configure in .claude/settings.json.
+type hookDef struct {
+	event   string // Hook event name (e.g., "PostCompact")
+	marker  string // Unique string to detect if already configured
+	command string // Shell command for the hook
+	logMsg  string // Success log message
+}
+
+// rpiHooks defines all hooks that configureHooks will ensure are present.
+var rpiHooks = []hookDef{
+	{
+		event:   "PostCompact",
+		marker:  "rpi_context_essentials",
+		command: "cat <<'HOOK_EOF'\nIMPORTANT: Context was compacted. Call the rpi_context_essentials MCP tool to restore your implementation context (active plan phase, spec scenarios, constraints).\nHOOK_EOF",
+		logMsg:  "Configured PostCompact hook for context preservation",
+	},
+	{
+		event:   "SessionStart",
+		marker:  "rpi_session_resume",
+		command: "cat <<'HOOK_EOF'\nCall the rpi_session_resume MCP tool to see active work and suggested next steps.\nHOOK_EOF",
+		logMsg:  "Configured SessionStart hook for session resume",
+	},
+	{
+		event:   "Stop",
+		marker:  "rpi_suggest_next",
+		command: "cat <<'HOOK_EOF'\nCall the rpi_suggest_next MCP tool to determine the appropriate next pipeline step.\nHOOK_EOF",
+		logMsg:  "Configured Stop hook for pipeline suggestions",
+	},
+}
+
+// configureHooks ensures .claude/settings.json contains RPI hooks
+// (PostCompact, SessionStart, Stop). Merges into existing settings/hooks.
 func configureHooks(w io.Writer, toolDirPath string) {
 	settingsPath := filepath.Join(toolDirPath, "settings.json")
 
@@ -317,30 +346,39 @@ func configureHooks(w io.Writer, toolDirPath string) {
 		}
 	}
 
-	// Check if PostCompact already has our entry
-	const marker = "rpi_context_essentials"
-	if pcRaw, ok := hooks["PostCompact"]; ok {
-		if strings.Contains(string(pcRaw), marker) {
-			return // already configured
+	added := 0
+	for _, h := range rpiHooks {
+		// Skip if already configured
+		if existing, ok := hooks[h.event]; ok {
+			if strings.Contains(string(existing), h.marker) {
+				continue
+			}
 		}
+
+		// Build the hook entry
+		hookEntry := map[string]string{
+			"type":    "command",
+			"command": h.command,
+		}
+
+		// Append to existing hooks for this event or create new array
+		var entries []json.RawMessage
+		if existing, ok := hooks[h.event]; ok {
+			json.Unmarshal(existing, &entries)
+		}
+		entryJSON, _ := json.Marshal(hookEntry)
+		entries = append(entries, json.RawMessage(entryJSON))
+
+		entriesJSON, _ := json.Marshal(entries)
+		hooks[h.event] = json.RawMessage(entriesJSON)
+
+		logSuccess(w, h.logMsg+" in settings.json")
+		added++
 	}
 
-	// Build the hook entry
-	hookEntry := map[string]string{
-		"type":    "command",
-		"command": "cat <<'HOOK_EOF'\nIMPORTANT: Context was compacted. Call the rpi_context_essentials MCP tool to restore your implementation context (active plan phase, spec scenarios, constraints).\nHOOK_EOF",
+	if added == 0 {
+		return // all hooks already configured
 	}
-
-	// Append to existing PostCompact hooks or create new array
-	var postCompact []json.RawMessage
-	if pcRaw, ok := hooks["PostCompact"]; ok {
-		json.Unmarshal(pcRaw, &postCompact)
-	}
-	entryJSON, _ := json.Marshal(hookEntry)
-	postCompact = append(postCompact, json.RawMessage(entryJSON))
-
-	pcJSON, _ := json.Marshal(postCompact)
-	hooks["PostCompact"] = json.RawMessage(pcJSON)
 
 	hooksJSON, _ := json.Marshal(hooks)
 	raw["hooks"] = json.RawMessage(hooksJSON)
@@ -355,5 +393,4 @@ func configureHooks(w io.Writer, toolDirPath string) {
 		logWarning(w, fmt.Sprintf("Failed to write %s: %v", settingsPath, err))
 		return
 	}
-	logSuccess(w, "Configured PostCompact hook for context preservation in settings.json")
 }

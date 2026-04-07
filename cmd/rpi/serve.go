@@ -170,6 +170,17 @@ func registerTools(s *mcp.Server) {
 		Description: mcpDescription(contextCmd),
 	}, handleContextEssentials)
 
+	// Session awareness
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "rpi_session_resume",
+		Description: mcpDescription(resumeCmd),
+	}, handleSessionResume)
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "rpi_suggest_next",
+		Description: mcpDescription(nextCmd),
+	}, handleSuggestNext)
+
 	// Archive (1:1 subcommand mappings)
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_archive_check_refs",
@@ -301,6 +312,10 @@ type verifySpecInput struct {
 
 type contextInput struct {
 	PlanPath string `json:"plan_path,omitempty" jsonschema:"path to a specific plan file (omit to auto-detect the most recent active plan)"`
+}
+
+type suggestInput struct {
+	ArtifactPath string `json:"artifact_path,omitempty" jsonschema:"path to a specific artifact (omit to auto-detect from all artifacts)"`
 }
 
 type archiveCheckRefsInput struct {
@@ -525,6 +540,22 @@ func handleVerifySpec(_ context.Context, _ *mcp.CallToolRequest, input verifySpe
 
 func handleContextEssentials(_ context.Context, _ *mcp.CallToolRequest, input contextInput) (*mcp.CallToolResult, any, error) {
 	result, err := assembleContext(rpiDirFlag, input.PlanPath)
+	if err != nil {
+		return nil, nil, err
+	}
+	return jsonResult(result)
+}
+
+func handleSessionResume(_ context.Context, _ *mcp.CallToolRequest, _ emptyInput) (*mcp.CallToolResult, any, error) {
+	result, err := assembleResume(rpiDirFlag)
+	if err != nil {
+		return nil, nil, err
+	}
+	return jsonResult(result)
+}
+
+func handleSuggestNext(_ context.Context, _ *mcp.CallToolRequest, input suggestInput) (*mcp.CallToolResult, any, error) {
+	result, err := suggestNext(rpiDirFlag, input.ArtifactPath)
 	if err != nil {
 		return nil, nil, err
 	}
