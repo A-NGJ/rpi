@@ -1,8 +1,8 @@
 ---
 domain: agent-skills-compatibility
 feature: agent-skills
-last_updated: 2026-04-04T22:30:00+02:00
-updated_by: .rpi/designs/2026-03-22-agent-skills-compatibility.md
+last_updated: 2026-04-07T16:00:00+02:00
+updated_by: .rpi/designs/2026-04-07-skill-metadata-for-read-only-safety.md
 ---
 
 # Agent Skills Compatibility
@@ -43,6 +43,21 @@ Given a project with existing `.claude/commands/` files
 When the user runs `rpi update`
 Then `.claude/commands/` is left untouched and `.claude/skills/` is created or updated
 
+### Read-only skills restricted from file modification
+Given a project initialized for the Claude target
+When inspecting the installed research, verify, and explain skills
+Then their frontmatter includes an allowed-tools field that excludes Write, Edit, and NotebookEdit
+
+### Research skill runs in isolated context
+Given a project initialized for the Claude target
+When inspecting the installed research skill
+Then its frontmatter includes a context field set to fork
+
+### Skill metadata not applied for agents-only target
+Given a project initialized with the agents-only target
+When inspecting the installed research, verify, and explain skills
+Then their frontmatter does not contain allowed-tools or context fields
+
 ## Constraints
 - Follow Agent Skills naming: lowercase, hyphens, no consecutive hyphens, ≤64 chars
 - Support all three targets: claude, opencode, agents-only
@@ -53,4 +68,5 @@ Then `.claude/commands/` is left untouched and `.claude/skills/` is created or u
 - MCP server changes
 - Prompt content rewrites
 - New tool targets beyond claude/opencode
-- Agent Skills `allowed-tools` field
+- Per-skill hooks or agent designations
+- Plugin packaging

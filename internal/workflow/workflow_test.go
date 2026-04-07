@@ -76,8 +76,8 @@ func TestSkillNameMatchesDir(t *testing.T) {
 }
 
 func TestCanonicalSkillsHaveNoToolFields(t *testing.T) {
-	// AS-10: canonical SKILL.md must not contain model, disable-model-invocation, or tools
-	toolFields := []string{"model:", "disable-model-invocation:", "tools:"}
+	// AS-10: canonical SKILL.md must not contain tool-specific fields
+	toolFields := []string{"model:", "disable-model-invocation:", "tools:", "allowed-tools:", "context:"}
 
 	entries, err := fs.ReadDir(assets, "assets/skills")
 	if err != nil {
@@ -158,8 +158,10 @@ func TestInstallSkills_AgentsOnly(t *testing.T) {
 			continue
 		}
 		fm := extractFrontmatter(string(data))
-		if strings.Contains(fm, "model:") {
-			t.Errorf("agents-only %s contains model: field", e.Name())
+		for _, field := range []string{"model:", "allowed-tools:", "context:"} {
+			if strings.Contains(fm, field) {
+				t.Errorf("agents-only %s contains %s field", e.Name(), field)
+			}
 		}
 	}
 }
@@ -197,13 +199,52 @@ func TestInstallSkills_Claude(t *testing.T) {
 		t.Error("rpi-commit should have model: haiku")
 	}
 
-	// Verify rpi-research (no overrides) has no model field
+	// Verify rpi-research has allowed-tools and context: fork
 	researchData, err := os.ReadFile(filepath.Join(skillsDir, "rpi-research", "SKILL.md"))
 	if err != nil {
 		t.Fatalf("read rpi-research: %v", err)
 	}
-	if strings.Contains(extractFrontmatter(string(researchData)), "model:") {
+	researchFM := extractFrontmatter(string(researchData))
+	if !strings.Contains(researchFM, "allowed-tools:") {
+		t.Error("rpi-research should have allowed-tools field")
+	}
+	if !strings.Contains(researchFM, "context: fork") {
+		t.Error("rpi-research should have context: fork")
+	}
+	if !strings.Contains(researchFM, "WebSearch") {
+		t.Error("rpi-research allowed-tools should include WebSearch")
+	}
+	if strings.Contains(researchFM, "model:") {
 		t.Error("rpi-research should not have model field")
+	}
+
+	// Verify rpi-verify has allowed-tools but no context
+	verifyData, err := os.ReadFile(filepath.Join(skillsDir, "rpi-verify", "SKILL.md"))
+	if err != nil {
+		t.Fatalf("read rpi-verify: %v", err)
+	}
+	verifyFM := extractFrontmatter(string(verifyData))
+	if !strings.Contains(verifyFM, "allowed-tools:") {
+		t.Error("rpi-verify should have allowed-tools field")
+	}
+	if strings.Contains(verifyFM, "context:") {
+		t.Error("rpi-verify should not have context field")
+	}
+	if strings.Contains(verifyFM, "WebSearch") {
+		t.Error("rpi-verify allowed-tools should not include WebSearch")
+	}
+
+	// Verify rpi-explain has allowed-tools but no context
+	explainData, err := os.ReadFile(filepath.Join(skillsDir, "rpi-explain", "SKILL.md"))
+	if err != nil {
+		t.Fatalf("read rpi-explain: %v", err)
+	}
+	explainFM := extractFrontmatter(string(explainData))
+	if !strings.Contains(explainFM, "allowed-tools:") {
+		t.Error("rpi-explain should have allowed-tools field")
+	}
+	if strings.Contains(explainFM, "context:") {
+		t.Error("rpi-explain should not have context field")
 	}
 }
 

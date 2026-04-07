@@ -26,12 +26,36 @@ var modelMap = map[string]string{
 	"haiku":  "anthropic/claude-haiku-4-5-20251001",
 }
 
+// readOnlyBuiltinTools lists Claude Code built-in tools available to read-only skills.
+const readOnlyBuiltinTools = "Read,Glob,Grep,Bash,Agent,LSP"
+
+// mcpTools lists all RPI MCP tools with the mcp__rpi__ prefix.
+const mcpTools = "mcp__rpi__rpi_git_context,mcp__rpi__rpi_git_changed_files," +
+	"mcp__rpi__rpi_git_sensitive_check,mcp__rpi__rpi_archive_scan," +
+	"mcp__rpi__rpi_scan,mcp__rpi__rpi_scaffold," +
+	"mcp__rpi__rpi_frontmatter_get,mcp__rpi__rpi_frontmatter_set," +
+	"mcp__rpi__rpi_frontmatter_transition,mcp__rpi__rpi_chain," +
+	"mcp__rpi__rpi_extract,mcp__rpi__rpi_extract_list_sections," +
+	"mcp__rpi__rpi_verify_completeness,mcp__rpi__rpi_verify_markers," +
+	"mcp__rpi__rpi_verify_spec,mcp__rpi__rpi_context_essentials," +
+	"mcp__rpi__rpi_session_resume,mcp__rpi__rpi_suggest_next," +
+	"mcp__rpi__rpi_archive_check_refs,mcp__rpi__rpi_archive_move"
+
+// readOnlyTools is the full allowed-tools value for read-only skills.
+const readOnlyTools = readOnlyBuiltinTools + "," + mcpTools
+
+// researchTools adds web access to the read-only tool set.
+const researchTools = readOnlyTools + ",WebSearch,WebFetch"
+
 // skillOverrides defines per-skill tool-specific frontmatter fields to inject
 // when the target is not agents-only. Skills not listed here get no extra
 // fields.
 var skillOverrides = map[string]map[string]string{
-	"rpi-archive": {"model": "haiku", "disable-model-invocation": "true"},
-	"rpi-commit":  {"model": "haiku"},
+	"rpi-archive":  {"model": "haiku", "disable-model-invocation": "true"},
+	"rpi-commit":   {"model": "haiku"},
+	"rpi-research": {"allowed-tools": researchTools, "context": "fork"},
+	"rpi-verify":   {"allowed-tools": readOnlyTools},
+	"rpi-explain":  {"allowed-tools": readOnlyTools},
 }
 
 //go:embed all:assets
