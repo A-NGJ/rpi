@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/A-NGJ/rpi/internal/frontmatter"
 )
@@ -85,6 +86,9 @@ func buildInfo(doc *frontmatter.Document, path string) ArtifactInfo {
 	}
 	if d, ok := getStr(doc.Frontmatter, "date"); ok {
 		a.Date = &d
+	} else if t, ok := doc.Frontmatter["date"].(time.Time); ok {
+		s := t.Format(time.RFC3339)
+		a.Date = &s
 	}
 	if id, ok := getStr(doc.Frontmatter, "ticket_id"); ok {
 		a.TicketID = &id
