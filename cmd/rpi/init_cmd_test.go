@@ -763,3 +763,71 @@ func TestInitMCPAddCommandShape(t *testing.T) {
 		}
 	}
 }
+
+func TestConfigureHooksAddsPostCompact(t *testing.T) {
+	dir := t.TempDir()
+	claudeDir := filepath.Join(dir, ".claude")
+	os.MkdirAll(claudeDir, 0755)
+
+	// Start with a settings.json that has permissions only
+	os.WriteFile(filepath.Join(claudeDir, "settings.json"),
+		[]byte(`{"permissions":{"allow":["mcp__rpi__*"]}}`), 0644)
+
+	buf := new(bytes.Buffer)
+	configureHooks(buf, claudeDir)
+
+	data, err := os.ReadFile(filepath.Join(claudeDir, "settings.json"))
+	if err != nil {
+		t.Fatalf("read settings.json: %v", err)
+	}
+	content := string(data)
+	if !strings.Contains(content, "PostCompact") {
+		t.Error("settings.json missing PostCompact hook")
+	}
+	if !strings.Contains(content, "rpi_context_essentials") {
+		t.Error("PostCompact hook missing rpi_context_essentials reference")
+	}
+	// Verify permissions weren't clobbered
+	if !strings.Contains(content, "mcp__rpi__*") {
+		t.Error("permissions lost after configureHooks")
+	}
+}
+
+func TestConfigureHooksIdempotent(t *testing.T) {
+	dir := t.TempDir()
+	claudeDir := filepath.Join(dir, ".claude")
+	os.MkdirAll(claudeDir, 0755)
+	os.WriteFile(filepath.Join(claudeDir, "settings.json"), []byte(`{}`), 0644)
+
+	buf := new(bytes.Buffer)
+	configureHooks(buf, claudeDir)
+	configureHooks(buf, claudeDir)
+
+	data, _ := os.ReadFile(filepath.Join(claudeDir, "settings.json"))
+	count := strings.Count(string(data), "rpi_context_essentials")
+	if count != 1 {
+		t.Errorf("expected 1 rpi_context_essentials reference, got %d", count)
+	}
+}
+
+func TestConfigureHooksMergesExisting(t *testing.T) {
+	dir := t.TempDir()
+	claudeDir := filepath.Join(dir, ".claude")
+	os.MkdirAll(claudeDir, 0755)
+
+	// Start with existing hooks
+	os.WriteFile(filepath.Join(claudeDir, "settings.json"),
+		[]byte(`{"hooks":{"PreToolUse":[{"type":"command","command":"echo pre"}]}}`), 0644)
+
+	buf := new(bytes.Buffer)
+	configureHooks(buf, claudeDir)
+
+	data, _ := os.ReadFile(filepath.Join(claudeDir, "settings.json"))
+	content := string(data)
+	if !strings.Contains(content, "PreToolUse") {
+		t.Error("existing PreToolUse hook was clobbered")
+	}
+	if !strings.Contains(content, "PostCompact") {
+		t.Error("PostCompact hook not added")
+	}
+}

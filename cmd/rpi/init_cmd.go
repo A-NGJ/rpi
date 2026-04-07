@@ -292,3 +292,68 @@ func configureSettings(w io.Writer, toolDirPath string) {
 	}
 	logSuccess(w, "Configured auto-allow for RPI MCP tools in settings.json")
 }
+
+// configureHooks ensures .claude/settings.json contains a PostCompact hook
+// that reminds the assistant to call rpi_context_essentials after compaction.
+// It merges into any existing settings/hooks rather than overwriting.
+func configureHooks(w io.Writer, toolDirPath string) {
+	settingsPath := filepath.Join(toolDirPath, "settings.json")
+
+	// Read existing settings (if any)
+	raw := make(map[string]json.RawMessage)
+	if data, err := os.ReadFile(settingsPath); err == nil {
+		if err := json.Unmarshal(data, &raw); err != nil {
+			logWarning(w, fmt.Sprintf("Failed to parse %s: %v", settingsPath, err))
+			return
+		}
+	}
+
+	// Parse existing hooks
+	hooks := make(map[string]json.RawMessage)
+	if hooksRaw, ok := raw["hooks"]; ok {
+		if err := json.Unmarshal(hooksRaw, &hooks); err != nil {
+			logWarning(w, fmt.Sprintf("Failed to parse hooks in %s: %v", settingsPath, err))
+			return
+		}
+	}
+
+	// Check if PostCompact already has our entry
+	const marker = "rpi_context_essentials"
+	if pcRaw, ok := hooks["PostCompact"]; ok {
+		if strings.Contains(string(pcRaw), marker) {
+			return // already configured
+		}
+	}
+
+	// Build the hook entry
+	hookEntry := map[string]string{
+		"type":    "command",
+		"command": "cat <<'HOOK_EOF'\nIMPORTANT: Context was compacted. Call the rpi_context_essentials MCP tool to restore your implementation context (active plan phase, spec scenarios, constraints).\nHOOK_EOF",
+	}
+
+	// Append to existing PostCompact hooks or create new array
+	var postCompact []json.RawMessage
+	if pcRaw, ok := hooks["PostCompact"]; ok {
+		json.Unmarshal(pcRaw, &postCompact)
+	}
+	entryJSON, _ := json.Marshal(hookEntry)
+	postCompact = append(postCompact, json.RawMessage(entryJSON))
+
+	pcJSON, _ := json.Marshal(postCompact)
+	hooks["PostCompact"] = json.RawMessage(pcJSON)
+
+	hooksJSON, _ := json.Marshal(hooks)
+	raw["hooks"] = json.RawMessage(hooksJSON)
+
+	// Write back with indentation
+	out, err := json.MarshalIndent(raw, "", "  ")
+	if err != nil {
+		logWarning(w, fmt.Sprintf("Failed to marshal settings: %v", err))
+		return
+	}
+	if err := os.WriteFile(settingsPath, append(out, '\n'), 0644); err != nil {
+		logWarning(w, fmt.Sprintf("Failed to write %s: %v", settingsPath, err))
+		return
+	}
+	logSuccess(w, "Configured PostCompact hook for context preservation in settings.json")
+}

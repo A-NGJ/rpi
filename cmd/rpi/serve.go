@@ -164,6 +164,12 @@ func registerTools(s *mcp.Server) {
 		Description: mcpDescriptionWithPrefix("Parse spec scenarios into structured JSON with feature name, scenario titles, and Given/When/Then steps.", verifyCmd),
 	}, handleVerifySpec)
 
+	// Context
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "rpi_context_essentials",
+		Description: mcpDescription(contextCmd),
+	}, handleContextEssentials)
+
 	// Archive (1:1 subcommand mappings)
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_archive_check_refs",
@@ -291,6 +297,10 @@ type verifyMarkersInput struct {
 
 type verifySpecInput struct {
 	SpecPath string `json:"spec_path" jsonschema:"path to the spec file"`
+}
+
+type contextInput struct {
+	PlanPath string `json:"plan_path,omitempty" jsonschema:"path to a specific plan file (omit to auto-detect the most recent active plan)"`
 }
 
 type archiveCheckRefsInput struct {
@@ -509,6 +519,14 @@ func handleVerifySpec(_ context.Context, _ *mcp.CallToolRequest, input verifySpe
 		Feature:   feature,
 		Scenarios: scenarios,
 		Total:     len(scenarios),
+	}
+	return jsonResult(result)
+}
+
+func handleContextEssentials(_ context.Context, _ *mcp.CallToolRequest, input contextInput) (*mcp.CallToolResult, any, error) {
+	result, err := assembleContext(rpiDirFlag, input.PlanPath)
+	if err != nil {
+		return nil, nil, err
 	}
 	return jsonResult(result)
 }

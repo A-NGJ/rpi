@@ -27,6 +27,7 @@ After all phases are complete and verified, announce completion and update the p
 - **After hook failure**: read error, fix the issue, re-stage, create a new commit (never amend)
 - If a phase's success criteria are fully covered by automated checks (tests, linting, etc.), run them and proceed automatically when they pass — only pause for manual verification when the plan includes manual verification items not covered by automated tests
 - **On mismatch**: stop, present what the plan says vs what you found, ask how to proceed
+- **Context recovery**: if context seems lost or you're unsure which phase you're on, call the context essentials tool to restore your implementation context
 - **On completion**: verify spec conformance for all linked specs — extract scenarios using the verify spec tool, then check each scenario against actual code and tests; plan → complete
 
 ## Principles

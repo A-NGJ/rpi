@@ -96,7 +96,9 @@ func syncProject(opts syncOptions) error {
 
 	// Configure settings.json (Claude only)
 	if opts.cfg.target == workflow.TargetClaude {
-		configureSettings(opts.w, filepath.Join(opts.targetDir, opts.cfg.toolDir))
+		toolDirPath := filepath.Join(opts.targetDir, opts.cfg.toolDir)
+		configureSettings(opts.w, toolDirPath)
+		configureHooks(opts.w, toolDirPath)
 	}
 
 	return nil

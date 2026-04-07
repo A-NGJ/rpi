@@ -403,6 +403,7 @@ func TestIntegration_AllToolsRegistered(t *testing.T) {
 		"rpi_verify_spec",
 		"rpi_archive_check_refs",
 		"rpi_archive_move",
+		"rpi_context_essentials",
 	}
 
 	if len(res.Tools) != len(expectedTools) {
