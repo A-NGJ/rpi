@@ -355,18 +355,24 @@ func configureHooks(w io.Writer, toolDirPath string) {
 			}
 		}
 
-		// Build the hook entry
-		hookEntry := map[string]string{
-			"type":    "command",
-			"command": h.command,
+		// Build the matcher+hooks entry per Claude Code hook format:
+		// {"matcher": "", "hooks": [{"type": "command", "command": "..."}]}
+		matcherEntry := map[string]interface{}{
+			"matcher": "",
+			"hooks": []map[string]string{
+				{
+					"type":    "command",
+					"command": h.command,
+				},
+			},
 		}
 
-		// Append to existing hooks for this event or create new array
+		// Append to existing entries for this event or create new array
 		var entries []json.RawMessage
 		if existing, ok := hooks[h.event]; ok {
 			json.Unmarshal(existing, &entries)
 		}
-		entryJSON, _ := json.Marshal(hookEntry)
+		entryJSON, _ := json.Marshal(matcherEntry)
 		entries = append(entries, json.RawMessage(entryJSON))
 
 		entriesJSON, _ := json.Marshal(entries)

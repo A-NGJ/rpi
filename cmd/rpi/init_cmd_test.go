@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -802,6 +803,34 @@ func TestConfigureHooksAddsAllHooks(t *testing.T) {
 	// Verify permissions weren't clobbered
 	if !strings.Contains(content, "mcp__rpi__*") {
 		t.Error("permissions lost after configureHooks")
+	}
+
+	// Verify hook entries use matcher+hooks structure
+	if !strings.Contains(content, `"matcher"`) {
+		t.Error("hook entries should contain matcher field")
+	}
+	// Each hook entry wraps its command in a hooks array
+	var parsed map[string]json.RawMessage
+	json.Unmarshal(data, &parsed)
+	var hooks map[string]json.RawMessage
+	json.Unmarshal(parsed["hooks"], &hooks)
+	for event, raw := range hooks {
+		var entries []struct {
+			Matcher string `json:"matcher"`
+			Hooks   []struct {
+				Type    string `json:"type"`
+				Command string `json:"command"`
+			} `json:"hooks"`
+		}
+		if err := json.Unmarshal(raw, &entries); err != nil {
+			t.Errorf("%s: failed to parse as matcher+hooks structure: %v", event, err)
+			continue
+		}
+		for _, entry := range entries {
+			if len(entry.Hooks) == 0 {
+				t.Errorf("%s: matcher entry has empty hooks array", event)
+			}
+		}
 	}
 }
 
