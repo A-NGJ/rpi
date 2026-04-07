@@ -325,7 +325,8 @@ var rpiHooks = []hookDef{
 
 // configureHooks ensures .claude/settings.json contains RPI hooks
 // (PostCompact, SessionStart, Stop). Merges into existing settings/hooks.
-func configureHooks(w io.Writer, toolDirPath string) {
+// When force is true, existing RPI hook entries are replaced.
+func configureHooks(w io.Writer, toolDirPath string, force bool) {
 	settingsPath := filepath.Join(toolDirPath, "settings.json")
 
 	// Read existing settings (if any)
@@ -348,10 +349,12 @@ func configureHooks(w io.Writer, toolDirPath string) {
 
 	added := 0
 	for _, h := range rpiHooks {
-		// Skip if already configured
+		// Skip if already configured (unless force replaces)
 		if existing, ok := hooks[h.event]; ok {
 			if strings.Contains(string(existing), h.marker) {
-				continue
+				if !force {
+					continue
+				}
 			}
 		}
 
@@ -367,10 +370,16 @@ func configureHooks(w io.Writer, toolDirPath string) {
 			},
 		}
 
-		// Append to existing entries for this event or create new array
+		// Remove existing entries containing our marker before appending
 		var entries []json.RawMessage
 		if existing, ok := hooks[h.event]; ok {
-			json.Unmarshal(existing, &entries)
+			var all []json.RawMessage
+			json.Unmarshal(existing, &all)
+			for _, e := range all {
+				if !strings.Contains(string(e), h.marker) {
+					entries = append(entries, e)
+				}
+			}
 		}
 		entryJSON, _ := json.Marshal(matcherEntry)
 		entries = append(entries, json.RawMessage(entryJSON))

@@ -98,7 +98,7 @@ func syncProject(opts syncOptions) error {
 	if opts.cfg.target == workflow.TargetClaude {
 		toolDirPath := filepath.Join(opts.targetDir, opts.cfg.toolDir)
 		configureSettings(opts.w, toolDirPath)
-		configureHooks(opts.w, toolDirPath)
+		configureHooks(opts.w, toolDirPath, opts.force)
 	}
 
 	return nil

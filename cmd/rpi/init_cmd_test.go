@@ -775,7 +775,7 @@ func TestConfigureHooksAddsAllHooks(t *testing.T) {
 		[]byte(`{"permissions":{"allow":["mcp__rpi__*"]}}`), 0644)
 
 	buf := new(bytes.Buffer)
-	configureHooks(buf, claudeDir)
+	configureHooks(buf, claudeDir, false)
 
 	data, err := os.ReadFile(filepath.Join(claudeDir, "settings.json"))
 	if err != nil {
@@ -841,8 +841,8 @@ func TestConfigureHooksIdempotent(t *testing.T) {
 	os.WriteFile(filepath.Join(claudeDir, "settings.json"), []byte(`{}`), 0644)
 
 	buf := new(bytes.Buffer)
-	configureHooks(buf, claudeDir)
-	configureHooks(buf, claudeDir)
+	configureHooks(buf, claudeDir, false)
+	configureHooks(buf, claudeDir, false)
 
 	data, _ := os.ReadFile(filepath.Join(claudeDir, "settings.json"))
 	content := string(data)
@@ -866,7 +866,7 @@ func TestConfigureHooksMergesExisting(t *testing.T) {
 		[]byte(`{"hooks":{"PreToolUse":[{"type":"command","command":"echo pre"}]}}`), 0644)
 
 	buf := new(bytes.Buffer)
-	configureHooks(buf, claudeDir)
+	configureHooks(buf, claudeDir, false)
 
 	data, _ := os.ReadFile(filepath.Join(claudeDir, "settings.json"))
 	content := string(data)
@@ -881,5 +881,30 @@ func TestConfigureHooksMergesExisting(t *testing.T) {
 	}
 	if !strings.Contains(content, "Stop") {
 		t.Error("Stop hook not added")
+	}
+}
+
+func TestConfigureHooksForceReplacesOldFormat(t *testing.T) {
+	dir := t.TempDir()
+	claudeDir := filepath.Join(dir, ".claude")
+	os.MkdirAll(claudeDir, 0755)
+
+	// Start with old-format hooks (flat {type, command} without matcher)
+	os.WriteFile(filepath.Join(claudeDir, "settings.json"),
+		[]byte(`{"hooks":{"PostCompact":[{"type":"command","command":"cat <<'HOOK_EOF'\nrpi_context_essentials\nHOOK_EOF"}]}}`), 0644)
+
+	buf := new(bytes.Buffer)
+	configureHooks(buf, claudeDir, true)
+
+	data, _ := os.ReadFile(filepath.Join(claudeDir, "settings.json"))
+	content := string(data)
+
+	// Old entry should be replaced with correct structure
+	if !strings.Contains(content, `"matcher"`) {
+		t.Error("force should replace old-format entry with matcher+hooks structure")
+	}
+	// Marker should appear exactly once (not duplicated)
+	if count := strings.Count(content, "rpi_context_essentials"); count != 1 {
+		t.Errorf("expected 1 rpi_context_essentials reference, got %d", count)
 	}
 }
