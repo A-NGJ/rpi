@@ -9,7 +9,7 @@ updated_by: .rpi/designs/2026-03-24-init-update-cleanup.md
 
 ## Purpose
 
-Ensure `rpi init` and `rpi update` share a single code path for project synchronization, and that `--force` uniformly governs overwriting of all managed files (skills, templates, and rules file).
+Ensure `rpi init` and `rpi update` share a single code path for project synchronization. Update always installs the latest managed files, creating `.bak` backups of any files that differ before overwriting.
 
 ## Scenarios
 
@@ -18,15 +18,15 @@ Given the codebase
 When inspecting the init and update command implementations
 Then both call a shared sync function for installing skills, templates, rules file, and settings
 
-### Update without --force preserves rules file
-Given an initialized project with a customized CLAUDE.md
-When `rpi update` runs without `--force`
-Then the CLAUDE.md content remains unchanged
+### Update backs up modified files before overwriting
+Given an initialized project with customized skill files or CLAUDE.md
+When `rpi update` runs
+Then modified files are backed up to `.bak` and replaced with the latest embedded versions
 
-### Update with --force overwrites rules file
-Given an initialized project with a customized CLAUDE.md
-When `rpi update --force` runs
-Then CLAUDE.md is replaced with the latest template version
+### Update skips backup when file content is identical
+Given an initialized project with no local modifications to managed files
+When `rpi update` runs
+Then no `.bak` files are created and no files are rewritten
 
 ### Init creates fresh project with rules file
 Given an empty directory
@@ -45,11 +45,8 @@ Then it detects the OpenCode target and operates on `.opencode/`
 
 ## Constraints
 - Init and update remain separate Cobra commands
-- Rules file overwrite governed by `--force`, same as skills/templates
-- Do not change CLI interface (command names, flag names, flag defaults)
 - Do not introduce new dependencies or packages
 
 ## Out of Scope
 - Merging init/update into one command
-- New flags or features
 - Changes to skill content or template content
