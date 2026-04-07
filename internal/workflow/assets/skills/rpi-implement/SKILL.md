@@ -30,6 +30,17 @@ After all phases are complete and verified, announce completion and update the p
 - **Context recovery**: if context seems lost or you're unsure which phase you're on, call the context essentials tool to restore your implementation context
 - **On completion**: verify spec conformance for all linked specs — extract scenarios using the verify spec tool, then check each scenario against actual code and tests; plan → complete
 
+## Worktree Mode
+
+If the worktree implementation agent is available:
+- After pre-review approval, spawn the agent in a worktree with the full context bundle (plan content, spec scenarios, design constraints, file paths to read)
+- On agent completion, spawn the verification agent to check the worktree branch
+- If verification passes and no manual verification items exist in the plan, merge the worktree branch automatically
+- If manual verification items exist, present the diff and wait for user approval before merging
+- After merge, update plan status to complete
+
+If agents are not available, implement in-place on the current branch (default behavior above).
+
 ## Principles
 
 - Follow the plan's intent while adapting to what you find — your judgment matters
