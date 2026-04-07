@@ -148,6 +148,41 @@ func InstallTemplates(templatesDir string, force bool) (int, error) {
 	return count, nil
 }
 
+// InstallAgents copies embedded agent definitions to agentsDir.
+// Existing files are only overwritten when force is true.
+func InstallAgents(agentsDir string, force bool) (int, error) {
+	entries, err := fs.ReadDir(assets, "assets/agents")
+	if err != nil {
+		return 0, fmt.Errorf("read embedded agents: %w", err)
+	}
+
+	if err := os.MkdirAll(agentsDir, 0755); err != nil {
+		return 0, fmt.Errorf("create %s: %w", agentsDir, err)
+	}
+
+	count := 0
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".md") {
+			continue
+		}
+
+		data, err := assets.ReadFile("assets/agents/" + entry.Name())
+		if err != nil {
+			return count, fmt.Errorf("read %s: %w", entry.Name(), err)
+		}
+
+		dest := filepath.Join(agentsDir, entry.Name())
+		if _, statErr := os.Stat(dest); statErr != nil || force {
+			if err := os.WriteFile(dest, data, 0644); err != nil {
+				return count, fmt.Errorf("write %s: %w", dest, err)
+			}
+			count++
+		}
+	}
+
+	return count, nil
+}
+
 // injectFrontmatter inserts additional YAML fields into an existing SKILL.md
 // frontmatter block. For OpenCode targets, model aliases are translated to
 // full provider-qualified IDs.

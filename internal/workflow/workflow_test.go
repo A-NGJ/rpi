@@ -455,6 +455,110 @@ func TestPromptStructure_NoToolReferences(t *testing.T) {
 	}
 }
 
+// --- InstallAgents tests ---
+
+func TestInstallAgents_InstallsAllAgents(t *testing.T) {
+	agentsDir := filepath.Join(t.TempDir(), ".claude", "agents")
+
+	count, err := InstallAgents(agentsDir, false)
+	if err != nil {
+		t.Fatalf("InstallAgents error: %v", err)
+	}
+	if count != 2 {
+		t.Errorf("expected 2 agent files installed, got %d", count)
+	}
+
+	// Verify both agent files exist
+	for _, name := range []string{"rpi-verify.md", "rpi-implement-worktree.md"} {
+		path := filepath.Join(agentsDir, name)
+		if _, err := os.Stat(path); err != nil {
+			t.Errorf("agent file %s not installed: %v", name, err)
+		}
+	}
+}
+
+func TestInstallAgents_NoOverwriteWithoutForce(t *testing.T) {
+	agentsDir := filepath.Join(t.TempDir(), "agents")
+
+	// First install
+	_, err := InstallAgents(agentsDir, false)
+	if err != nil {
+		t.Fatalf("first install: %v", err)
+	}
+
+	// Modify a file
+	modPath := filepath.Join(agentsDir, "rpi-verify.md")
+	if err := os.WriteFile(modPath, []byte("custom content"), 0644); err != nil {
+		t.Fatalf("modify file: %v", err)
+	}
+
+	// Second install without force — should not overwrite
+	_, err = InstallAgents(agentsDir, false)
+	if err != nil {
+		t.Fatalf("second install: %v", err)
+	}
+	data, _ := os.ReadFile(modPath)
+	if string(data) != "custom content" {
+		t.Error("file should not be overwritten without force")
+	}
+}
+
+func TestInstallAgents_ForceOverwrites(t *testing.T) {
+	agentsDir := filepath.Join(t.TempDir(), "agents")
+
+	// First install
+	_, err := InstallAgents(agentsDir, false)
+	if err != nil {
+		t.Fatalf("first install: %v", err)
+	}
+
+	// Modify a file
+	modPath := filepath.Join(agentsDir, "rpi-verify.md")
+	if err := os.WriteFile(modPath, []byte("custom content"), 0644); err != nil {
+		t.Fatalf("modify file: %v", err)
+	}
+
+	// Install with force — should overwrite
+	count, err := InstallAgents(agentsDir, true)
+	if err != nil {
+		t.Fatalf("force install: %v", err)
+	}
+	if count != 2 {
+		t.Errorf("force install: expected 2 files, got %d", count)
+	}
+	data, _ := os.ReadFile(modPath)
+	if string(data) == "custom content" {
+		t.Error("file should be overwritten with force")
+	}
+}
+
+func TestAgentDefinitions_ValidFrontmatter(t *testing.T) {
+	entries, err := fs.ReadDir(assets, "assets/agents")
+	if err != nil {
+		t.Fatalf("read assets/agents: %v", err)
+	}
+
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".md") {
+			continue
+		}
+		data, err := assets.ReadFile("assets/agents/" + e.Name())
+		if err != nil {
+			t.Errorf("read %s: %v", e.Name(), err)
+			continue
+		}
+		content := string(data)
+		name := extractFrontmatterField(content, "name")
+		if name == "" {
+			t.Errorf("agent %s: missing name field", e.Name())
+		}
+		desc := extractFrontmatterField(content, "description")
+		if desc == "" {
+			t.Errorf("agent %s: missing description field", e.Name())
+		}
+	}
+}
+
 // --- helpers ---
 
 func extractFrontmatter(content string) string {
