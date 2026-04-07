@@ -8,10 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	updateForce      bool
-	updateNoClaudeMD bool
-)
+var updateNoClaudeMD bool
 
 var updateCmd = &cobra.Command{
 	Use:   "update [directory]",
@@ -21,14 +18,10 @@ var updateCmd = &cobra.Command{
 This command brings an already-initialized project up to date:
   - Creates any missing .rpi/ or tool subdirectories
   - Updates skills in .agents/skills/ and tool-specific directory
-  - Rebuilds the codebase index
 
-Workflow files (skills, templates, rules file) are only overwritten with --force.`,
+Modified files are backed up to .bak before overwriting.`,
 	Example: `  # Update current project
   rpi update
-
-  # Force-overwrite workflow files with latest embedded versions
-  rpi update --force
 
   # Update without touching the rules file
   rpi update --no-claude-md`,
@@ -37,7 +30,6 @@ Workflow files (skills, templates, rules file) are only overwritten with --force
 }
 
 func init() {
-	updateCmd.Flags().BoolVar(&updateForce, "force", false, "Overwrite existing workflow files with latest embedded versions")
 	updateCmd.Flags().BoolVar(&updateNoClaudeMD, "no-claude-md", false, "Skip rules file update (CLAUDE.md or AGENTS.md)")
 	rootCmd.AddCommand(updateCmd)
 }
@@ -75,7 +67,6 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 	return syncProject(syncOptions{
 		targetDir: targetDir,
 		cfg:       cfg,
-		force:     updateForce,
 		skipRules: updateNoClaudeMD,
 		w:         cmd.OutOrStdout(),
 	})

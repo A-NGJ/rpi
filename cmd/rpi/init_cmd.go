@@ -177,7 +177,6 @@ func runInit(cmd *cobra.Command, args []string) error {
 	return syncProject(syncOptions{
 		targetDir: targetDir,
 		cfg:       cfg,
-		force:     false,
 		skipRules: initNoClaudeMD,
 		w:         w,
 	})
@@ -325,8 +324,8 @@ var rpiHooks = []hookDef{
 
 // configureHooks ensures .claude/settings.json contains RPI hooks
 // (PostCompact, SessionStart, Stop). Merges into existing settings/hooks.
-// When force is true, existing RPI hook entries are replaced.
-func configureHooks(w io.Writer, toolDirPath string, force bool) {
+// Existing RPI hook entries are always replaced with the latest version.
+func configureHooks(w io.Writer, toolDirPath string) {
 	settingsPath := filepath.Join(toolDirPath, "settings.json")
 
 	// Read existing settings (if any)
@@ -349,14 +348,6 @@ func configureHooks(w io.Writer, toolDirPath string, force bool) {
 
 	added := 0
 	for _, h := range rpiHooks {
-		// Skip if already configured (unless force replaces)
-		if existing, ok := hooks[h.event]; ok {
-			if strings.Contains(string(existing), h.marker) {
-				if !force {
-					continue
-				}
-			}
-		}
 
 		// Build the matcher+hooks entry per Claude Code hook format:
 		// {"matcher": "", "hooks": [{"type": "command", "command": "..."}]}
