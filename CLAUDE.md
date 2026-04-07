@@ -25,7 +25,6 @@ This project uses a `.rpi/` directory for persistent context:
 ├── specs/         # Living behavioral specs
 ├── reviews/       # Verification reports
 ├── diagnoses/     # Bug diagnosis post-mortems (created by /rpi-diagnose)
-├── templates/     # Scaffold templates (user-overridable)
 ├── archive/       # Archived completed artifacts
 ```
 
@@ -40,7 +39,6 @@ Workflow: Research → Propose → Plan → Implement → Verify
 - **Verify** (`/rpi-verify`): Validate spec conformance.
 - **Diagnose** (`/rpi-diagnose`): Iterative root-cause analysis and fix for complex bugs. Optional.
 - **Explain** (`/rpi-explain`): Diff-scoped walkthrough of an implemented solution. Optional.
-- **Spec Sync** (`/rpi-spec-sync`): Sync specs to match codebase — detect drift, rewrite, rename, merge, or archive. Optional.
 
 Each command suggests the next step. Start with `/rpi-propose` for features, `/rpi-plan` for bug fixes, `/rpi-diagnose` for complex bugs, `/rpi-research` when exploring.
 
