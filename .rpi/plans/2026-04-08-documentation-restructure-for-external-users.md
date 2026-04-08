@@ -2,7 +2,7 @@
 date: 2026-04-08T12:17:22+02:00
 design: .rpi/designs/2026-04-08-documentation-restructure-for-external-users.md
 spec: .rpi/specs/documentation-structure.md
-status: active
+status: complete
 tags:
     - plan
 topic: documentation restructure for external users
