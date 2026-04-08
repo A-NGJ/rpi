@@ -1,27 +1,44 @@
 # AI Agent: Research-Propose-Plan-Implement Flow
 
-A structured development workflow for AI coding agents that turns vague feature requests into shipped code through a pipeline of discrete, reviewable stages. Built for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and [OpenCode](https://github.com/opencode-ai/opencode), but the underlying methodology works with any AI coding tool.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/A-NGJ/rpi)](https://github.com/A-NGJ/rpi/releases/latest)
+[![CI](https://github.com/A-NGJ/rpi/actions/workflows/release.yml/badge.svg)](https://github.com/A-NGJ/rpi/actions/workflows/release.yml)
 
-Instead of asking an AI to "just implement it" and hoping for the best, this workflow forces deliberate progression through **Research -> Propose -> Plan -> Implement**. Each stage produces a document you can review, edit, and approve before moving on.
+AI coding agents are capable -- the challenge is steering them. Without structure, you end up re-running prompts hoping the output lands closer to what you actually need. RPI gives you a framework to direct that capability: staged decisions, reviewable artifacts, and behavioral specs that keep work on track.
+
+Each stage produces a document you can read, edit, and approve before the next one starts. A compiled Go CLI handles the bookkeeping so the LLM spends its tokens on thinking, not parsing. Built for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and [OpenCode](https://github.com/opencode-ai/opencode), but the methodology works with any AI coding tool.
+
+## See It in Action
+
+Add rate limiting to an API in four commands:
 
 ```
-Research -> Design -> Plan -> Implement
-   |          |        |        |
-   v          v        v        v
-.rpi/       .rpi/    .rpi/    code +
-research/   designs/ plans/   tests +
-            specs/            commits
+/rpi-research How does the API middleware chain work?
 ```
+Claude explores your codebase conversationally. You discuss findings, no artifact required.
 
-## Why This Exists
+```
+/rpi-propose Add per-endpoint rate limiting for authenticated and anonymous users
+```
+Claude presents 2-3 options with pros/cons tied to your codebase. You pick one. Writes `.rpi/designs/`.
 
-AI coding assistants are powerful but unpredictable when given large tasks. They skip steps, make questionable architectural choices, and produce code that doesn't fit the codebase. This workflow solves that by:
+```
+/rpi-plan .rpi/designs/2026-03-04-api-rate-limiting.md
+```
+Breaks work into phases (core module, middleware integration, configuration), each with file changes, verification commands, and success criteria. Writes `.rpi/plans/`.
 
-- **Separating thinking from doing** -- Research gathers facts. Propose makes decisions with trade-offs. Plan specifies exact changes. Implement executes them.
-- **Creating review checkpoints** -- You approve each stage before the next one starts. Bad decisions get caught early, not after 500 lines of wrong code.
-- **Building persistent context** -- All artifacts live in `.rpi/`, so you and your team (or the AI) can pick up where you left off across sessions. Living specs in `.rpi/specs/` capture current module behavior and stay updated as the codebase evolves.
-- **Scaling to complexity** -- Simple bug fix? Skip straight to Plan -> Implement. Complex feature? Use Propose -> Plan -> Implement.
-- **Keeping the context window small** -- LLMs produce better output when focused. By breaking work into stages, each conversation stays scoped to one job. The `.rpi/` documents carry knowledge between stages, so the AI starts each stage with exactly the context it needs -- no more, no less.
+```
+/rpi-implement .rpi/plans/2026-03-04-api-rate-limiting.md
+```
+Implements phase-by-phase -- previews changes, runs tests, commits, then pauses for your review before starting the next phase. If something diverges from the plan, it stops and tells you.
+
+## How RPI Is Different
+
+RPI combines two things other tools don't: **reviewable artifacts that keep a human in the loop at every stage**, and a **compiled Go CLI that keeps mechanical work out of the LLM's context window**. The CLI handles scaffolding, frontmatter, artifact linking, and verification so the LLM focuses on the actual problem. Separating thinking from doing -- research gathers facts, propose makes decisions, plan specifies changes, implement executes them -- means review checkpoints catch bad decisions early, not after 500 lines of wrong code. All artifacts live in `.rpi/`, so context persists across sessions and teams. And by breaking work into stages, each conversation stays scoped to one job, keeping the context window small and output quality high.
+
+**vs. [OpenSpec](https://github.com/Fission-AI/OpenSpec)** -- OpenSpec gives the AI more autonomy, implementing an entire plan in one pass. RPI gives you fine-grained control -- you review each implementation phase before it's executed, with git commits between phases for versioning and easy rollback. RPI also gives you full ownership of every command and skill -- they're plain markdown files you can read, edit, and customize after `rpi init`. OpenSpec's prompts are compiled into its npm package and regenerated on `openspec update`, so the workflow logic stays inside the tool rather than in your project.
+
+**vs. unstructured prompting** -- Without stage boundaries, the LLM researches, designs, and implements in a single pass -- no checkpoints, no review, no way to course-correct before code is written.
 
 ## Quick Start
 
@@ -66,9 +83,17 @@ rpi update          # add missing dirs, update workflow files
 rpi update --force  # also overwrite workflow files with latest versions
 ```
 
-### 3. Start coding
+### 3. Try it
 
-Open your AI coding tool in the project and use the slash commands.
+```
+/rpi-plan Fix the date formatter in utils/dates.ts that returns "NaN" for ISO strings
+```
+Claude investigates, writes a phased plan to `.rpi/plans/`.
+
+```
+/rpi-implement .rpi/plans/2026-04-08-fix-date-formatter.md
+```
+Review the changes, approve, done. See the [full workflow guide](docs/workflow-guide.md) for more.
 
 ### The Slash Commands
 
@@ -112,16 +137,6 @@ See the [full workflow guide](docs/workflow-guide.md) for detailed examples of e
 The `rpi` binary doubles as an [MCP](https://modelcontextprotocol.io/) server. Running `rpi serve` starts a stdio-based server that exposes all CLI operations as typed tools (`rpi_scaffold`, `rpi_scan`, `rpi_chain`, `rpi_frontmatter_get`, etc.). AI assistants call these tools with validated JSON schemas instead of constructing shell commands.
 
 `rpi init` auto-registers the MCP server with Claude Code when both `rpi` and `claude` are in your PATH. Use `--no-mcp` to skip this. See [Architecture](docs/architecture.md) for details.
-
-## How It Compares
-
-What sets RPI apart from other spec-driven development tools is the combination of two things: **reviewable artifacts that keep a human in the loop at every stage**, and a **compiled CLI that keeps mechanical work out of the LLM's context window**.
-
-Every stage produces a document you can read, edit, reject, or share with your team before the next stage starts. The Go binary handles the bookkeeping (scaffolding, frontmatter, artifact linking, verification) so the LLM spends its tokens on thinking, not parsing.
-
-**vs. [OpenSpec](https://github.com/Fission-AI/OpenSpec)** -- OpenSpec gives the AI more autonomy, implementing an entire plan in one pass. RPI gives you fine-grained control -- you review each implementation phase before it's executed, with git commits between phases for versioning and easy rollback. RPI also gives you full ownership of every command and skill -- they're plain markdown files you can read, edit, and customize after `rpi init`. OpenSpec's prompts are compiled into its npm package and regenerated on `openspec update`, so the workflow logic stays inside the tool rather than in your project.
-
-**vs. unstructured prompting** -- Without stage boundaries, the LLM researches, designs, and implements in a single pass -- no checkpoints, no review, no way to course-correct before code is written.
 
 ## Acknowledgments
 
