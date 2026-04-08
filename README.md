@@ -30,7 +30,7 @@ Breaks work into phases (core module, middleware integration, configuration), ea
 ```
 /rpi-implement .rpi/plans/2026-03-04-api-rate-limiting.md
 ```
-Implements phase-by-phase -- previews changes, runs tests, commits, then pauses for your review before starting the next phase. If something diverges from the plan, it stops and tells you.
+Implements phase-by-phase -- runs tests, commits, and advances automatically when checks pass. Pauses only when manual verification is needed or something diverges from the plan. Runs in an isolated git worktree so your working tree stays clean until you merge.
 
 ## How RPI Is Different
 
@@ -77,7 +77,12 @@ This creates:
 - `CLAUDE.md` (or `AGENTS.md`) -- Project-level instructions for the AI
 - MCP server registration (Claude Code only) -- auto-registers `rpi serve` so the AI calls typed tools instead of shelling out
 
-To sync an existing project with the latest workflow files after updating the `rpi` binary:
+To update the `rpi` binary itself:
+```bash
+rpi upgrade         # download and install the latest release
+```
+
+To sync an existing project with the latest workflow files:
 ```bash
 rpi update          # add missing dirs, update workflow files
 rpi update --force  # also overwrite workflow files with latest versions
@@ -120,7 +125,14 @@ Not every task needs every stage. Match the path to your task's complexity:
 
 Not sure where to start? Use `/rpi-research` with any question -- it handles both focused investigation and open-ended research. For complex bugs, use `/rpi-diagnose` to iterate on root-cause analysis.
 
-Check the current state of all artifacts at any time with `rpi status`.
+Not sure what's in flight? Run `rpi status` for a single-screen dashboard of all artifacts, progress, and what's ready to archive.
+
+<details>
+<summary><code>rpi status</code> example output</summary>
+
+![rpi status output](docs/assets/rpi-status.png)
+
+</details>
 
 See the [full workflow guide](docs/workflow-guide.md) for detailed examples of each path.
 

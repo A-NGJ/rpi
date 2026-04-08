@@ -9,3 +9,4 @@ walkthrough.md
 .rpi/research/
 .rpi/prs/
 testdata/
+.DS_Store
