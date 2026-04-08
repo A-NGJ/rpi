@@ -38,10 +38,18 @@ draft -> active -> complete -> archived
 
 ## Specs (`.rpi/specs/`)
 
-Specs are living documents that describe the **current behavior** of a module or domain -- not planned changes. They're created and updated as a byproduct of research and implementation:
+Specs are living documents that describe the **current behavior** of a module or domain -- not planned changes. Each spec contains:
 
-- `/rpi-research` can optionally create or update a spec when it documents a module's behavior comprehensively
+- **Purpose** -- what the feature does and why (1-3 sentences)
+- **Scenarios** -- 5-8 Given/When/Then scenarios describing user-observable behavior. Scenarios must not reference internal structure (structs, file paths, function names) -- they describe what the user sees, not how it's built.
+- **Constraints** -- boundaries and invariants
+- **Out of Scope** -- what the spec intentionally does not cover
+
+Specs are created and updated as a byproduct of research and implementation:
+
+- `/rpi-propose` creates a spec alongside each design, with scenarios as the behavioral contract
 - `/rpi-propose` can flag existing specs with `pending_changes` when a proposal will alter documented behavior
+- `/rpi-verify` and `/rpi-implement` check specs by extracting scenarios and verifying each against the implementation
 - Specs are updated to reflect reality *after* implementation, not during design
 
 This directory serves as persistent context across sessions. You can read, edit, or delete any document. Claude will check for existing documents before creating new ones to avoid duplication.

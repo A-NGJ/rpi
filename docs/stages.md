@@ -42,16 +42,17 @@ All open questions must be resolved before the plan is finalized.
 
 **Purpose:** Execute a plan phase-by-phase with verification at each step.
 
-The implementation stage:
+The implementation stage runs in an isolated git worktree so your working tree stays clean:
+
 1. Reads the plan completely
 2. Checks for sensitive files (credentials, secrets) before proceeding
-3. For each phase, shows a **pre-review** of all intended changes before writing code
-4. Implements the phase after approval
+3. For each phase, presents intended changes before writing code
+4. Implements the phase
 5. Runs automated verification (tests, linting, type checks)
-6. Updates checkboxes in the plan file
-7. If the plan specifies spec updates, updates the relevant `.rpi/specs/` files
-8. Proposes a commit
-9. Pauses for manual verification before the next phase
+6. Auto-commits when checks pass -- no manual confirmation needed
+7. Updates checkboxes in the plan file
+8. Advances to the next phase automatically if all success criteria are covered by automated checks; pauses only when the plan includes manual verification items
+9. On completion, verifies spec conformance for all linked specs -- extracts Given/When/Then scenarios and checks each against the implementation
 
 If the plan doesn't match reality (codebase drifted since the plan was written), it stops and clearly explains the mismatch rather than silently improvising.
 
@@ -71,7 +72,7 @@ You can use `/rpi-commit` standalone anytime, or let `/rpi-implement` handle com
 
 Checks three dimensions:
 - **Completeness** -- Are all planned changes implemented?
-- **Correctness** -- Does the code match the proposal decisions?
+- **Correctness** -- Does the code match the proposal decisions? Extracts Given/When/Then scenarios from linked specs and verifies each against actual code and tests, reporting pass/fail per scenario with file:line references.
 - **Coherence** -- Do the pieces work together as intended?
 
 Can auto-detect what to verify from recent git changes and active plans, or you can point it at a specific proposal, plan, or research doc. Produces a severity-classified report. Purely advisory -- it doesn't block anything, and can be re-run after fixes.

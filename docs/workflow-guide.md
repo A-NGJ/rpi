@@ -19,7 +19,7 @@ Claude researches the file, writes a 1-phase plan with the fix and test, saves i
 You:  /rpi-implement .rpi/plans/2026-03-04-fix-date-formatter.md
 ```
 
-Claude shows you the intended changes, you approve, it implements, runs tests, and proposes a commit.
+Claude implements in an isolated worktree, runs tests, auto-commits when they pass, and merges back.
 
 **Example -- Add a missing environment variable:**
 ```
@@ -63,7 +63,7 @@ Each phase has specific file changes, code snippets, automated verification comm
 ```
 You:  /rpi-implement .rpi/plans/2026-03-04-api-rate-limiting.md
 ```
-Claude implements Phase 1, shows you a preview of all changes before writing code, runs the test suite, updates checkboxes in the plan, and proposes a commit. Then it pauses for your manual verification before starting Phase 2.
+Claude implements in an isolated worktree. For each phase, it runs the test suite, auto-commits when checks pass, updates checkboxes in the plan, and advances to the next phase. It only pauses when the plan includes manual verification items not covered by automated tests.
 
 If something doesn't match the plan -- say a file was refactored since the proposal was written -- Claude stops and tells you exactly what diverged, rather than silently improvising.
 
