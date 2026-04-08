@@ -1,3 +1,5 @@
+![RPI Banner](docs/assets/rpi-banner.svg)
+
 # AI Agent: Research-Propose-Plan-Implement Flow
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
