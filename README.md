@@ -34,43 +34,13 @@ Breaks work into phases (core module, middleware integration, configuration), ea
 ```
 Implements phase-by-phase -- runs tests, commits, and advances automatically when checks pass. Pauses only when manual verification is needed or something diverges from the plan. Runs in an isolated git worktree so your working tree stays clean until you merge.
 
-## How RPI Is Different
-
-RPI combines two things other tools don't: **reviewable artifacts that keep a human in the loop at every stage**, and a **compiled Go CLI that keeps mechanical work out of the LLM's context window**. The CLI handles scaffolding, frontmatter, artifact linking, and verification so the LLM focuses on the actual problem. Separating thinking from doing -- research gathers facts, propose makes decisions, plan specifies changes, implement executes them -- means review checkpoints catch bad decisions early, not after 500 lines of wrong code. All artifacts live in `.rpi/`, so context persists across sessions and teams. And by breaking work into stages, each conversation stays scoped to one job, keeping the context window small and output quality high.
-
-**vs. [OpenSpec](https://github.com/Fission-AI/OpenSpec)** -- OpenSpec gives the AI more autonomy, implementing an entire plan in one pass. RPI gives you fine-grained control -- you review each implementation phase before it's executed, with git commits between phases for versioning and easy rollback. RPI also gives you full ownership of every command and skill -- they're plain markdown files you can read, edit, and customize after `rpi init`. OpenSpec's prompts are compiled into its npm package and regenerated on `openspec update`, so the workflow logic stays inside the tool rather than in your project.
-
-**vs. unstructured prompting** -- Without stage boundaries, the LLM researches, designs, and implements in a single pass -- no checkpoints, no review, no way to course-correct before code is written.
-
 ## Quick Start
 
-### Prerequisites
-
-- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) or [OpenCode](https://github.com/opencode-ai/opencode)
-- Git
-
-### 1. Install `rpi`
-
-**Quick install (recommended):**
 ```bash
 curl -sSfL https://raw.githubusercontent.com/A-NGJ/rpi/main/install.sh | bash
-```
-
-Pin a specific version:
-```bash
-VERSION=v0.1.0 curl -sSfL https://raw.githubusercontent.com/A-NGJ/rpi/main/install.sh | bash
-```
-
-**From source (requires Go 1.25+):**
-```bash
-go install github.com/A-NGJ/rpi/cmd/rpi@latest
-```
-
-### 2. Initialize your project
-
-```bash
-rpi init /path/to/your/project                     # Claude Code (default)
-rpi init /path/to/your/project --target opencode    # OpenCode
+rpi init                                         # current directory, Claude Code
+rpi init /path/to/project                        # different directory
+rpi init /path/to/project --target opencode      # OpenCode
 ```
 
 This creates:
@@ -87,10 +57,9 @@ rpi upgrade         # download and install the latest release
 To sync an existing project with the latest workflow files:
 ```bash
 rpi update          # add missing dirs, update workflow files
-rpi update --force  # also overwrite workflow files with latest versions
 ```
 
-### 3. Try it
+### Try it
 
 ```
 /rpi-plan Fix the date formatter in utils/dates.ts that returns "NaN" for ISO strings
@@ -116,6 +85,14 @@ Review the changes, approve, done. See the [full workflow guide](docs/workflow-g
 | `/rpi-explain` | Diff-scoped walkthrough of an implemented solution | Conversation |
 | `/rpi-spec-sync` | Syncs specs to match current codebase (detect drift, rewrite, rename, merge) | Updated `.rpi/specs/` |
 | `/rpi-archive` | Archives completed artifacts to keep `.rpi/` clean | Moves files to `.rpi/archive/` |
+
+## How RPI Is Different
+
+RPI combines two things other tools don't: **reviewable artifacts that keep a human in the loop at every stage**, and a **compiled Go CLI that keeps mechanical work out of the LLM's context window**. The CLI handles scaffolding, frontmatter, artifact linking, and verification so the LLM focuses on the actual problem. Separating thinking from doing -- research gathers facts, propose makes decisions, plan specifies changes, implement executes them -- means review checkpoints catch bad decisions early, not after 500 lines of wrong code. All artifacts live in `.rpi/`, so context persists across sessions and teams. And by breaking work into stages, each conversation stays scoped to one job, keeping the context window small and output quality high.
+
+**vs. [OpenSpec](https://github.com/Fission-AI/OpenSpec)** -- OpenSpec gives the AI more autonomy, implementing an entire plan in one pass. RPI gives you fine-grained control -- you review each implementation phase before it's executed, with git commits between phases for versioning and easy rollback. RPI also gives you full ownership of every command and skill -- they're plain markdown files you can read, edit, and customize after `rpi init`. OpenSpec's prompts are compiled into its npm package and regenerated on `openspec update`, so the workflow logic stays inside the tool rather than in your project.
+
+**vs. unstructured prompting** -- Without stage boundaries, the LLM researches, designs, and implements in a single pass -- no checkpoints, no review, no way to course-correct before code is written.
 
 ## Choosing Your Path
 
@@ -145,6 +122,42 @@ See the [full workflow guide](docs/workflow-guide.md) for detailed examples of e
 - [`.rpi/` Directory](docs/thoughts-directory.md) -- Artifact structure, naming, status lifecycle, and team sharing
 - [`rpi init`](docs/rpi-init.md) -- CLI bootstrapping, flags, shell completion, and OpenCode support
 - [Architecture](docs/architecture.md) -- Why a Go binary, CLI commands, and project structure
+
+## Installation
+
+### Pre-built binary (recommended)
+
+```bash
+curl -sSfL https://raw.githubusercontent.com/A-NGJ/rpi/main/install.sh | bash
+```
+
+Pin a specific version:
+```bash
+VERSION=v0.1.0 curl -sSfL https://raw.githubusercontent.com/A-NGJ/rpi/main/install.sh | bash
+```
+
+### From source
+
+Requires Go 1.25+.
+
+```bash
+go install github.com/A-NGJ/rpi/cmd/rpi@latest
+```
+
+Or clone and build:
+```bash
+git clone https://github.com/A-NGJ/rpi
+cd rpi
+make install   # builds and copies to ~/.local/bin
+```
+
+Make sure `~/.local/bin` (or your chosen install dir) is in your PATH.
+
+### Upgrading
+
+```bash
+rpi upgrade    # download and install the latest release
+```
 
 ## MCP Server
 
