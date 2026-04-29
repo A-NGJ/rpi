@@ -21,6 +21,10 @@ Three modes, auto-detected:
 
 The propose stage is interactive. Claude investigates the codebase, presents options with concrete trade-offs (grounded in your actual codebase, not generic advice), makes a recommendation, and waits for your direction. After you choose, it validates that your combined choices work together before documenting the design in `.rpi/designs/`. If the proposal changes existing behavior documented in `.rpi/specs/`, it can flag those specs with `pending_changes` for update after implementation.
 
+**Grill mode (opt-in):** Pass `--grill` (or use phrasing like "grill me on this", "stress-test this") to invoke the externally-installed `grill-me` skill at the approval gate. Once the design and spec are drafted, `grill-me` interrogates them one question at a time, walking every branch of the decision tree before you accept the artifact. Findings are applied inline to the design and spec; no separate audit log is written. Grilling is single-pass -- re-invoke if you want a second round.
+
+If `grill-me` is not installed, you'll be told and asked whether to proceed with the standard approval gate. The `grill-me` skill is not bundled with RPI -- install it separately.
+
 ## Plan (`/rpi-plan`)
 
 **Purpose:** Create a phase-by-phase implementation plan with specific code changes and verification steps.
@@ -37,6 +41,8 @@ Every plan phase includes:
 - A commit with specific files and message
 
 All open questions must be resolved before the plan is finalized.
+
+**Grill mode (opt-in):** Pass `--grill` (or use phrasing like "grill me on this") to invoke the externally-installed `grill-me` skill on the *phase outline* before the full plan is written. Same fall-back behavior as Propose -- if `grill-me` isn't installed, you'll be asked whether to proceed without it. The `grill-me` skill is not bundled with RPI.
 
 ## Implement (`/rpi-implement`)
 

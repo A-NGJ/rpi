@@ -86,6 +86,8 @@ Review the changes, approve, done. See the [full workflow guide](docs/workflow-g
 | `/rpi-spec-sync` | Syncs specs to match current codebase (detect drift, rewrite, rename, merge) | Updated `.rpi/specs/` |
 | `/rpi-archive` | Archives completed artifacts to keep `.rpi/` clean | Moves files to `.rpi/archive/` |
 
+> **Note:** `/rpi-propose` and `/rpi-plan` support an opt-in `--grill` mode (or phrasing like "grill me on this") that hands off the approval gate to the externally-installed `grill-me` skill for adversarial, one-question-at-a-time interrogation of the draft. Falls back gracefully if `grill-me` isn't installed -- the skill is not bundled with RPI.
+
 ## How RPI Is Different
 
 RPI combines two things other tools don't: **reviewable artifacts that keep a human in the loop at every stage**, and a **compiled Go CLI that keeps mechanical work out of the LLM's context window**. The CLI handles scaffolding, frontmatter, artifact linking, and verification so the LLM focuses on the actual problem. Separating thinking from doing -- research gathers facts, propose makes decisions, plan specifies changes, implement executes them -- means review checkpoints catch bad decisions early, not after 500 lines of wrong code. All artifacts live in `.rpi/`, so context persists across sessions and teams. And by breaking work into stages, each conversation stays scoped to one job, keeping the context window small and output quality high.
