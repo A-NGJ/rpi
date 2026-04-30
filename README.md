@@ -32,7 +32,7 @@ Breaks work into phases (core module, middleware integration, configuration), ea
 ```
 /rpi-implement .rpi/plans/2026-03-04-api-rate-limiting.md
 ```
-Implements phase-by-phase -- runs tests, commits, and advances automatically when checks pass. Pauses only when manual verification is needed or something diverges from the plan. Runs in an isolated git worktree so your working tree stays clean until you merge.
+Implements phase-by-phase -- runs tests, commits, and advances automatically when checks pass. Pauses only when manual verification is needed or something diverges from the plan.
 
 ## Quick Start
 
@@ -87,6 +87,8 @@ Review the changes, approve, done. See the [full workflow guide](docs/workflow-g
 | `/rpi-archive` | Archives completed artifacts to keep `.rpi/` clean | Moves files to `.rpi/archive/` |
 
 > **Note:** `/rpi-propose` and `/rpi-plan` support an opt-in `--grill` mode (or phrasing like "grill me on this") that hands off the approval gate to the externally-installed `grill-me` skill for adversarial, one-question-at-a-time interrogation of the draft. Falls back gracefully if `grill-me` isn't installed -- the skill is not bundled with RPI.
+>
+> `/rpi-propose`, `/rpi-plan`, and `/rpi-implement` also support an opt-in `--ff` (fast-forward) mode that suppresses approval gates and auto-chains through the rest of the pipeline ending at `/rpi-verify`. Use it when you trust the defaults and want autopilot -- the chain stops only on safety gates (codebase drift, sensitive content). Mutually exclusive with `--grill`; the explicit `--ff` flag is required (no natural-language form).
 
 ## How RPI Is Different
 

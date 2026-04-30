@@ -25,6 +25,8 @@ The propose stage is interactive. Claude investigates the codebase, presents opt
 
 If `grill-me` is not installed, you'll be told and asked whether to proceed with the standard approval gate. The `grill-me` skill is not bundled with RPI -- install it separately.
 
+**Fast-forward mode (opt-in):** Pass `--ff` to suppress all approval gates (trade-off buy-in, mid-flight checkpoints, spec approval) and auto-chain into `/rpi-plan --ff <design-path>` immediately. The chain continues through `/rpi-implement` and ends at `/rpi-verify`, producing a verification report in `.rpi/reviews/` as the terminal artifact. Mutually exclusive with `--grill`; the explicit flag is required (no natural-language trigger). Use when you trust the defaults and want full autopilot. Safety gates (codebase drift detection, sensitive-content scan) still stop the chain.
+
 ## Plan (`/rpi-plan`)
 
 **Purpose:** Create a phase-by-phase implementation plan with specific code changes and verification steps.
@@ -44,11 +46,13 @@ All open questions must be resolved before the plan is finalized.
 
 **Grill mode (opt-in):** Pass `--grill` (or use phrasing like "grill me on this") to invoke the externally-installed `grill-me` skill on the *phase outline* before the full plan is written. Same fall-back behavior as Propose -- if `grill-me` isn't installed, you'll be asked whether to proceed without it. The `grill-me` skill is not bundled with RPI.
 
+**Fast-forward mode (opt-in):** Pass `--ff` to skip the phase outline buy-in and auto-chain into `/rpi-implement --ff <plan-path>`, terminating at `/rpi-verify`. Pre-flight checks (design status, artifact chain, drift spot-check) and the design-coverage check still run and can stop the chain. Mutually exclusive with `--grill`.
+
 ## Implement (`/rpi-implement`)
 
 **Purpose:** Execute a plan phase-by-phase with verification at each step.
 
-The implementation stage runs in an isolated git worktree so your working tree stays clean:
+The implementation stage works phase-by-phase:
 
 1. Reads the plan completely
 2. Checks for sensitive files (credentials, secrets) before proceeding
@@ -63,6 +67,8 @@ The implementation stage runs in an isolated git worktree so your working tree s
 If the plan doesn't match reality (codebase drifted since the plan was written), it stops and clearly explains the mismatch rather than silently improvising.
 
 Resumable: if you invoke `/rpi-implement` on a partially-completed plan, it picks up from the first unchecked item.
+
+**Fast-forward mode (opt-in):** Pass `--ff` to skip the per-phase pre-review and any manual verification pauses. After the plan completes, `/rpi-verify <plan-path>` is invoked automatically, producing a verification report in `.rpi/reviews/` as the chain's terminal artifact. The "On mismatch" gate, the sensitive-content scan, end-of-plan spec verification, and phase failure handling all run unchanged -- `--ff` is a review override, not a safety override. Mutually exclusive with `--grill`.
 
 ## Commit (`/rpi-commit`)
 
