@@ -15,7 +15,7 @@ Two phases:
 
 ## Invariants
 
-- Scan all specs: parse scenarios, check staleness (last_updated vs git activity on related code), detect naming mismatches (filename vs feature field), find orphaned specs (zero incoming references)
+- Scan all specs: parse scenarios, check staleness (last_updated vs git activity on related code), detect naming mismatches (filename vs feature field), find orphaned specs (zero incoming references). When semantic search is available, also surface content-level near-duplicate specs that differ only in filename (use a high relevance threshold, ~0.7). When unavailable, the structural pass alone is sufficient.
 - Read actual implementation code for every flagged spec — never judge drift from metadata alone
 - For each flagged spec, propose exactly one action: **keep** (still accurate), **rewrite** (update scenarios to match code), **rename** (filename ≠ feature field), **merge** (overlapping specs → combine into one), or **archive** (feature removed)
 - Present all proposals as a summary table before executing anything — get explicit user approval

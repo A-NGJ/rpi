@@ -169,6 +169,23 @@ The `rpi` binary doubles as an [MCP](https://modelcontextprotocol.io/) server. R
 
 `rpi init` auto-registers the MCP server with Claude Code when both `rpi` and `claude` are in your PATH. Use `--no-mcp` to skip this. See [Architecture](docs/architecture.md) for details.
 
+## Optional: Semantic Search
+
+`rpi serve` exposes an `rpi_search` MCP tool that returns ranked, semantically relevant `.rpi/` artifacts for a natural-language query. When the optional [qmd](https://github.com/tobi/qmd) backend is installed and warmed up, four skills (`rpi-research`, `rpi-propose`, `rpi-diagnose`, `rpi-spec-sync`) call `rpi_search` automatically before investigating, so prior designs, research, and diagnoses get surfaced without keyword guesswork.
+
+**One-time setup:**
+
+```bash
+npm install -g @tobilu/qmd      # or: bun install -g @tobilu/qmd
+rpi search --warmup             # spawns qmd's HTTP MCP daemon and downloads ~2 GB of GGUF models
+```
+
+The warmup is a one-time cost (qmd caches models in `~/.cache/qmd/models/`). Subsequent searches are fast — the daemon keeps models loaded in VRAM, and an internal debounce skips redundant index refreshes for back-to-back skill calls. Expect bimodal latency: most queries return in milliseconds; the call right after a batch of writes pays a re-index cost (and embed inference if files changed).
+
+**Without qmd**, `rpi_search` returns `backend_unavailable` with an install hint, and skills fall back to `rpi_scan` + keyword grep automatically. RPI ships fully functional without qmd; semantic search is a strict upgrade, not a requirement.
+
+**Status contract.** `rpi_search` returns one of four states — `ok` (hits returned), `empty` (no matches), `backend_error` (qmd installed but failing — daemon down, models missing, parse error), or `backend_unavailable` (qmd not on PATH). Each non-`ok` status carries an actionable hint so the failure mode is unambiguous.
+
 ## Acknowledgments
 
 Inspired by [HumanLayer](https://github.com/humanlayer/humanlayer) -- their work on human-in-the-loop patterns for AI agents informed the design of this workflow.

@@ -15,7 +15,7 @@ When insights crystallize into something actionable, suggest → `/rpi-propose` 
 
 - Always interview before investigating — ask about motivation, prior attempts, constraints, and success criteria (1-2 questions at a time, adapt based on answers)
 - Reflect back a concise problem statement and get confirmation before codebase investigation
-- Check for existing research artifacts on this topic — build on prior work
+- After problem confirmation, search for prior research artifacts whose content semantically matches the problem statement — prefer semantic search when available (default relevance threshold ~0.4), and fall back to name/keyword artifact discovery when not. Read snippets first; only read full files for hits with strong relevance. For promising hits, expand to see whether downstream design or plan artifacts already exist (answers "has this been picked up already?"). Surface findings to the user before fresh codebase investigation. If semantic search reports an installed-but-failing state, surface its hint before falling back.
 - Read all mentioned files fully before investigating further
 - Scale investigation to the question — focused questions need minimal research; broad questions need parallel investigation across multiple areas
 - Include file:line references in all findings — no vague descriptions
