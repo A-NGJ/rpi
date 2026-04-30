@@ -195,13 +195,12 @@ func TestEnsureCollection(t *testing.T) {
 		return rpiDir, n
 	}
 
-	t.Run("creates when no prior collection exists", func(t *testing.T) {
+	t.Run("creates collection and sets context on first run", func(t *testing.T) {
 		rpiDir, name := makeDir(t)
 		abs, _ := filepath.Abs(rpiDir)
 
 		routes := map[string]stubResponse{
-			"qmd collection list --json":                              {out: "[]"},
-			"qmd collection add " + abs + " --name " + name:           {out: "added"},
+			"qmd collection add " + abs + " --name " + name:           {out: "Collection '" + name + "' created successfully"},
 			"qmd context add qmd://" + name + " " + CollectionContext: {out: "ctx added"},
 		}
 		run, seen := routeStub(t, routes)
@@ -214,90 +213,87 @@ func TestEnsureCollection(t *testing.T) {
 		if got != name {
 			t.Errorf("got name %q, want %q", got, name)
 		}
-		if len(*seen) != 3 {
-			t.Errorf("expected 3 commands (list+add+context), got %d: %v", len(*seen), *seen)
+		if len(*seen) != 2 {
+			t.Errorf("expected add+context calls, got %d: %v", len(*seen), *seen)
 		}
 	})
 
-	t.Run("no-op when collection already registered with matching path", func(t *testing.T) {
+	// Real-world fixture: this is the exact stderr+stdout text qmd emits when
+	// `qmd collection add . --name <existing-name>` is called twice in a row.
+	// Captured manually from `qmd 1.x` on 2026-04-30. EnsureCollection must
+	// treat this as a successful no-op rather than a hard failure — repeat
+	// invocations are the steady state once a project has bootstrapped once.
+	t.Run("treats 'already exists' as no-op on repeat run", func(t *testing.T) {
 		rpiDir, name := makeDir(t)
 		abs, _ := filepath.Abs(rpiDir)
 
-		listJSON := `[{"name":"` + name + `","pwd":"` + abs + `"}]`
+		alreadyExistsOutput := "Collection '" + name + "' already exists.\nUse a different name with --name <name>\n"
 		routes := map[string]stubResponse{
-			"qmd collection list --json": {out: listJSON},
+			"qmd collection add " + abs + " --name " + name: {
+				out: alreadyExistsOutput,
+				err: errors.New("exit status 1"),
+			},
 		}
 		run, seen := routeStub(t, routes)
 		c := NewClient().WithRunner(run)
 
 		got, err := c.EnsureCollection(context.Background(), rpiDir)
 		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
+			t.Fatalf("expected no error on already-exists, got %v", err)
 		}
 		if got != name {
 			t.Errorf("got name %q, want %q", got, name)
 		}
+		// Context add must NOT run on the already-exists path — the context
+		// was set on the original creation.
 		if len(*seen) != 1 {
-			t.Errorf("expected only the list call, got %d: %v", len(*seen), *seen)
+			t.Errorf("expected only the add call, got %d: %v", len(*seen), *seen)
 		}
 	})
 
-	t.Run("repairs path drift by remove + re-add", func(t *testing.T) {
+	t.Run("propagates other add failures", func(t *testing.T) {
 		rpiDir, name := makeDir(t)
 		abs, _ := filepath.Abs(rpiDir)
 
-		// Simulate a stale registration pointing at a different directory.
-		stalePath := filepath.Join(t.TempDir(), "old-checkout", ".rpi")
-		listJSON := `[{"name":"` + name + `","pwd":"` + stalePath + `"}]`
+		routes := map[string]stubResponse{
+			"qmd collection add " + abs + " --name " + name: {
+				out: "Error: database locked",
+				err: errors.New("exit status 1"),
+			},
+		}
+		run, _ := routeStub(t, routes)
+		c := NewClient().WithRunner(run)
+
+		_, err := c.EnsureCollection(context.Background(), rpiDir)
+		if err == nil {
+			t.Fatal("expected error to propagate")
+		}
+	})
+
+	t.Run("tolerates context add already-exists", func(t *testing.T) {
+		// Defensive: if a prior bootstrap created the collection but a second
+		// invocation hits the context-add step (e.g., qmd collection was
+		// removed but context wasn't), don't fail bootstrap on the context's
+		// already-exists report.
+		rpiDir, name := makeDir(t)
+		abs, _ := filepath.Abs(rpiDir)
 
 		routes := map[string]stubResponse{
-			"qmd collection list --json":                              {out: listJSON},
-			"qmd collection remove " + name:                           {out: "removed"},
-			"qmd collection add " + abs + " --name " + name:           {out: "added"},
-			"qmd context add qmd://" + name + " " + CollectionContext: {out: "ctx added"},
+			"qmd collection add " + abs + " --name " + name: {out: "added"},
+			"qmd context add qmd://" + name + " " + CollectionContext: {
+				out: "Context for 'qmd://" + name + "' already exists",
+				err: errors.New("exit status 1"),
+			},
 		}
-		run, seen := routeStub(t, routes)
+		run, _ := routeStub(t, routes)
 		c := NewClient().WithRunner(run)
 
 		got, err := c.EnsureCollection(context.Background(), rpiDir)
 		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
+			t.Fatalf("expected context already-exists to be tolerated, got %v", err)
 		}
 		if got != name {
 			t.Errorf("got name %q, want %q", got, name)
-		}
-		if len(*seen) != 4 {
-			t.Errorf("expected 4 commands (list+remove+add+context), got %d: %v", len(*seen), *seen)
-		}
-	})
-
-	t.Run("propagates parse failure on malformed list output", func(t *testing.T) {
-		rpiDir, _ := makeDir(t)
-
-		routes := map[string]stubResponse{
-			"qmd collection list --json": {out: "not valid json"},
-		}
-		run, _ := routeStub(t, routes)
-		c := NewClient().WithRunner(run)
-
-		_, err := c.EnsureCollection(context.Background(), rpiDir)
-		if err == nil {
-			t.Fatal("expected error from malformed list output")
-		}
-	})
-
-	t.Run("propagates list failure", func(t *testing.T) {
-		rpiDir, _ := makeDir(t)
-
-		routes := map[string]stubResponse{
-			"qmd collection list --json": {err: errors.New("qmd: not running")},
-		}
-		run, _ := routeStub(t, routes)
-		c := NewClient().WithRunner(run)
-
-		_, err := c.EnsureCollection(context.Background(), rpiDir)
-		if err == nil {
-			t.Fatal("expected error from list failure")
 		}
 	})
 }
