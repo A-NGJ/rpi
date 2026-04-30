@@ -85,13 +85,22 @@ func Query(ctx context.Context, rpiDir string, params SearchParams, opts QueryOp
 		limit = MaxLimit
 	}
 
+	// qmd's MCP `query` tool expects a `searches` array of typed sub-queries
+	// (lex / vec / hyde) — see node_modules/@tobilu/qmd/dist/mcp/server.js. We
+	// send both a `lex` and a `vec` sub-query for the same string: lex catches
+	// exact keyword matches, vec catches semantic matches. The first sub-query
+	// gets 2× weight per qmd's docs; we put `vec` first so semantic relevance
+	// dominates ranking, with `lex` as a recall booster for exact keywords.
 	args := map[string]any{
-		"q":          params.Query,
-		"collection": collectionName,
-		"n":          limit,
+		"searches": []map[string]any{
+			{"type": "vec", "query": params.Query},
+			{"type": "lex", "query": params.Query},
+		},
+		"collections": []string{collectionName},
+		"limit":       limit,
 	}
 	if params.MinScore > 0 {
-		args["min_score"] = params.MinScore
+		args["minScore"] = params.MinScore
 	}
 
 	raw, err := daemon.Call(ctx, "query", args)
@@ -139,11 +148,14 @@ func backendError(stage ErrorStage, msg, hint string) SearchResponse {
 	}
 }
 
-// qmdHit is the shape we extract from qmd's tool result. Field names follow
-// qmd's documented `--json` output; we accept aliases (`displayPath` for
-// `path`, `text` for `snippet`) so a minor qmd schema tweak doesn't break us.
+// qmdHit is the shape we extract from qmd's tool result. qmd's MCP `query`
+// tool returns hits with field names `file` (collection-relative path),
+// `title`, `score`, `snippet`, `context`, `docid`. We accept aliases
+// (`path`, `displayPath`) so callers driving the parser with different
+// shapes (or future qmd versions) still work.
 type qmdHit struct {
-	Path        string  `json:"path"`
+	File        string  `json:"file,omitempty"`
+	Path        string  `json:"path,omitempty"`
 	DisplayPath string  `json:"displayPath,omitempty"`
 	Title       string  `json:"title"`
 	Score       float64 `json:"score"`
@@ -185,6 +197,9 @@ func parseQmdHits(raw json.RawMessage) ([]Hit, error) {
 	for _, h := range arr {
 		path := h.Path
 		if path == "" {
+			path = h.File
+		}
+		if path == "" {
 			path = h.DisplayPath
 		}
 		snippet := h.Snippet
@@ -203,38 +218,42 @@ func parseQmdHits(raw json.RawMessage) ([]Hit, error) {
 	return out, nil
 }
 
-// inferType maps an .rpi/ path to its artifact type via directory naming.
-// Returns empty string when the path doesn't match a known type folder.
+// typeTokens maps every directory name we might see in a path segment
+// (plural folder names for active artifacts, singular folder names for
+// archived ones) to the canonical singular type the spec contract uses.
+var typeTokens = map[string]string{
+	"research":  "research",
+	"designs":   "design",
+	"design":    "design",
+	"plans":     "plan",
+	"plan":      "plan",
+	"specs":     "spec",
+	"spec":      "spec",
+	"diagnoses": "diagnosis",
+	"diagnosis": "diagnosis",
+	"reviews":   "review",
+	"review":    "review",
+}
+
+// inferType maps an artifact path to its canonical type by scanning each
+// path segment for a known directory name. Works for both:
+//
+//   - Filesystem-relative paths like ".rpi/designs/foo.md" or
+//     ".rpi/archive/designs/foo.md".
+//   - qmd's collection-prefixed paths like
+//     "rpi-myrepo-abc123/specs/foo.md" or
+//     "rpi-myrepo-abc123/archive/2026-04/plan/foo.md" (qmd's archive
+//     subdirectory uses the singular form).
+//
+// Returns empty string when no recognizable type segment appears.
 func inferType(path string) string {
 	clean := filepath.ToSlash(path)
-	idx := strings.Index(clean, ".rpi/")
-	if idx < 0 {
-		return ""
+	for _, seg := range strings.Split(clean, "/") {
+		if t, ok := typeTokens[seg]; ok {
+			return t
+		}
 	}
-	rest := clean[idx+len(".rpi/"):]
-	// Strip leading "archive/" so archived artifacts still report their
-	// original type (e.g. archive/designs/foo.md → "design").
-	rest = strings.TrimPrefix(rest, "archive/")
-	first := rest
-	if slash := strings.Index(rest, "/"); slash >= 0 {
-		first = rest[:slash]
-	}
-	switch first {
-	case "research":
-		return "research"
-	case "designs":
-		return "design"
-	case "plans":
-		return "plan"
-	case "specs":
-		return "spec"
-	case "diagnoses":
-		return "diagnosis"
-	case "reviews":
-		return "review"
-	default:
-		return ""
-	}
+	return ""
 }
 
 // filterHits applies caller-side filters that qmd doesn't natively know
@@ -268,9 +287,15 @@ func filterHits(hits []Hit, params SearchParams) []Hit {
 	return out
 }
 
-// isArchivePath reports whether the path lives under .rpi/archive/. Any
-// occurrence of the segment counts so absolute or relative paths both match.
+// isArchivePath reports whether the path lives under any /archive/ segment.
+// Matches both filesystem-relative ".rpi/archive/..." and qmd's collection-
+// prefixed "<collection>/archive/..." shapes.
 func isArchivePath(path string) bool {
 	clean := filepath.ToSlash(path)
-	return strings.Contains(clean, ".rpi/archive/")
+	for _, seg := range strings.Split(clean, "/") {
+		if seg == "archive" {
+			return true
+		}
+	}
+	return false
 }

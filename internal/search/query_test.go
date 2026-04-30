@@ -310,6 +310,7 @@ func TestInferType(t *testing.T) {
 		path string
 		want string
 	}{
+		// Filesystem-relative .rpi/ paths
 		{".rpi/designs/x.md", "design"},
 		{".rpi/research/x.md", "research"},
 		{".rpi/plans/x.md", "plan"},
@@ -318,12 +319,39 @@ func TestInferType(t *testing.T) {
 		{".rpi/reviews/x.md", "review"},
 		{".rpi/archive/designs/old.md", "design"},
 		{"/abs/path/.rpi/designs/x.md", "design"},
+		// qmd's collection-prefixed paths (active artifacts use plural folders)
+		{"rpi-myrepo-abc123/specs/session-awareness.md", "spec"},
+		{"rpi-myrepo-abc123/designs/2026-04-07-foo.md", "design"},
+		{"rpi-myrepo-abc123/plans/2026-04-30-bar.md", "plan"},
+		// qmd's archive structure uses singular type folder under YYYY-MM
+		{"rpi-myrepo-abc123/archive/2026-04/plan/2026-04-07-x.md", "plan"},
+		{"rpi-myrepo-abc123/archive/2026-04/design/2026-04-07-y.md", "design"},
+		// Non-matches
 		{".rpi/unknown/x.md", ""},
 		{"unrelated/file.md", ""},
 	}
 	for _, c := range cases {
 		if got := inferType(c.path); got != c.want {
 			t.Errorf("inferType(%q) = %q, want %q", c.path, got, c.want)
+		}
+	}
+}
+
+func TestIsArchivePath(t *testing.T) {
+	cases := []struct {
+		path string
+		want bool
+	}{
+		{".rpi/archive/designs/old.md", true},
+		{"rpi-myrepo-abc/archive/2026-04/plan/x.md", true},
+		{".rpi/designs/active.md", false},
+		{"rpi-myrepo-abc/specs/x.md", false},
+		// "archive" only counts as a path segment, not a substring
+		{"my-archive-research/notes.md", false},
+	}
+	for _, c := range cases {
+		if got := isArchivePath(c.path); got != c.want {
+			t.Errorf("isArchivePath(%q) = %v, want %v", c.path, got, c.want)
 		}
 	}
 }

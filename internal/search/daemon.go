@@ -1,18 +1,17 @@
 package search
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
 	"os"
 	"strings"
-	"sync/atomic"
 	"time"
+
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 // defaultDaemonURL matches qmd's default HTTP MCP endpoint when launched
@@ -42,12 +41,20 @@ var errDaemonNotRunning = errors.New("qmd daemon not running")
 // expected MCP envelope. Query maps this to StatusBackendError{StageParse}.
 var errParse = errors.New("qmd response parse failed")
 
-// daemonClient issues MCP Streamable-HTTP requests to qmd. Each call is a
-// fresh JSON-RPC 2.0 request — the server is documented as stateless.
+// daemonClient speaks MCP's Streamable HTTP transport against qmd's
+// `qmd mcp --http --daemon` server. Per the MCP spec the protocol requires
+// an `initialize` handshake that yields an `Mcp-Session-Id` to be carried on
+// every subsequent request — we delegate that bookkeeping to the SDK's
+// StreamableClientTransport rather than reimplementing it.
+//
+// Each Call opens its own session because qmd indexes inference work per
+// query and there's no shared client-side state worth amortizing across
+// calls; the initialize round-trip is cheap relative to the actual query
+// (qmd reports ~1s for context recreation, milliseconds for handshake).
 type daemonClient struct {
-	url    string
-	http   *http.Client
-	nextID atomic.Int64
+	endpoint   string
+	httpClient *http.Client
+	impl       *mcp.Implementation
 }
 
 // NewDaemonClient builds a client pointed at the qmd MCP daemon. The HTTP
@@ -55,102 +62,78 @@ type daemonClient struct {
 // inference for several seconds.
 func NewDaemonClient() *daemonClient {
 	return &daemonClient{
-		url:  DaemonURL(),
-		http: &http.Client{Timeout: 60 * time.Second},
+		endpoint:   DaemonURL(),
+		httpClient: &http.Client{Timeout: 120 * time.Second},
+		impl:       &mcp.Implementation{Name: "rpi-search", Version: "dev"},
 	}
 }
 
-// jsonRPCRequest is the request envelope sent to qmd.
-type jsonRPCRequest struct {
-	JSONRPC string         `json:"jsonrpc"`
-	ID      int64          `json:"id"`
-	Method  string         `json:"method"`
-	Params  map[string]any `json:"params"`
-}
-
-// jsonRPCResponse is the envelope returned by qmd. We only consume Result;
-// Error is surfaced as a parse-class failure with the embedded message.
-type jsonRPCResponse struct {
-	JSONRPC string           `json:"jsonrpc"`
-	ID      int64            `json:"id"`
-	Result  *toolResultBlock `json:"result,omitempty"`
-	Error   *jsonRPCError    `json:"error,omitempty"`
-}
-
-type jsonRPCError struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-}
-
-// toolResultBlock matches MCP's typed tool-call response — qmd returns its
-// structured payload as a single text content block holding JSON.
-type toolResultBlock struct {
-	Content []toolContent `json:"content"`
-	IsError bool          `json:"isError,omitempty"`
-}
-
-type toolContent struct {
-	Type string `json:"type"`
-	Text string `json:"text"`
-}
-
-// Call invokes a tool on the qmd MCP server using JSON-RPC's tools/call
-// method. Returns the raw JSON inside the first text content block.
+// Call opens an MCP session, invokes the named tool with args, and returns
+// the JSON payload from the first text content block. Connection-refused
+// surfaces as errDaemonNotRunning; all other transport-class failures
+// surface as errParse so Query can map them to specific stages.
 func (c *daemonClient) Call(ctx context.Context, toolName string, args map[string]any) (json.RawMessage, error) {
-	id := c.nextID.Add(1)
-	body, err := json.Marshal(jsonRPCRequest{
-		JSONRPC: "2.0",
-		ID:      id,
-		Method:  "tools/call",
-		Params: map[string]any{
-			"name":      toolName,
-			"arguments": args,
-		},
-	})
-	if err != nil {
-		return nil, fmt.Errorf("marshal request: %w", err)
+	client := mcp.NewClient(c.impl, nil)
+	transport := &mcp.StreamableClientTransport{
+		Endpoint:   c.endpoint,
+		HTTPClient: c.httpClient,
+		// We only need request-response semantics; qmd doesn't push
+		// server-initiated notifications we'd want to consume, and disabling
+		// SSE avoids holding a long-lived background connection per Call.
+		DisableStandaloneSSE: true,
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.url, bytes.NewReader(body))
+	session, err := client.Connect(ctx, transport, nil)
 	if err != nil {
-		return nil, fmt.Errorf("build request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-
-	resp, err := c.http.Do(req)
-	if err != nil {
-		// Distinguish "daemon not listening" from generic transport errors so
-		// Query can map it to a specific stage with a useful hint.
 		if isConnRefused(err) {
 			return nil, errDaemonNotRunning
 		}
-		return nil, fmt.Errorf("http call: %w", err)
+		return nil, fmt.Errorf("connect to qmd daemon: %w", err)
 	}
-	defer resp.Body.Close()
+	defer session.Close()
 
-	respBody, err := io.ReadAll(resp.Body)
+	result, err := session.CallTool(ctx, &mcp.CallToolParams{
+		Name:      toolName,
+		Arguments: args,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("read response: %w", err)
+		return nil, fmt.Errorf("call %s: %w", toolName, err)
+	}
+	if result.IsError {
+		return nil, fmt.Errorf("qmd reported tool error for %s: %s", toolName, contentSummary(result.Content))
 	}
 
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("%w: HTTP %d: %s", errParse, resp.StatusCode, strings.TrimSpace(string(respBody)))
+	// Prefer the structured payload — qmd ships the typed result there. Fall
+	// back to the first text content block (which qmd uses for the human-
+	// formatted summary) only when the structured field is empty.
+	if result.StructuredContent != nil {
+		raw, err := json.Marshal(result.StructuredContent)
+		if err != nil {
+			return nil, fmt.Errorf("%w: re-marshal structured content: %v", errParse, err)
+		}
+		return raw, nil
 	}
 
-	var env jsonRPCResponse
-	if err := json.Unmarshal(respBody, &env); err != nil {
-		return nil, fmt.Errorf("%w: %v", errParse, err)
-	}
-	if env.Error != nil {
-		return nil, fmt.Errorf("qmd: %s (code %d)", env.Error.Message, env.Error.Code)
-	}
-	if env.Result == nil || len(env.Result.Content) == 0 {
+	if len(result.Content) == 0 {
 		return nil, fmt.Errorf("%w: empty result", errParse)
 	}
+	text, ok := result.Content[0].(*mcp.TextContent)
+	if !ok {
+		return nil, fmt.Errorf("%w: first content block is %T, expected TextContent",
+			errParse, result.Content[0])
+	}
+	return json.RawMessage(text.Text), nil
+}
 
-	// qmd encodes the tool's structured payload as JSON inside a text block.
-	return json.RawMessage(env.Result.Content[0].Text), nil
+// contentSummary renders MCP content for embedding in error messages.
+func contentSummary(content []mcp.Content) string {
+	var parts []string
+	for _, c := range content {
+		if t, ok := c.(*mcp.TextContent); ok {
+			parts = append(parts, t.Text)
+		}
+	}
+	return strings.Join(parts, " ")
 }
 
 // isConnRefused detects the kernel-level "no listener" signal for a wide

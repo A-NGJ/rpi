@@ -7,15 +7,38 @@ import (
 	"time"
 )
 
+// realQmdUpdateOutput is qmd's actual `qmd update --collection X --json`
+// output (captured 2026-04-30 from `qmd 1.x`). qmd ignores `--json` here
+// and prints the same human text either way — same root cause as the
+// `collection list` regression. Used as the canonical fixture.
+const realQmdUpdateOutput = `Updating 1 collection(s)...
+
+[1/1] test (**/*.md)
+Collection: /tmp/some/path/.rpi (**/*.md)
+
+Indexed: 0 new, 0 updated, 103 unchanged, 0 removed
+
+✓ All collections updated.
+
+Run 'qmd embed' to update embeddings (103 unique hashes need vectors)
+`
+
+const realQmdUpdateOutputAllEmbedded = `Updating 1 collection(s)...
+
+[1/1] test (**/*.md)
+
+Indexed: 2 new, 1 updated, 50 unchanged, 0 removed
+
+✓ All collections updated.
+`
+
 func TestRefresh(t *testing.T) {
 	t.Run("clean update with no embed needed", func(t *testing.T) {
 		resetDebounce()
 		t.Cleanup(resetDebounce)
 
 		routes := map[string]stubResponse{
-			"qmd update --collection test --json": {
-				out: `{"indexed":0,"updated":2,"unchanged":10,"removed":0,"needsEmbedding":0}`,
-			},
+			"qmd update --collection test --json": {out: realQmdUpdateOutputAllEmbedded},
 		}
 		run, seen := routeStub(t, routes)
 		c := NewClient().WithRunner(run)
@@ -24,8 +47,11 @@ func TestRefresh(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		if result.Updated != 2 || result.Unchanged != 10 {
+		if result.Indexed != 2 || result.Updated != 1 || result.Unchanged != 50 {
 			t.Errorf("unexpected counts: %+v", result)
+		}
+		if result.NeedsEmbedding != 0 {
+			t.Errorf("expected NeedsEmbedding=0, got %d", result.NeedsEmbedding)
 		}
 		if len(*seen) != 1 {
 			t.Errorf("expected only update call (no embed), got %d: %v", len(*seen), *seen)
@@ -37,10 +63,8 @@ func TestRefresh(t *testing.T) {
 		t.Cleanup(resetDebounce)
 
 		routes := map[string]stubResponse{
-			"qmd update --collection test --json": {
-				out: `{"indexed":3,"updated":1,"unchanged":5,"removed":0,"needsEmbedding":4}`,
-			},
-			"qmd embed -c test": {out: "embedded 4 chunks"},
+			"qmd update --collection test --json": {out: realQmdUpdateOutput},
+			"qmd embed -c test":                   {out: "embedded 103 chunks"},
 		}
 		run, seen := routeStub(t, routes)
 		c := NewClient().WithRunner(run)
@@ -49,8 +73,8 @@ func TestRefresh(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		if result.NeedsEmbedding != 4 {
-			t.Errorf("expected NeedsEmbedding=4, got %d", result.NeedsEmbedding)
+		if result.NeedsEmbedding != 103 {
+			t.Errorf("expected NeedsEmbedding=103, got %d", result.NeedsEmbedding)
 		}
 		if len(*seen) != 2 {
 			t.Errorf("expected update+embed calls, got %d: %v", len(*seen), *seen)
@@ -64,9 +88,7 @@ func TestRefresh(t *testing.T) {
 		// qmd update exits non-zero but reports some files indexed.
 		routes := map[string]stubResponse{
 			"qmd update --collection test --json": {
-				out: `progress: scanning...
-{"indexed":3,"updated":0,"unchanged":2,"removed":0,"needsEmbedding":0}
-error: 1 file failed to parse`,
+				out: "Indexed: 3 new, 0 updated, 2 unchanged, 0 removed\nerror: 1 file failed to parse",
 				err: errors.New("exit status 1"),
 			},
 		}
@@ -116,9 +138,7 @@ error: 1 file failed to parse`,
 		t.Cleanup(resetDebounce)
 
 		routes := map[string]stubResponse{
-			"qmd update --collection test --json": {
-				out: `{"indexed":1,"needsEmbedding":1}`,
-			},
+			"qmd update --collection test --json": {out: realQmdUpdateOutput},
 			"qmd embed -c test": {
 				out: "fatal: model load failed",
 				err: errors.New("exit status 1"),
@@ -150,9 +170,7 @@ error: 1 file failed to parse`,
 		t.Cleanup(func() { nowFn = time.Now })
 
 		routes := map[string]stubResponse{
-			"qmd update --collection test --json": {
-				out: `{"indexed":0,"updated":1,"needsEmbedding":0}`,
-			},
+			"qmd update --collection test --json": {out: realQmdUpdateOutputAllEmbedded},
 		}
 		run, seen := routeStub(t, routes)
 		c := NewClient().WithRunner(run)
@@ -192,14 +210,19 @@ func TestParseUpdateOutput(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:  "pure json",
-			input: `{"indexed":1,"updated":2,"unchanged":3,"removed":0,"needsEmbedding":1}`,
-			want:  RefreshResult{Indexed: 1, Updated: 2, Unchanged: 3, NeedsEmbedding: 1},
+			name:  "real qmd output with embeddings owed",
+			input: realQmdUpdateOutput,
+			want:  RefreshResult{Indexed: 0, Updated: 0, Unchanged: 103, Removed: 0, NeedsEmbedding: 103},
 		},
 		{
-			name:  "json with preamble",
-			input: "scanning files...\n{\"indexed\":1,\"needsEmbedding\":0}",
-			want:  RefreshResult{Indexed: 1},
+			name:  "real qmd output all embedded",
+			input: realQmdUpdateOutputAllEmbedded,
+			want:  RefreshResult{Indexed: 2, Updated: 1, Unchanged: 50, NeedsEmbedding: 0},
+		},
+		{
+			name:  "summary line alone",
+			input: "Indexed: 1 new, 2 updated, 3 unchanged, 4 removed",
+			want:  RefreshResult{Indexed: 1, Updated: 2, Unchanged: 3, Removed: 4},
 		},
 		{
 			name:  "empty output",
@@ -207,8 +230,8 @@ func TestParseUpdateOutput(t *testing.T) {
 			want:  RefreshResult{},
 		},
 		{
-			name:    "no json present",
-			input:   "just human text",
+			name:    "no recognizable summary",
+			input:   "some unrelated text without an Indexed: line",
 			wantErr: true,
 		},
 	}
@@ -226,7 +249,8 @@ func TestParseUpdateOutput(t *testing.T) {
 				t.Fatalf("unexpected error: %v", err)
 			}
 			if got.Indexed != tc.want.Indexed || got.Updated != tc.want.Updated ||
-				got.Unchanged != tc.want.Unchanged || got.NeedsEmbedding != tc.want.NeedsEmbedding {
+				got.Unchanged != tc.want.Unchanged || got.Removed != tc.want.Removed ||
+				got.NeedsEmbedding != tc.want.NeedsEmbedding {
 				t.Errorf("got %+v, want %+v", got, tc.want)
 			}
 		})

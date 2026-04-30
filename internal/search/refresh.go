@@ -2,8 +2,9 @@ package search
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -128,26 +129,56 @@ func (c *Client) Refresh(ctx context.Context, collectionName string) (RefreshRes
 	return result, nil
 }
 
-// parseUpdateOutput tolerates qmd outputs that mix human-readable preamble
-// with a trailing JSON object — common when qmd writes progress before the
-// final summary. We extract the last JSON object found and unmarshal it.
+// updateSummaryRe matches the canonical qmd update summary line:
+//
+//	Indexed: 0 new, 0 updated, 103 unchanged, 0 removed
+//
+// qmd silently ignores --json on `update` (same as on `collection list`),
+// so we parse the human text. The regex tolerates extra whitespace.
+var updateSummaryRe = regexp.MustCompile(
+	`Indexed:\s*(\d+)\s+new,\s*(\d+)\s+updated,\s*(\d+)\s+unchanged,\s*(\d+)\s+removed`,
+)
+
+// needsEmbeddingRe matches the trailing hint qmd emits when fresh vectors
+// are owed:
+//
+//	Run 'qmd embed' to update embeddings (103 unique hashes need vectors)
+//
+// Absent line means everything is embedded.
+var needsEmbeddingRe = regexp.MustCompile(`\((\d+)\s+unique\s+hashes\s+need\s+vectors\)`)
+
+// parseUpdateOutput extracts counts from qmd's human-format `update` output.
+// Returns a zero-valued RefreshResult with no error when the output is
+// empty (qmd printed nothing meaningful) or when no recognizable summary
+// line is present — the caller treats that as "we don't know, assume
+// nothing changed" rather than a hard failure.
 func parseUpdateOutput(out []byte) (RefreshResult, error) {
 	trimmed := strings.TrimSpace(string(out))
 	if trimmed == "" {
 		return RefreshResult{}, nil
 	}
 
-	// Take the substring from the last '{' to the last '}' so progress
-	// lines emitted before the JSON summary don't break parsing.
-	openIdx := strings.LastIndex(trimmed, "{")
-	closeIdx := strings.LastIndex(trimmed, "}")
-	if openIdx == -1 || closeIdx == -1 || openIdx >= closeIdx {
-		return RefreshResult{}, fmt.Errorf("no JSON object found in update output")
+	var result RefreshResult
+	if m := updateSummaryRe.FindStringSubmatch(trimmed); m != nil {
+		result.Indexed = atoi(m[1])
+		result.Updated = atoi(m[2])
+		result.Unchanged = atoi(m[3])
+		result.Removed = atoi(m[4])
+	} else {
+		return RefreshResult{}, fmt.Errorf("no update summary line found")
 	}
 
-	var result RefreshResult
-	if err := json.Unmarshal([]byte(trimmed[openIdx:closeIdx+1]), &result); err != nil {
-		return RefreshResult{}, fmt.Errorf("unmarshal update output: %w", err)
+	if m := needsEmbeddingRe.FindStringSubmatch(trimmed); m != nil {
+		result.NeedsEmbedding = atoi(m[1])
 	}
+
 	return result, nil
+}
+
+// atoi is a forgiving integer parser — invalid input becomes 0 rather than
+// propagating an error, since the caller has already established that the
+// surrounding regex matched.
+func atoi(s string) int {
+	n, _ := strconv.Atoi(s)
+	return n
 }
