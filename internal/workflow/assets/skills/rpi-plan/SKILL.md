@@ -16,6 +16,8 @@ Auto-detect the mode from input:
 
 Any mode can be combined with **`--grill`** — pass `--grill` or use phrasing like "grill me on this" / "stress-test this" to invoke the externally-installed `grill-me` skill at the approval gate (see invariants).
 
+Any mode can be combined with **`--ff`** — pass `--ff` to suppress approval gates and auto-chain through `/rpi-implement` and `/rpi-verify`. Mutually exclusive with `--grill`.
+
 When the user confirms the plan, suggest → `/rpi-implement <plan-path>`.
 
 ## Invariants
@@ -29,6 +31,7 @@ When the user confirms the plan, suggest → `/rpi-implement <plan-path>`.
 - Each phase has: tasks with file paths, success criteria (automated + manual), and a commit step
 - Map phases to spec scenarios where applicable
 - Get buy-in on proposed phases before writing the full plan
+- If the user passed `--ff`, skip the phase outline buy-in — write the full plan immediately, run the existing automated coverage check, transition the design to complete, and invoke `/rpi-implement --ff <plan-path>` via the Skill tool. Error if `--grill` was also passed.
 - If the user requested grilling (via `--grill` or natural-language phrasing) and `grill-me` is in your available skills, invoke `grill-me` on the phase outline before writing the full plan. Apply revisions inline, then continue with normal phase approval. If `grill-me` is unavailable, tell the user it must be installed externally and ask whether to proceed with the standard approval gate.
 - **Pipeline mode**: after writing, verify the plan covers all design decisions — nothing silently dropped; transition design → complete
 - Scaffold and save the plan artifact, linking to upstream design and spec

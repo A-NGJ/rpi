@@ -11,6 +11,8 @@ Execute an active plan from `.rpi/plans/` phase by phase. Plans come in two form
 
 After all phases are complete and verified, announce completion and update the plan status.
 
+**`--ff` (fast-forward) mode**: if invoked with `--ff`, skip the per-phase pre-review and any manual verification pauses, and after the plan transitions to complete, invoke `/rpi-verify <plan-path>` via the Skill tool as the chain's terminal step. The "On mismatch" gate, the sensitive-content scan, end-of-plan spec verification, and phase failure handling all run unchanged. Error if `--grill` is also passed.
+
 ## Invariants
 
 - Validate the plan's status before starting — draft/active: proceed; complete: warn about duplication
@@ -18,17 +20,18 @@ After all phases are complete and verified, announce completion and update the p
 - Read all files mentioned in the plan fully — never use limit/offset
 - Transition the plan to active status when starting
 - Check current progress (completed vs remaining items) — resume from first unchecked item
-- **Pre-review**: before writing code for a phase, present all intended changes for approval — flag any deviations from plan
+- **Pre-review**: before writing code for a phase, present all intended changes for approval — flag any deviations from plan. Under `--ff`, skip the preview and write the changes directly.
 - **Red/green TDD**: for new code, write tests first (confirm they fail), then implement until they pass
 - Run success criteria checks after each phase — fix issues before proceeding
 - Update checkboxes in the plan file as items complete
 - **Before committing**: scan staged files for sensitive content — warn and exclude if flagged
 - **Auto-commit**: after each phase passes its checks, commit automatically without manual confirmation — use descriptive messages matching repo style
 - **After hook failure**: read error, fix the issue, re-stage, create a new commit (never amend)
-- If a phase's success criteria are fully covered by automated checks (tests, linting, etc.), run them and proceed automatically when they pass — only pause for manual verification when the plan includes manual verification items not covered by automated tests
+- If a phase's success criteria are fully covered by automated checks (tests, linting, etc.), run them and proceed automatically when they pass — only pause for manual verification when the plan includes manual verification items not covered by automated tests. Under `--ff`, skip manual verification pauses too — mark unverified items as `[unverified — --ff]` in the plan checkbox text.
 - **On mismatch**: stop, present what the plan says vs what you found, ask how to proceed
 - **Context recovery**: if context seems lost or you're unsure which phase you're on, call the context essentials tool to restore your implementation context
 - **On completion**: verify spec conformance for all linked specs — extract scenarios using the verify spec tool, then check each scenario against actual code and tests; plan → complete
+- Under `--ff`, after the plan transitions to complete, invoke `/rpi-verify <plan-path>` via the Skill tool as the chain's terminal step.
 
 ## Principles
 
