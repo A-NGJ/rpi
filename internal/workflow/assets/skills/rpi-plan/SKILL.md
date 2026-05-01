@@ -32,7 +32,7 @@ When the user confirms the plan, suggest → `/rpi-implement <plan-path>`.
 - Map phases to spec scenarios where applicable
 - Get buy-in on proposed phases before writing the full plan
 - If the user passed `--ff`, skip the phase outline buy-in — write the full plan immediately, run the existing automated coverage check, transition the design to complete, and invoke `/rpi-implement --ff <plan-path>` via the Skill tool. Error if `--grill` was also passed.
-- If the user requested grilling (via `--grill` or natural-language phrasing) and `grill-me` is in your available skills, invoke `grill-me` on the phase outline before writing the full plan. Apply revisions inline, then continue with normal phase approval. If `grill-me` is unavailable, tell the user it must be installed externally and ask whether to proceed with the standard approval gate.
+- If the user requested grilling (via `--grill` or natural-language phrasing) and `grill-me` is in your available skills, invoke `grill-me` on the phase outline before writing the full plan. Apply revisions inline, then continue with normal phase approval. If `grill-me` is unavailable, tell the user `grill-me` is not currently available and ask whether to proceed with the standard approval gate.
 - **Pipeline mode**: after writing, verify the plan covers all design decisions — nothing silently dropped; transition design → complete
 - Scaffold and save the plan artifact, linking to upstream design and spec
 

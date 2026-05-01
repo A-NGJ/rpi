@@ -31,7 +31,7 @@ When the user approves the spec, suggest → `/rpi-plan <design-path>`.
 - Create a behavioral spec with 5-8 Given/When/Then scenarios describing user-observable behavior — scenarios must not reference internal structure (structs, file paths, function names); include a Constraints section for boundaries and an Out of Scope section. Name the spec file after its `feature` field (e.g., `feature: rpi-status` → `rpi-status.md`)
 - Present the spec for approval — iterate until accepted
 - If the user passed `--ff`, skip the trade-off buy-in, the mid-flight decision checkpoints, and the spec approval gate — auto-accept the drafted design and spec and immediately invoke `/rpi-plan --ff <design-path>` via the Skill tool. Error if `--grill` was also passed.
-- If the user requested grilling (via `--grill` or natural-language phrasing) and `grill-me` is in your available skills, invoke `grill-me` on the drafted design+spec before the approval gate. Apply revisions inline to the design and spec, then present for approval. If `grill-me` is unavailable, tell the user it must be installed externally and ask whether to proceed with the standard approval gate.
+- If the user requested grilling (via `--grill` or natural-language phrasing) and `grill-me` is in your available skills, invoke `grill-me` on the drafted design+spec before the approval gate. Apply revisions inline to the design and spec, then present for approval. If `grill-me` is unavailable, tell the user `grill-me` is not currently available and ask whether to proceed with the standard approval gate.
 - Transition artifacts: design → active, research → complete (if fully addressed)
 - For incremental mode: update in place, add an Update Log entry, update affected specs
 
