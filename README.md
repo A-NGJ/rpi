@@ -86,7 +86,7 @@ Review the changes, approve, done. See the [full workflow guide](docs/workflow-g
 | `/rpi-spec-sync` | Syncs specs to match current codebase (detect drift, rewrite, rename, merge) | Updated `.rpi/specs/` |
 | `/rpi-archive` | Archives completed artifacts to keep `.rpi/` clean | Moves files to `.rpi/archive/` |
 
-> **Note:** `/rpi-propose` and `/rpi-plan` support an opt-in `--grill` mode (or phrasing like "grill me on this") that hands off the approval gate to the externally-installed `grill-me` skill for adversarial, one-question-at-a-time interrogation of the draft. Falls back gracefully if `grill-me` isn't installed -- the skill is not bundled with RPI.
+> **Note:** `/rpi-propose` and `/rpi-plan` support an opt-in `--grill` mode (or phrasing like "grill me on this") that hands off the approval gate to the bundled `grill-me` skill (sourced from [mattpocock/skills](https://github.com/mattpocock/skills) under MIT) for adversarial, one-question-at-a-time interrogation of the draft. Falls back gracefully if a user has removed the skill from their local installation.
 >
 > `/rpi-propose`, `/rpi-plan`, and `/rpi-implement` also support an opt-in `--ff` (fast-forward) mode that suppresses approval gates and auto-chains through the rest of the pipeline ending at `/rpi-verify`. Use it when you trust the defaults and want autopilot -- the chain stops only on safety gates (codebase drift, sensitive content). Mutually exclusive with `--grill`; the explicit `--ff` flag is required (no natural-language form).
 

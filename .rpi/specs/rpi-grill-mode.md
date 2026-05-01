@@ -1,8 +1,8 @@
 ---
 domain: rpi-propose and rpi-plan approval gates
 feature: rpi-grill-mode
-last_updated: 2026-04-29T21:11:07+00:00
-updated_by: .rpi/designs/2026-04-29-grill-mode-for-rpi-propose-and-rpi-plan.md
+last_updated: 2026-05-01T00:00:00+02:00
+updated_by: .rpi/plans/2026-05-01-bundle-grill-me-skill-from-mattpocock-skills.md
 ---
 
 # --grill mode for rpi-propose and rpi-plan
@@ -10,11 +10,19 @@ updated_by: .rpi/designs/2026-04-29-grill-mode-for-rpi-propose-and-rpi-plan.md
 ## Purpose
 
 An opt-in mode that hands off `/rpi-propose` and `/rpi-plan` approval gates to
-the externally-installed `grill-me` skill for adversarial, one-question-at-a-time
-interrogation before the user accepts the artifact. Falls back gracefully when
-`grill-me` is not installed.
+the bundled `grill-me` skill (sourced from
+[mattpocock/skills](https://github.com/mattpocock/skills) under MIT) for
+adversarial, one-question-at-a-time interrogation before the user accepts the
+artifact. `grill-me` ships by default with `rpi init` / `rpi update`; the
+fall-back path remains for users who have removed it from their local
+installation.
 
 ## Scenarios
+
+### Grill-me is available by default
+Given a fresh `rpi init` (or `rpi update`) with no manual skill removal
+When the user invokes `/rpi-propose --grill` or `/rpi-plan --grill`
+Then the bundled `grill-me` skill is available and grilling proceeds without the soft fall-back warning
 
 ### Grill triggered via flag
 Given the user invokes `/rpi-propose --grill <input>` or `/rpi-plan --grill <input>`
@@ -39,10 +47,10 @@ When grilling fires
 Then it runs on the phase outline before the full plan is written, mirroring the existing buy-in gate
 
 ### Grill-me unavailable, soft fall-back
-Given the user requests grilling
-And the `grill-me` skill is not available
+Given the user has removed the bundled `grill-me` skill or runs in an environment where it is not available
+And the user requests grilling
 When the approval gate is reached
-Then the user is told `grill-me` must be installed externally, offered the standard non-grill approval, and the flow proceeds only after explicit confirmation
+Then the user is told `grill-me` is not currently available, offered the standard non-grill approval, and the flow proceeds only after explicit confirmation
 
 ### Findings shape the artifact inline
 Given `grill-me` has just finished interrogating a draft
@@ -62,7 +70,6 @@ Then the existing collaborative approval gate runs unchanged and `grill-me` is n
 
 ## Out of Scope
 
-- Auto-installing or downloading the `grill-me` skill
 - Grilling on artifacts produced by skills other than `/rpi-propose` and `/rpi-plan` (no grill mode in research, implement, verify, etc.)
 - Recording `grill-me`'s questions and answers as a separate artifact
 - Looping `grill-me` until "no more questions"

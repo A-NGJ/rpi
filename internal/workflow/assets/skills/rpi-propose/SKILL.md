@@ -15,7 +15,7 @@ Auto-detect the mode from input:
 - **Updating existing design** (path to existing design) → read it, understand what changed, propose updates in place
 - **Nothing provided** → ask for input with brief examples of each mode
 
-Any mode can be combined with **`--grill`** — pass `--grill` or use phrasing like "grill me on this" / "stress-test this" to invoke the externally-installed `grill-me` skill at the approval gate (see invariants).
+Any mode can be combined with **`--grill`** — pass `--grill` or use phrasing like "grill me on this" / "stress-test this" to invoke the bundled `grill-me` skill at the approval gate (see invariants).
 
 Any mode can be combined with **`--ff`** — pass `--ff` to suppress approval gates and auto-chain through `/rpi-plan`, `/rpi-implement`, and `/rpi-verify`. Mutually exclusive with `--grill`.
 

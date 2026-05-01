@@ -21,9 +21,9 @@ Three modes, auto-detected:
 
 The propose stage is interactive. Claude investigates the codebase, presents options with concrete trade-offs (grounded in your actual codebase, not generic advice), makes a recommendation, and waits for your direction. After you choose, it validates that your combined choices work together before documenting the design in `.rpi/designs/`. If the proposal changes existing behavior documented in `.rpi/specs/`, it can flag those specs with `pending_changes` for update after implementation.
 
-**Grill mode (opt-in):** Pass `--grill` (or use phrasing like "grill me on this", "stress-test this") to invoke the externally-installed `grill-me` skill at the approval gate. Once the design and spec are drafted, `grill-me` interrogates them one question at a time, walking every branch of the decision tree before you accept the artifact. Findings are applied inline to the design and spec; no separate audit log is written. Grilling is single-pass -- re-invoke if you want a second round.
+**Grill mode (opt-in):** Pass `--grill` (or use phrasing like "grill me on this", "stress-test this") to invoke the bundled `grill-me` skill (sourced from [mattpocock/skills](https://github.com/mattpocock/skills) under MIT) at the approval gate. Once the design and spec are drafted, `grill-me` interrogates them one question at a time, walking every branch of the decision tree before you accept the artifact. Findings are applied inline to the design and spec; no separate audit log is written. Grilling is single-pass -- re-invoke if you want a second round.
 
-If `grill-me` is not installed, you'll be told and asked whether to proceed with the standard approval gate. The `grill-me` skill is not bundled with RPI -- install it separately.
+If a user has removed the bundled `grill-me` skill, you'll be told and asked whether to proceed with the standard approval gate.
 
 **Fast-forward mode (opt-in):** Pass `--ff` to suppress all approval gates (trade-off buy-in, mid-flight checkpoints, spec approval) and auto-chain into `/rpi-plan --ff <design-path>` immediately. The chain continues through `/rpi-implement` and ends at `/rpi-verify`, producing a verification report in `.rpi/reviews/` as the terminal artifact. Mutually exclusive with `--grill`; the explicit flag is required (no natural-language trigger). Use when you trust the defaults and want full autopilot. Safety gates (codebase drift detection, sensitive-content scan) still stop the chain.
 
@@ -44,7 +44,7 @@ Every plan phase includes:
 
 All open questions must be resolved before the plan is finalized.
 
-**Grill mode (opt-in):** Pass `--grill` (or use phrasing like "grill me on this") to invoke the externally-installed `grill-me` skill on the *phase outline* before the full plan is written. Same fall-back behavior as Propose -- if `grill-me` isn't installed, you'll be asked whether to proceed without it. The `grill-me` skill is not bundled with RPI.
+**Grill mode (opt-in):** Pass `--grill` (or use phrasing like "grill me on this") to invoke the bundled `grill-me` skill on the *phase outline* before the full plan is written. Same fall-back behavior as Propose -- if a user has removed `grill-me` locally, you'll be asked whether to proceed without it.
 
 **Fast-forward mode (opt-in):** Pass `--ff` to skip the phase outline buy-in and auto-chain into `/rpi-implement --ff <plan-path>`, terminating at `/rpi-verify`. Pre-flight checks (design status, artifact chain, drift spot-check) and the design-coverage check still run and can stop the chain. Mutually exclusive with `--grill`.
 
