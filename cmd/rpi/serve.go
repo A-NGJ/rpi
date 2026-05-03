@@ -99,6 +99,11 @@ func registerTools(s *mcp.Server) {
 		Description: mcpDescriptionWithPrefix("Scan staged files for sensitive content.", gitContextCmd),
 	}, handleGitSensitiveCheck)
 
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "rpi_git_gitignore_check",
+		Description: mcpDescriptionWithPrefix("Scan files in git status against .gitignore patterns.", gitContextCmd),
+	}, handleGitGitignoreCheck)
+
 	// No-param tools — archive scan
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_archive_scan",
@@ -220,6 +225,14 @@ func handleGitChangedFiles(_ context.Context, _ *mcp.CallToolRequest, _ emptyInp
 
 func handleGitSensitiveCheck(_ context.Context, _ *mcp.CallToolRequest, _ emptyInput) (*mcp.CallToolResult, any, error) {
 	matches, err := git.SensitiveCheck()
+	if err != nil {
+		return nil, nil, err
+	}
+	return jsonResult(matches)
+}
+
+func handleGitGitignoreCheck(_ context.Context, _ *mcp.CallToolRequest, _ emptyInput) (*mcp.CallToolResult, any, error) {
+	matches, err := git.GitignoreCheck()
 	if err != nil {
 		return nil, nil, err
 	}

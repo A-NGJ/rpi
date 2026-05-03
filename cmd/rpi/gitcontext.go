@@ -20,7 +20,10 @@ commits, diff summary, and sensitive file scan results.
 Actions:
   changed-files     Files changed vs main branch (falls back to last 10 commits)
   sensitive-check   Scan staged files for sensitive filenames (.env, .pem, .key,
-                    credentials) and content patterns (password=, API_KEY=, RSA keys)`,
+                    credentials) and content patterns (password=, API_KEY=, RSA keys)
+  gitignore-check   Scan files in git status (staged, modified, untracked)
+                    against .gitignore patterns; catches tracked files that now
+                    match ignore rules`,
 	Example: `  # Full git context
   rpi git-context
 
@@ -28,7 +31,10 @@ Actions:
   rpi git-context changed-files
 
   # Check staged files for sensitive content before committing
-  rpi git-context sensitive-check`,
+  rpi git-context sensitive-check
+
+  # Check working-tree files against .gitignore
+  rpi git-context gitignore-check`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runGitContext,
 }
@@ -56,8 +62,10 @@ func runGitContext(cmd *cobra.Command, args []string) error {
 		return runGitContextChangedFiles(format)
 	case "sensitive-check":
 		return runGitContextSensitiveCheck(format)
+	case "gitignore-check":
+		return runGitContextGitignoreCheck(format)
 	default:
-		return fmt.Errorf("unknown action: %s (expected changed-files or sensitive-check)", action)
+		return fmt.Errorf("unknown action: %s (expected changed-files, sensitive-check, or gitignore-check)", action)
 	}
 }
 
@@ -97,6 +105,23 @@ func runGitContextChangedFiles(format string) error {
 
 func runGitContextSensitiveCheck(format string) error {
 	matches, err := git.SensitiveCheck()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+
+	switch format {
+	case "json":
+		data, _ := json.MarshalIndent(matches, "", "  ")
+		fmt.Println(string(data))
+	default:
+		return fmt.Errorf("unknown format: %s (expected json)", format)
+	}
+	return nil
+}
+
+func runGitContextGitignoreCheck(format string) error {
+	matches, err := git.GitignoreCheck()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)

@@ -39,6 +39,12 @@ type SensitiveMatch struct {
 	Reason string `json:"reason"`
 }
 
+type GitignoreMatch struct {
+	File    string `json:"file"`
+	Pattern string `json:"pattern"`
+	Source  string `json:"source"`
+}
+
 var sensitiveFilePatterns = []struct {
 	pattern *regexp.Regexp
 	reason  string
@@ -137,6 +143,96 @@ func ChangedFiles() ([]string, error) {
 		return []string{}, nil
 	}
 	return strings.Split(out, "\n"), nil
+}
+
+// GitignoreCheck scans files appearing in `git status` (staged, modified,
+// untracked) against gitignore rules and returns any matches. Uses
+// `git check-ignore --no-index` so already-tracked-but-now-ignored files are
+// reported (the realistic case: a file was tracked, then later added to
+// .gitignore, and is now showing up as a candidate to commit).
+func GitignoreCheck() ([]GitignoreMatch, error) {
+	statusOut, err := runGit("status", "--porcelain")
+	if err != nil {
+		return []GitignoreMatch{}, nil
+	}
+	info := ParseStatus(statusOut)
+
+	seen := map[string]struct{}{}
+	var files []string
+	for _, group := range [][]string{info.Staged, info.Modified, info.Untracked} {
+		for _, f := range group {
+			if _, ok := seen[f]; ok {
+				continue
+			}
+			seen[f] = struct{}{}
+			files = append(files, f)
+		}
+	}
+	if len(files) == 0 {
+		return []GitignoreMatch{}, nil
+	}
+
+	matches := []GitignoreMatch{}
+	for _, file := range files {
+		m, ok, err := checkIgnoreOne(file)
+		if err != nil {
+			return nil, err
+		}
+		if ok {
+			matches = append(matches, m)
+		}
+	}
+	return matches, nil
+}
+
+// checkIgnoreOne runs `git check-ignore --no-index --verbose -- <file>` and
+// returns the parsed match. `git check-ignore` exits 0 when a file is ignored,
+// 1 when it is not, and other codes on real errors.
+func checkIgnoreOne(file string) (GitignoreMatch, bool, error) {
+	cmd := exec.Command("git", "check-ignore", "--no-index", "--verbose", "--", file)
+	out, err := cmd.Output()
+	if err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			if exitErr.ExitCode() == 1 {
+				return GitignoreMatch{}, false, nil
+			}
+			return GitignoreMatch{}, false, fmt.Errorf("git check-ignore %s: exit %d: %s",
+				file, exitErr.ExitCode(), strings.TrimSpace(string(exitErr.Stderr)))
+		}
+		return GitignoreMatch{}, false, fmt.Errorf("git check-ignore %s: %w", file, err)
+	}
+
+	line := strings.TrimRight(string(out), "\n")
+	return parseCheckIgnoreLine(line)
+}
+
+// parseCheckIgnoreLine parses a `git check-ignore --verbose` output line in the
+// form `<source>:<lineno>:<pattern>\t<file>`. The source may itself be empty
+// (e.g. when no gitignore source is recorded) and the file path may contain
+// spaces, so we split on the tab boundary first.
+func parseCheckIgnoreLine(line string) (GitignoreMatch, bool, error) {
+	tab := strings.IndexByte(line, '\t')
+	if tab < 0 {
+		return GitignoreMatch{}, false, fmt.Errorf("unexpected check-ignore output: %q", line)
+	}
+	meta := line[:tab]
+	file := line[tab+1:]
+
+	// meta is "<source>:<lineno>:<pattern>". Split from the right twice so a
+	// colon in the source path (e.g. Windows) doesn't corrupt the pattern.
+	lastColon := strings.LastIndexByte(meta, ':')
+	if lastColon < 0 {
+		return GitignoreMatch{}, false, fmt.Errorf("unexpected check-ignore meta: %q", meta)
+	}
+	pattern := meta[lastColon+1:]
+	rest := meta[:lastColon]
+	secondLastColon := strings.LastIndexByte(rest, ':')
+	if secondLastColon < 0 {
+		return GitignoreMatch{}, false, fmt.Errorf("unexpected check-ignore meta: %q", meta)
+	}
+	source := rest[:secondLastColon]
+
+	return GitignoreMatch{File: file, Pattern: pattern, Source: source}, true, nil
 }
 
 func SensitiveCheck() ([]SensitiveMatch, error) {

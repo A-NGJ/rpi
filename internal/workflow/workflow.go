@@ -32,7 +32,8 @@ const readOnlyBuiltinTools = "Read,Glob,Grep,Bash,Agent,LSP"
 
 // mcpTools lists all RPI MCP tools with the mcp__rpi__ prefix.
 const mcpTools = "mcp__rpi__rpi_git_context,mcp__rpi__rpi_git_changed_files," +
-	"mcp__rpi__rpi_git_sensitive_check,mcp__rpi__rpi_archive_scan," +
+	"mcp__rpi__rpi_git_sensitive_check,mcp__rpi__rpi_git_gitignore_check," +
+	"mcp__rpi__rpi_archive_scan," +
 	"mcp__rpi__rpi_scan,mcp__rpi__rpi_scaffold," +
 	"mcp__rpi__rpi_frontmatter_get,mcp__rpi__rpi_frontmatter_set," +
 	"mcp__rpi__rpi_frontmatter_transition,mcp__rpi__rpi_chain," +

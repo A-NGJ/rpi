@@ -63,3 +63,18 @@ func TestChangedFilesIntegration(t *testing.T) {
 		t.Error("ChangedFiles should return empty slice, not nil")
 	}
 }
+
+func TestGitignoreCheckIntegration(t *testing.T) {
+	if err := exec.Command("git", "rev-parse", "--git-dir").Run(); err != nil {
+		t.Skip("not in a git repository")
+	}
+
+	matches, err := git.GitignoreCheck()
+	if err != nil {
+		t.Fatalf("GitignoreCheck failed: %v", err)
+	}
+
+	if matches == nil {
+		t.Error("GitignoreCheck should return empty slice, not nil")
+	}
+}

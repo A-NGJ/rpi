@@ -76,6 +76,18 @@ func TestHandleGitSensitiveCheck_ReturnsJSON(t *testing.T) {
 	}
 }
 
+func TestHandleGitGitignoreCheck_ReturnsJSON(t *testing.T) {
+	result, _, err := handleGitGitignoreCheck(context.Background(), nil, emptyInput{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	text := extractText(t, result)
+	var matches []any
+	if err := json.Unmarshal([]byte(text), &matches); err != nil {
+		t.Fatalf("invalid JSON: %v\ntext: %s", err, text)
+	}
+}
+
 func TestHandleArchiveScan_EmptyDir(t *testing.T) {
 	dir := t.TempDir()
 	oldFlag := rpiDirFlag
@@ -389,6 +401,7 @@ func TestIntegration_AllToolsRegistered(t *testing.T) {
 		"rpi_git_context",
 		"rpi_git_changed_files",
 		"rpi_git_sensitive_check",
+		"rpi_git_gitignore_check",
 		"rpi_archive_scan",
 		"rpi_scan",
 		"rpi_scaffold",
