@@ -20,6 +20,7 @@ type syncOptions struct {
 	targetDir string
 	cfg       targetConfig
 	skipRules bool
+	noTrack   bool
 	w         io.Writer
 }
 
@@ -49,6 +50,23 @@ func syncProject(opts syncOptions) error {
 				logSuccess(opts.w, fmt.Sprintf("Created %s/%s/", opts.cfg.toolDir, d))
 			}
 		}
+	}
+
+	// Manage .gitignore for tool dir (skip for agents-only)
+	if opts.cfg.toolDir != "" {
+		if err := ensureGitignoreEntries(opts.w, opts.targetDir, opts.cfg.toolDir+"/"); err != nil {
+			logWarning(opts.w, fmt.Sprintf("Failed to update .gitignore: %v", err))
+		}
+	}
+
+	// Manage .gitignore for .rpi/. Default: ignore artifacts but keep specs
+	// tracked. With noTrack: ignore the entire .rpi/ tree.
+	rpiEntries := []string{".rpi/*", "!.rpi/specs/"}
+	if opts.noTrack {
+		rpiEntries = []string{".rpi/"}
+	}
+	if err := ensureGitignoreEntries(opts.w, opts.targetDir, rpiEntries...); err != nil {
+		logWarning(opts.w, fmt.Sprintf("Failed to update .gitignore: %v", err))
 	}
 
 	// Install skills

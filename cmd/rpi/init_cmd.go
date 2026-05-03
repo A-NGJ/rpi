@@ -156,33 +156,18 @@ func runInit(cmd *cobra.Command, args []string) error {
 		logSuccess(w, "Created .agents/skills/")
 	}
 
-	// Manage .gitignore for tool dir (skip for agents-only)
-	if cfg.toolDir != "" {
-		if err := ensureGitignoreEntries(w, targetDir, cfg.toolDir+"/"); err != nil {
-			logWarning(w, fmt.Sprintf("Failed to update .gitignore: %v", err))
-		}
-	}
-
 	// Configure MCP server (Claude only)
 	if !initNoMCP && cfg.target == workflow.TargetClaude {
 		configureMCP(w, targetDir)
 	}
 
-	// Manage .gitignore for .rpi/. Default: ignore artifacts but keep specs
-	// tracked. With --no-track: ignore the entire .rpi/ tree.
-	rpiEntries := []string{".rpi/*", "!.rpi/specs/"}
-	if initNoTrack {
-		rpiEntries = []string{".rpi/"}
-	}
-	if err := ensureGitignoreEntries(w, targetDir, rpiEntries...); err != nil {
-		logWarning(w, fmt.Sprintf("Failed to update .gitignore: %v", err))
-	}
-
-	// Sync shared project structure (dirs, skills, templates, rules, settings)
+	// Sync shared project structure (dirs, skills, templates, rules, settings,
+	// .gitignore entries).
 	return syncProject(syncOptions{
 		targetDir: targetDir,
 		cfg:       cfg,
 		skipRules: initNoClaudeMD,
+		noTrack:   initNoTrack,
 		w:         w,
 	})
 }

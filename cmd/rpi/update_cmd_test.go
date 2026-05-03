@@ -419,3 +419,74 @@ func TestUpdateDetectsAgentsOnlyTarget(t *testing.T) {
 		t.Error(".claude/ should not be created for agents-only update")
 	}
 }
+
+func TestUpdateWritesGitignorePolicy(t *testing.T) {
+	dir := t.TempDir()
+
+	// Init the project, then strip .gitignore to simulate a project that pre-dates
+	// the gitignore policy.
+	resetInitFlags()
+	buf := new(bytes.Buffer)
+	cmd := initCmd
+	cmd.SetOut(buf)
+	if err := cmd.RunE(cmd, []string{dir}); err != nil {
+		t.Fatalf("init failed: %v", err)
+	}
+	if err := os.Remove(filepath.Join(dir, ".gitignore")); err != nil {
+		t.Fatalf("remove .gitignore: %v", err)
+	}
+
+	// Update should re-apply the policy.
+	resetUpdateFlags()
+	buf = new(bytes.Buffer)
+	cmd = updateCmd
+	cmd.SetOut(buf)
+	if err := cmd.RunE(cmd, []string{dir}); err != nil {
+		t.Fatalf("update error: %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(dir, ".gitignore"))
+	if err != nil {
+		t.Fatalf("read .gitignore: %v", err)
+	}
+	content := string(data)
+	for _, want := range []string{".claude/\n", ".rpi/*\n", "!.rpi/specs/\n"} {
+		if !strings.Contains(content, want) {
+			t.Errorf(".gitignore missing %q after update; got:\n%s", want, content)
+		}
+	}
+}
+
+func TestUpdateGitignoreIdempotent(t *testing.T) {
+	dir := t.TempDir()
+
+	resetInitFlags()
+	buf := new(bytes.Buffer)
+	cmd := initCmd
+	cmd.SetOut(buf)
+	if err := cmd.RunE(cmd, []string{dir}); err != nil {
+		t.Fatalf("init failed: %v", err)
+	}
+
+	// Run update twice — entries should appear exactly once.
+	for range 2 {
+		resetUpdateFlags()
+		buf = new(bytes.Buffer)
+		cmd = updateCmd
+		cmd.SetOut(buf)
+		if err := cmd.RunE(cmd, []string{dir}); err != nil {
+			t.Fatalf("update error: %v", err)
+		}
+	}
+
+	data, err := os.ReadFile(filepath.Join(dir, ".gitignore"))
+	if err != nil {
+		t.Fatalf("read .gitignore: %v", err)
+	}
+	content := string(data)
+	for _, entry := range []string{".claude/", ".rpi/*", "!.rpi/specs/"} {
+		if got := strings.Count(content, entry+"\n"); got != 1 {
+			t.Errorf(".gitignore entry %q appears %d times, want 1; content:\n%s", entry, got, content)
+		}
+	}
+}

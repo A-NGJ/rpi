@@ -1,8 +1,8 @@
 ---
 domain: init-update-cleanup
 feature: init-update
-last_updated: 2026-04-29T00:00:00+02:00
-updated_by: .rpi/diagnoses/2026-04-29-rpi-init-gitignore-default.md
+last_updated: 2026-05-04T00:00:00+02:00
+updated_by: .rpi/plans/2026-05-04-rpi-update-applies-gitignore-policy.md
 ---
 
 # Init/Update Cleanup
@@ -52,6 +52,11 @@ Then `.gitignore` contains `.rpi/*` and `!.rpi/specs/` so behavioral specs are c
 Given an empty directory
 When `rpi init --no-track` runs
 Then `.gitignore` contains `.rpi/` (no negation), excluding specs from version control as well
+
+### Update applies gitignore policy on existing projects
+Given an initialized project whose `.gitignore` is missing the current policy entries
+When `rpi update` runs
+Then `.gitignore` is appended with `.rpi/*` and `!.rpi/specs/` (and `.claude/` for the Claude target), without removing or rewriting existing lines
 
 ## Constraints
 - Init and update remain separate Cobra commands
