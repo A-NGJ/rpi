@@ -25,6 +25,7 @@ After all phases are complete and verified, announce completion and update the p
 - Run success criteria checks after each phase — fix issues before proceeding
 - Update checkboxes in the plan file as items complete
 - **Before committing**: scan staged files for sensitive content — warn and exclude if flagged
+- **Before committing**: scan staged files against `.gitignore` rules — warn and silently drop any matches from the stage list (commonly: plan, design, research, diagnosis, or review artifacts under the default tracked-specs policy)
 - **Auto-commit**: after each phase passes its checks, commit automatically without manual confirmation — use descriptive messages matching repo style
 - **After hook failure**: read error, fix the issue, re-stage, create a new commit (never amend)
 - If a phase's success criteria are fully covered by automated checks (tests, linting, etc.), run them and proceed automatically when they pass — only pause for manual verification when the plan includes manual verification items not covered by automated tests. Under `--ff`, skip manual verification pauses too — mark unverified items as `[unverified — --ff]` in the plan checkbox text.

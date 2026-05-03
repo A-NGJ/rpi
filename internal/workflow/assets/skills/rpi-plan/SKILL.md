@@ -30,6 +30,7 @@ When the user confirms the plan, suggest → `/rpi-implement <plan-path>`.
 - Break changes into ordered phases — each leaves the codebase working and testable
 - Include tests in the same phase as the code they test
 - Each phase has: tasks with file paths, success criteria (automated + manual), and a commit step
+- When drafting each phase's Stage list, exclude paths matching `.gitignore` rules — gitignored artifacts (commonly the plan file itself, plus other `.rpi/` subdirectories under the default tracked-specs policy) must not appear in commit instructions
 - Map phases to spec scenarios where applicable
 - Get buy-in on proposed phases before writing the full plan
 - If the user passed `--ff`, skip the phase outline buy-in — write the full plan immediately, run the existing automated coverage check, transition the design to complete, and invoke `/rpi-implement --ff <plan-path>` via the Skill tool. Error if `--grill` was also passed.
