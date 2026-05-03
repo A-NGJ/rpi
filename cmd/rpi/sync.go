@@ -58,7 +58,7 @@ func syncProject(opts syncOptions) error {
 	} else {
 		skillsDir = filepath.Join(opts.targetDir, ".agents", "skills")
 	}
-	skillCount, skillBackups, err := workflow.InstallSkills(skillsDir, opts.cfg.target)
+	skillCount, skillBackups, err := workflow.InstallSkills(skillsDir)
 	if err != nil {
 		return fmt.Errorf("install skills: %w", err)
 	}

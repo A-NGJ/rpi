@@ -132,10 +132,10 @@ func TestSkillDescriptionValid(t *testing.T) {
 
 // --- InstallSkills tests ---
 
-func TestInstallSkills_AgentsOnly(t *testing.T) {
-	skillsDir := filepath.Join(t.TempDir(), ".agents", "skills")
+func TestInstallSkills(t *testing.T) {
+	skillsDir := filepath.Join(t.TempDir(), "skills")
 
-	count, _, err := InstallSkills(skillsDir, TargetAgentsOnly)
+	count, _, err := InstallSkills(skillsDir)
 	if err != nil {
 		t.Fatalf("InstallSkills error: %v", err)
 	}
@@ -144,7 +144,7 @@ func TestInstallSkills_AgentsOnly(t *testing.T) {
 		t.Errorf("expected 12 files installed, got %d", count)
 	}
 
-	// Verify all 11 canonical skill dirs exist (10 first-party + grill-me).
+	// Verify all 11 skill dirs exist (10 first-party + grill-me).
 	entries, err := os.ReadDir(skillsDir)
 	if err != nil {
 		t.Fatalf("read skills dir: %v", err)
@@ -153,7 +153,7 @@ func TestInstallSkills_AgentsOnly(t *testing.T) {
 		t.Errorf("expected 11 skill dirs, got %d", len(entries))
 	}
 
-	// Verify canonical files have no tool-specific fields
+	// Verify deployed files have no tool-specific fields.
 	for _, e := range entries {
 		data, err := os.ReadFile(filepath.Join(skillsDir, e.Name(), "SKILL.md"))
 		if err != nil {
@@ -161,144 +161,10 @@ func TestInstallSkills_AgentsOnly(t *testing.T) {
 			continue
 		}
 		fm := extractFrontmatter(string(data))
-		for _, field := range []string{"model:", "allowed-tools:", "context:"} {
+		for _, field := range []string{"model:", "disable-model-invocation:", "allowed-tools:", "context:", "tools:"} {
 			if strings.Contains(fm, field) {
-				t.Errorf("agents-only %s contains %s field", e.Name(), field)
+				t.Errorf("deployed %s contains %s field", e.Name(), field)
 			}
-		}
-	}
-}
-
-func TestInstallSkills_Claude(t *testing.T) {
-	skillsDir := filepath.Join(t.TempDir(), ".claude", "skills")
-
-	count, _, err := InstallSkills(skillsDir, TargetClaude)
-	if err != nil {
-		t.Fatalf("InstallSkills error: %v", err)
-	}
-	// 10 first-party SKILL.md + grill-me's SKILL.md + grill-me's LICENSE = 12.
-	if count != 12 {
-		t.Errorf("expected 12 files installed, got %d", count)
-	}
-
-	// Verify rpi-archive has model and disable-model-invocation
-	archiveData, err := os.ReadFile(filepath.Join(skillsDir, "rpi-archive", "SKILL.md"))
-	if err != nil {
-		t.Fatalf("read rpi-archive: %v", err)
-	}
-	archiveFM := extractFrontmatter(string(archiveData))
-	if !strings.Contains(archiveFM, "model: haiku") {
-		t.Error("rpi-archive should have model: haiku")
-	}
-	if !strings.Contains(archiveFM, "disable-model-invocation: true") {
-		t.Error("rpi-archive should have disable-model-invocation: true")
-	}
-
-	// Verify rpi-commit has model
-	commitData, err := os.ReadFile(filepath.Join(skillsDir, "rpi-commit", "SKILL.md"))
-	if err != nil {
-		t.Fatalf("read rpi-commit: %v", err)
-	}
-	if !strings.Contains(extractFrontmatter(string(commitData)), "model: haiku") {
-		t.Error("rpi-commit should have model: haiku")
-	}
-
-	// Verify rpi-research has allowed-tools and context: fork
-	researchData, err := os.ReadFile(filepath.Join(skillsDir, "rpi-research", "SKILL.md"))
-	if err != nil {
-		t.Fatalf("read rpi-research: %v", err)
-	}
-	researchFM := extractFrontmatter(string(researchData))
-	if !strings.Contains(researchFM, "allowed-tools:") {
-		t.Error("rpi-research should have allowed-tools field")
-	}
-	if !strings.Contains(researchFM, "context: fork") {
-		t.Error("rpi-research should have context: fork")
-	}
-	if !strings.Contains(researchFM, "WebSearch") {
-		t.Error("rpi-research allowed-tools should include WebSearch")
-	}
-	if strings.Contains(researchFM, "model:") {
-		t.Error("rpi-research should not have model field")
-	}
-
-	// Verify rpi-verify has allowed-tools but no context
-	verifyData, err := os.ReadFile(filepath.Join(skillsDir, "rpi-verify", "SKILL.md"))
-	if err != nil {
-		t.Fatalf("read rpi-verify: %v", err)
-	}
-	verifyFM := extractFrontmatter(string(verifyData))
-	if !strings.Contains(verifyFM, "allowed-tools:") {
-		t.Error("rpi-verify should have allowed-tools field")
-	}
-	if strings.Contains(verifyFM, "context:") {
-		t.Error("rpi-verify should not have context field")
-	}
-	if strings.Contains(verifyFM, "WebSearch") {
-		t.Error("rpi-verify allowed-tools should not include WebSearch")
-	}
-
-	// Verify rpi-explain has allowed-tools but no context
-	explainData, err := os.ReadFile(filepath.Join(skillsDir, "rpi-explain", "SKILL.md"))
-	if err != nil {
-		t.Fatalf("read rpi-explain: %v", err)
-	}
-	explainFM := extractFrontmatter(string(explainData))
-	if !strings.Contains(explainFM, "allowed-tools:") {
-		t.Error("rpi-explain should have allowed-tools field")
-	}
-	if strings.Contains(explainFM, "context:") {
-		t.Error("rpi-explain should not have context field")
-	}
-}
-
-func TestInstallSkills_OpenCode(t *testing.T) {
-	skillsDir := filepath.Join(t.TempDir(), ".opencode", "skills")
-
-	_, _, err := InstallSkills(skillsDir, TargetOpenCode)
-	if err != nil {
-		t.Fatalf("InstallSkills error: %v", err)
-	}
-
-	// Verify OpenCode translates model alias to full ID
-	archiveData, err := os.ReadFile(filepath.Join(skillsDir, "rpi-archive", "SKILL.md"))
-	if err != nil {
-		t.Fatalf("read rpi-archive: %v", err)
-	}
-	if !strings.Contains(string(archiveData), "model: anthropic/claude-haiku-4-5-20251001") {
-		t.Error("OpenCode rpi-archive should have full model ID")
-	}
-}
-
-func TestInstallSkills_ContentParity(t *testing.T) {
-	// AS-11: body content must be identical between agents-only and enriched installs
-	agentsDir := filepath.Join(t.TempDir(), "agents")
-	claudeDir := filepath.Join(t.TempDir(), "claude")
-
-	InstallSkills(agentsDir, TargetAgentsOnly)
-	InstallSkills(claudeDir, TargetClaude)
-
-	entries, err := os.ReadDir(agentsDir)
-	if err != nil {
-		t.Fatalf("read agents dir: %v", err)
-	}
-
-	for _, e := range entries {
-		agentsData, err := os.ReadFile(filepath.Join(agentsDir, e.Name(), "SKILL.md"))
-		if err != nil {
-			t.Errorf("read agents %s: %v", e.Name(), err)
-			continue
-		}
-		claudeData, err := os.ReadFile(filepath.Join(claudeDir, e.Name(), "SKILL.md"))
-		if err != nil {
-			t.Errorf("read claude %s: %v", e.Name(), err)
-			continue
-		}
-
-		agentsBody := extractBody(string(agentsData))
-		claudeBody := extractBody(string(claudeData))
-		if agentsBody != claudeBody {
-			t.Errorf("skill %s: body differs between agents-only and claude install", e.Name())
 		}
 	}
 }
@@ -307,7 +173,7 @@ func TestInstallSkills_BacksUpModifiedFiles(t *testing.T) {
 	skillsDir := filepath.Join(t.TempDir(), "skills")
 
 	// First install
-	_, _, err := InstallSkills(skillsDir, TargetAgentsOnly)
+	_, _, err := InstallSkills(skillsDir)
 	if err != nil {
 		t.Fatalf("first install: %v", err)
 	}
@@ -319,7 +185,7 @@ func TestInstallSkills_BacksUpModifiedFiles(t *testing.T) {
 	}
 
 	// Second install — should overwrite and create backup
-	installed, backedUp, err := InstallSkills(skillsDir, TargetAgentsOnly)
+	installed, backedUp, err := InstallSkills(skillsDir)
 	if err != nil {
 		t.Fatalf("second install: %v", err)
 	}
@@ -350,13 +216,13 @@ func TestInstallSkills_SkipsIdenticalFiles(t *testing.T) {
 	skillsDir := filepath.Join(t.TempDir(), "skills")
 
 	// First install
-	_, _, err := InstallSkills(skillsDir, TargetAgentsOnly)
+	_, _, err := InstallSkills(skillsDir)
 	if err != nil {
 		t.Fatalf("first install: %v", err)
 	}
 
 	// Second install with no modifications — should skip all
-	installed, backedUp, err := InstallSkills(skillsDir, TargetAgentsOnly)
+	installed, backedUp, err := InstallSkills(skillsDir)
 	if err != nil {
 		t.Fatalf("second install: %v", err)
 	}
@@ -377,89 +243,35 @@ func TestInstallSkills_SkipsIdenticalFiles(t *testing.T) {
 func TestInstallSkills_CopiesSiblingFiles(t *testing.T) {
 	// Bundled third-party skills (e.g. grill-me) ship a LICENSE file alongside
 	// SKILL.md. InstallSkills must copy every regular file in each skill source
-	// dir so the upstream attribution travels with each deployed copy, across
-	// all targets.
-	for _, target := range []Target{TargetAgentsOnly, TargetClaude, TargetOpenCode} {
-		t.Run(string(target), func(t *testing.T) {
-			skillsDir := filepath.Join(t.TempDir(), "skills")
-			if _, _, err := InstallSkills(skillsDir, target); err != nil {
-				t.Fatalf("InstallSkills(%s): %v", target, err)
-			}
-
-			licensePath := filepath.Join(skillsDir, "grill-me", "LICENSE")
-			data, err := os.ReadFile(licensePath)
-			if err != nil {
-				t.Fatalf("grill-me/LICENSE not deployed for target %s: %v", target, err)
-			}
-			if !strings.Contains(string(data), "Matt Pocock") {
-				t.Errorf("grill-me/LICENSE missing upstream attribution for target %s", target)
-			}
-			if !strings.Contains(string(data), "MIT License") {
-				t.Errorf("grill-me/LICENSE missing MIT notice for target %s", target)
-			}
-
-			// Skills with no sibling files should not get extras (regression check).
-			researchEntries, err := os.ReadDir(filepath.Join(skillsDir, "rpi-research"))
-			if err != nil {
-				t.Fatalf("read rpi-research dir: %v", err)
-			}
-			if len(researchEntries) != 1 {
-				names := make([]string, 0, len(researchEntries))
-				for _, e := range researchEntries {
-					names = append(names, e.Name())
-				}
-				t.Errorf("rpi-research should only contain SKILL.md, got %d entries: %v", len(researchEntries), names)
-			}
-		})
+	// dir so the upstream attribution travels with each deployed copy.
+	skillsDir := filepath.Join(t.TempDir(), "skills")
+	if _, _, err := InstallSkills(skillsDir); err != nil {
+		t.Fatalf("InstallSkills: %v", err)
 	}
-}
 
-// --- injectFrontmatter tests ---
-
-func TestInjectFrontmatter_AddsFields(t *testing.T) {
-	input := "---\nname: test\ndescription: a test\n---\n\n# Body\n"
-	fields := map[string]string{"model": "haiku"}
-	got := string(injectFrontmatter([]byte(input), fields, TargetClaude))
-
-	if !strings.Contains(got, "model: haiku") {
-		t.Error("should inject model: haiku")
+	licensePath := filepath.Join(skillsDir, "grill-me", "LICENSE")
+	data, err := os.ReadFile(licensePath)
+	if err != nil {
+		t.Fatalf("grill-me/LICENSE not deployed: %v", err)
 	}
-	if !strings.Contains(got, "name: test") {
-		t.Error("should preserve existing fields")
+	if !strings.Contains(string(data), "Matt Pocock") {
+		t.Error("grill-me/LICENSE missing upstream attribution")
 	}
-	if !strings.Contains(got, "# Body") {
-		t.Error("should preserve body")
+	if !strings.Contains(string(data), "MIT License") {
+		t.Error("grill-me/LICENSE missing MIT notice")
 	}
-}
 
-func TestInjectFrontmatter_OpenCodeTranslatesModel(t *testing.T) {
-	input := "---\nname: test\ndescription: a test\n---\n\n# Body\n"
-	fields := map[string]string{"model": "haiku"}
-	got := string(injectFrontmatter([]byte(input), fields, TargetOpenCode))
-
-	if !strings.Contains(got, "model: anthropic/claude-haiku-4-5-20251001") {
-		t.Errorf("OpenCode should translate model alias, got:\n%s", got)
+	// Skills with no sibling files should not get extras (regression check).
+	researchEntries, err := os.ReadDir(filepath.Join(skillsDir, "rpi-research"))
+	if err != nil {
+		t.Fatalf("read rpi-research dir: %v", err)
 	}
-}
-
-func TestInjectFrontmatter_MultipleFields(t *testing.T) {
-	input := "---\nname: test\ndescription: a test\n---\n\n# Body\n"
-	fields := map[string]string{"model": "haiku", "disable-model-invocation": "true"}
-	got := string(injectFrontmatter([]byte(input), fields, TargetClaude))
-
-	if !strings.Contains(got, "model: haiku") {
-		t.Error("should inject model")
-	}
-	if !strings.Contains(got, "disable-model-invocation: true") {
-		t.Error("should inject disable-model-invocation")
-	}
-}
-
-func TestInjectFrontmatter_NoFrontmatter(t *testing.T) {
-	input := "# No frontmatter\nJust body.\n"
-	got := injectFrontmatter([]byte(input), map[string]string{"model": "haiku"}, TargetClaude)
-	if string(got) != input {
-		t.Error("content without frontmatter should be returned as-is")
+	if len(researchEntries) != 1 {
+		names := make([]string, 0, len(researchEntries))
+		for _, e := range researchEntries {
+			names = append(names, e.Name())
+		}
+		t.Errorf("rpi-research should only contain SKILL.md, got %d entries: %v", len(researchEntries), names)
 	}
 }
 
