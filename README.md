@@ -171,7 +171,7 @@ The `rpi` binary doubles as an [MCP](https://modelcontextprotocol.io/) server. R
 
 ## Optional: Semantic Search
 
-`rpi serve` exposes an `rpi_search` MCP tool that returns ranked, semantically relevant `.rpi/` artifacts for a natural-language query. When the optional [qmd](https://github.com/tobi/qmd) backend is installed and warmed up, four skills (`rpi-research`, `rpi-propose`, `rpi-diagnose`, `rpi-spec-sync`) call `rpi_search` automatically before investigating, so prior designs, research, and diagnoses get surfaced without keyword guesswork.
+`rpi serve` exposes an `rpi_search` MCP tool that returns ranked, semantically relevant `.rpi/` artifacts for a natural-language query. When the optional [qmd](https://github.com/tobi/qmd) backend is installed and warmed up, seven skills (`rpi-research`, `rpi-propose`, `rpi-plan`, `rpi-verify`, `rpi-explain`, `rpi-diagnose`, `rpi-spec-sync`) call `rpi_search` automatically before producing or verifying artifacts, so prior designs, plans, research, diagnoses, and verify-reports get surfaced without keyword guesswork.
 
 **One-time setup:**
 
