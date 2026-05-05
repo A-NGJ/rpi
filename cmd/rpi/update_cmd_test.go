@@ -247,6 +247,40 @@ func TestUpdateAddsSettingsPermission(t *testing.T) {
 	}
 }
 
+func TestUpdateAddsSafeBashAllowlist(t *testing.T) {
+	dir := t.TempDir()
+
+	resetInitFlags()
+	buf := new(bytes.Buffer)
+	cmd := initCmd
+	cmd.SetOut(buf)
+	if err := cmd.RunE(cmd, []string{dir}); err != nil {
+		t.Fatalf("init failed: %v", err)
+	}
+
+	settingsPath := filepath.Join(dir, ".claude", "settings.json")
+	if err := os.WriteFile(settingsPath,
+		[]byte(`{"permissions":{"allow":["mcp__rpi__*"]}}`), 0644); err != nil {
+		t.Fatalf("rewrite settings.json: %v", err)
+	}
+
+	resetUpdateFlags()
+	buf = new(bytes.Buffer)
+	cmd = updateCmd
+	cmd.SetOut(buf)
+	if err := cmd.RunE(cmd, []string{dir}); err != nil {
+		t.Fatalf("update error: %v", err)
+	}
+
+	data, _ := os.ReadFile(settingsPath)
+	content := string(data)
+	for _, pattern := range safeBashPatterns {
+		if !strings.Contains(content, pattern) {
+			t.Errorf("update did not add safe pattern %q", pattern)
+		}
+	}
+}
+
 func TestUpdateDetectsOpenCodeTarget(t *testing.T) {
 	dir := t.TempDir()
 

@@ -240,15 +240,33 @@ func configureMCP(w io.Writer, _ string) {
 	logSuccess(w, "Configured MCP server via claude mcp add")
 }
 
-// configureSettings ensures .claude/settings.json contains the mcp__rpi__* permission.
-// It merges into any existing settings file rather than overwriting.
+// safeBashPatterns lists Claude Code permission patterns for the rpi
+// subcommands that operate on .rpi/ artifacts only. Inclusion rule:
+// safe = operates on .rpi/ artifacts only; unsafe = mutates host config,
+// the rpi binary, or runs long-lived. New `rpi` subcommands default to
+// unsafe — add them here only if they satisfy the safety contract.
+var safeBashPatterns = []string{
+	"Bash(rpi scan:*)",
+	"Bash(rpi search:*)",
+	"Bash(rpi status:*)",
+	"Bash(rpi version:*)",
+	"Bash(rpi context:*)",
+	"Bash(rpi resume:*)",
+	"Bash(rpi suggest:*)",
+	"Bash(rpi chain:*)",
+	"Bash(rpi extract:*)",
+	"Bash(rpi git-context:*)",
+	"Bash(rpi verify:*)",
+	"Bash(rpi frontmatter:*)",
+	"Bash(rpi scaffold:*)",
+	"Bash(rpi archive:*)",
+}
+
+// configureSettings ensures .claude/settings.json contains the mcp__rpi__*
+// permission and the safe rpi Bash allowlist. It merges into any existing
+// settings file rather than overwriting.
 func configureSettings(w io.Writer, toolDirPath string) {
 	settingsPath := filepath.Join(toolDirPath, "settings.json")
-
-	type settingsFile struct {
-		Permissions map[string][]string `json:"permissions,omitempty"`
-		Extra       map[string]json.RawMessage
-	}
 
 	// Read existing settings (if any)
 	raw := make(map[string]json.RawMessage)
@@ -268,21 +286,37 @@ func configureSettings(w io.Writer, toolDirPath string) {
 		}
 	}
 
-	// Check if mcp__rpi__* already present
-	const rpiPattern = "mcp__rpi__*"
+	existing := make(map[string]bool, len(allow))
 	for _, entry := range allow {
-		if entry == rpiPattern {
-			return // already configured
-		}
+		existing[entry] = true
 	}
 
-	// Add the pattern
-	allow = append(allow, rpiPattern)
+	const rpiPattern = "mcp__rpi__*"
+	mcpAdded := false
+	if !existing[rpiPattern] {
+		allow = append(allow, rpiPattern)
+		existing[rpiPattern] = true
+		mcpAdded = true
+	}
+
+	bashAdded := false
+	for _, pattern := range safeBashPatterns {
+		if existing[pattern] {
+			continue
+		}
+		allow = append(allow, pattern)
+		existing[pattern] = true
+		bashAdded = true
+	}
+
+	if !mcpAdded && !bashAdded {
+		return
+	}
+
 	permsMap := map[string][]string{"allow": allow}
 	permsJSON, _ := json.Marshal(permsMap)
 	raw["permissions"] = json.RawMessage(permsJSON)
 
-	// Write back with indentation
 	out, err := json.MarshalIndent(raw, "", "  ")
 	if err != nil {
 		logWarning(w, fmt.Sprintf("Failed to marshal settings: %v", err))
@@ -292,7 +326,12 @@ func configureSettings(w io.Writer, toolDirPath string) {
 		logWarning(w, fmt.Sprintf("Failed to write %s: %v", settingsPath, err))
 		return
 	}
-	logSuccess(w, "Configured auto-allow for RPI MCP tools in settings.json")
+	if mcpAdded {
+		logSuccess(w, "Configured auto-allow for RPI MCP tools in settings.json")
+	}
+	if bashAdded {
+		logSuccess(w, "Configured auto-allow for safe rpi Bash commands in settings.json")
+	}
 }
 
 // hookDef defines a hook to configure in .claude/settings.json.

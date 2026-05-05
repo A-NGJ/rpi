@@ -633,6 +633,92 @@ func TestInitSettingsJSONIdempotent(t *testing.T) {
 	}
 }
 
+func TestInitCreatesSafeBashAllowlist(t *testing.T) {
+	dir := t.TempDir()
+	if _, err := runInitInDir(t, dir); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(dir, ".claude", "settings.json"))
+	if err != nil {
+		t.Fatalf("settings.json not created: %v", err)
+	}
+	content := string(data)
+
+	for _, pattern := range safeBashPatterns {
+		if count := strings.Count(content, pattern); count != 1 {
+			t.Errorf("expected pattern %q to appear exactly once, got %d", pattern, count)
+		}
+	}
+
+	for _, unsafe := range []string{
+		"Bash(rpi init:*)",
+		"Bash(rpi update:*)",
+		"Bash(rpi upgrade:*)",
+		"Bash(rpi serve:*)",
+	} {
+		if strings.Contains(content, unsafe) {
+			t.Errorf("settings.json must not contain unsafe pattern %q", unsafe)
+		}
+	}
+}
+
+func TestInitSafeBashAllowlistIdempotent(t *testing.T) {
+	dir := t.TempDir()
+	if _, err := runInitInDir(t, dir); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	buf := new(bytes.Buffer)
+	configureSettings(buf, filepath.Join(dir, ".claude"))
+
+	data, _ := os.ReadFile(filepath.Join(dir, ".claude", "settings.json"))
+	content := string(data)
+	for _, pattern := range safeBashPatterns {
+		if count := strings.Count(content, pattern); count != 1 {
+			t.Errorf("expected 1 %q, got %d", pattern, count)
+		}
+	}
+}
+
+func TestInitSafeBashAllowlistPreservesUserEntries(t *testing.T) {
+	dir := t.TempDir()
+	if _, err := runInitInDir(t, dir); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	settingsPath := filepath.Join(dir, ".claude", "settings.json")
+	custom := `{"permissions":{"allow":["mcp__rpi__*","Bash(npm test:*)"]}}`
+	if err := os.WriteFile(settingsPath, []byte(custom), 0644); err != nil {
+		t.Fatalf("rewrite settings.json: %v", err)
+	}
+
+	buf := new(bytes.Buffer)
+	configureSettings(buf, filepath.Join(dir, ".claude"))
+
+	data, _ := os.ReadFile(settingsPath)
+	content := string(data)
+	if !strings.Contains(content, "Bash(npm test:*)") {
+		t.Error("user entry Bash(npm test:*) was lost")
+	}
+	if !strings.Contains(content, "mcp__rpi__*") {
+		t.Error("mcp__rpi__* entry was lost")
+	}
+	for _, pattern := range safeBashPatterns {
+		if !strings.Contains(content, pattern) {
+			t.Errorf("missing safe pattern %q after merge", pattern)
+		}
+	}
+
+	npmIdx := strings.Index(content, "Bash(npm test:*)")
+	for _, pattern := range safeBashPatterns {
+		patternIdx := strings.Index(content, pattern)
+		if patternIdx < npmIdx {
+			t.Errorf("safe pattern %q appears before user entry; expected append-only ordering", pattern)
+		}
+	}
+}
+
 func TestInitOpenCodeNoSettingsJSON(t *testing.T) {
 	dir := t.TempDir()
 	_, err := runInitOpenCode(t, dir)
