@@ -1,7 +1,7 @@
 ---
 domain: skill-descriptions
 feature: skill-descriptions
-last_updated: 2026-05-06T10:44:18+02:00
+last_updated: 2026-05-06T17:00:00+02:00
 updated_by: .rpi/designs/2026-05-06-skill-descriptions.md
 ---
 
@@ -38,23 +38,23 @@ Given the descriptions of all RPI skills
 When their trigger sentences are inspected
 Then every one uses the imperative form `Use when …` — none use third-person variants such as `This skill should be used when …`
 
-### Description meets the measured trigger threshold
-Given a rewritten description and an eval set of 20 realistic queries with a 60% train / 40% test split
-When the `skill-creator` description optimizer runs over the eval set with the test split held out
-Then the test-split trigger rate is at least 80%
+### Description triggers correctly on the manual eval prompt set
+Given a 20-prompt manual eval covering all RPI skills — one representative trigger per skill plus disambiguation probes for the known overlap pairs (`rpi-plan`↔`rpi-propose`, `rpi-research`↔`rpi-propose`, `rpi-research`↔`rpi-diagnose`)
+When each prompt is run verbatim in a fresh Claude Code session with all RPI skills installed
+Then the expected skill auto-fires (without slash-command invocation) on at least 80% of the prompts (≥16/20)
 
-### Eval query set is persisted alongside the description
-Given a skill whose description was tuned via the optimizer
-When the rewrite is merged
-Then the 20 queries used for the eval are stored as a CSV file under the design's eval directory so the same queries can be replayed when the description is later re-tuned
+### Eval prompt set is persisted alongside the descriptions
+Given the manual eval prompt set used to validate description quality
+When a description rewrite is merged
+Then the prompt set is stored as a markdown file under the design's eval directory so the same prompts can be replayed when descriptions are later re-tuned
 
 ## Constraints
 - Source of truth for skill files is `internal/workflow/assets/skills/<name>/SKILL.md`. Deployed copies under `.claude/skills/` are not edited directly.
 - Each rewrite changes only the `description:` line in frontmatter. The body of every SKILL.md remains byte-identical to its pre-rewrite content.
 - Compatibility with the existing Agent Skills format spec (`agent-skills.md`) remains intact: every skill still has `name` and `description`, every name still matches its parent directory and the naming regex.
 - Voice convention is imperative (`Use when …`), applied uniformly across all RPI skills.
-- Acceptance threshold: ≥80% trigger rate on the optimizer's test split.
-- The measurement instrument is Anthropic's `skill-creator` description optimizer using its default 60/40 train/test split, 5-iteration cap, and 3 trials per query.
+- Acceptance threshold: ≥80% pass rate (16/20) on the manual eval prompt set.
+- The measurement methodology is manual: each prompt is run in a fresh Claude Code session with all RPI skills installed; the expected skill must auto-fire without slash-command invocation. Tooling-driven optimization (e.g. Anthropic's `skill-creator`) is permitted but not required.
 
 ## Out of Scope
 - Triggering behavior of non-RPI skills installed alongside the RPI suite.
@@ -62,4 +62,4 @@ Then the 20 queries used for the eval are stored as a CSV file under the design'
 - Adding, removing, or renaming skills.
 - CLAUDE.md guidance that influences activation outside the description signal.
 - Hooks, harness signals, or plugin-marketplace metadata.
-- Automated CI integration of the optimizer (manual runs before merge are sufficient for v1).
+- Automated CI integration of the eval (manual runs before merge are sufficient for v1).
