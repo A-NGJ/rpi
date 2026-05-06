@@ -184,6 +184,8 @@ rpi search --warmup             # spawns qmd's HTTP MCP daemon and downloads ~2 
 
 The warmup is a one-time cost (qmd caches models in `~/.cache/qmd/models/`). Subsequent searches are fast — the daemon keeps models loaded in VRAM, and an internal debounce skips redundant index refreshes for back-to-back skill calls. Expect bimodal latency: most queries return in milliseconds; the call right after a batch of writes pays a re-index cost (and embed inference if files changed).
 
+**When qmd is installed but cold** (daemon down or models not yet downloaded), the calling skills run `rpi search --warmup` on the user's behalf and retry the query — so the user sees the install hint only when qmd is genuinely missing, not on transient first-run states.
+
 **Without qmd**, `rpi_search` returns `backend_unavailable` with an install hint, and skills fall back to `rpi_scan` + keyword grep automatically. RPI ships fully functional without qmd; semantic search is a strict upgrade, not a requirement.
 
 **Status contract.** `rpi_search` returns one of four states — `ok` (hits returned), `empty` (no matches), `backend_error` (qmd installed but failing — daemon down, models missing, parse error), or `backend_unavailable` (qmd not on PATH). Each non-`ok` status carries an actionable hint so the failure mode is unambiguous.

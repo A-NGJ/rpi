@@ -1,7 +1,7 @@
 ---
 domain: rpi-search
 feature: rpi-search
-last_updated: 2026-04-30T00:00:00+02:00
+last_updated: 2026-05-06T00:00:00+02:00
 updated_by: .rpi/designs/2026-04-17-semantic-artifact-discovery.md
 ---
 
@@ -37,6 +37,11 @@ Then the response status is "backend_error" with a stage, message, and actionabl
 Given a semantic search backend is installed but its required models or supporting daemon are not yet ready
 When a caller issues `rpi_search`
 Then the response status is "backend_error" with a stage indicating first-run setup is required and a hint naming the user-invoked command that completes setup, and no setup is triggered automatically
+
+### Callers may auto-recover from the recoverable first-run state
+Given a caller (e.g. a skill) receives a "backend_error" with a recoverable first-run hint
+When that caller invokes the user-facing recovery command and re-issues the same query
+Then the second response reports the recovered state — the tool itself performed no setup, and the recovery happened entirely outside the tool call
 
 ### Recent edits appear in keyword matches without manual re-indexing
 Given a semantic search backend is installed and ready, and the user has just written or edited an artifact in `.rpi/`
@@ -84,7 +89,7 @@ Then the response contains only artifacts from that project's `.rpi/` directory
 - The tool contract is backend-agnostic — request and response shapes describe intent and hits, not backend-specific fields.
 - Index freshness is guaranteed by the tool across both keyword and semantic paths; callers never need to trigger re-indexing.
 - Archive inclusion is on by default; callers opt out via an explicit flag.
-- The tool never installs the backend, downloads models, spawns a daemon, or otherwise mutates the user's environment without an explicit user-invoked command.
+- The tool itself never installs the backend, downloads models, spawns a daemon, or otherwise mutates the user's environment. Callers (e.g. skills) MAY invoke the user-facing `rpi search --warmup` recovery command on the user's behalf in response to a `backend_error` carrying a recoverable first-run hint — that command is itself the user-invoked entry point and does not violate this constraint.
 
 ## Out of Scope
 
