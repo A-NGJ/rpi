@@ -51,8 +51,39 @@ When the target is `claude`, `rpi init` auto-registers an MCP server so the AI c
 - Requires both `rpi` and `claude` to be in PATH
 - Skipped with `--no-mcp` or when the target is `opencode`
 - Warns and continues (doesn't fail) if `rpi` or `claude` are not found, or if the server is already registered
-- Uses `claude mcp add rpi -- rpi serve` to register
+- Uses `claude mcp add rpi -- rpi serve` to register (or `claude mcp add rpi --scope user -- rpi serve` under `--global`)
 - Use `rpi update` to sync an existing project (see `rpi update --help`)
+
+## Global setup (`--global`)
+
+Pass `--global` to `rpi init` to install RPI's skills, agents, MCP server registration, and `settings.json` hooks/permissions into the user-level config directory instead of the current project. After a one-time global install, every Claude Code (or OpenCode) session has the RPI skills available without per-project setup.
+
+```bash
+# Claude Code → ~/.claude/
+rpi init --global
+
+# OpenCode → ~/.config/opencode/
+rpi init --global --target opencode
+```
+
+What `--global` writes:
+
+- `~/.claude/skills/` (or `~/.config/opencode/skills/`) — the full RPI skill set, with `.bak`-on-diff semantics for files you've customized.
+- `~/.claude/agents/` — Claude target only.
+- `~/.claude/settings.json` — `mcp__rpi__*` permission, the safe `Bash(rpi …)` allowlist, and the `PostCompact` / `SessionStart` / `Stop` hooks. Existing keys (yours and other tools') are preserved.
+- MCP server registration via `claude mcp add rpi --scope user -- rpi serve`, so the registration is available from any working directory rather than just where the command was run.
+
+What `--global` does **not** touch:
+
+- No `~/.claude/CLAUDE.md` or `~/.config/opencode/AGENTS.md` is written — those are user-curated personal config.
+- No `~/.rpi/` tree is created — `.rpi/` artifacts remain per-project.
+- No `~/.gitignore` modifications.
+
+Conflicts (each returns an error):
+
+- `rpi init --global ./somewhere` — `--global` and a positional directory are mutually exclusive.
+- `rpi init --global --no-track` — `--no-track` controls `.gitignore` policy, which `--global` never touches.
+- `rpi init --global --target agents-only` — agents-only has no canonical user-level home; not supported in v1.
 
 ## Installation
 

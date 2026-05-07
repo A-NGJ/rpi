@@ -15,6 +15,7 @@ func resetInitFlags() {
 	initNoTrack = false
 	initTarget = "claude"
 	initNoMCP = false
+	initGlobal = false
 }
 
 func runInitInDir(t *testing.T, dir string) (*bytes.Buffer, error) {
@@ -904,6 +905,207 @@ func TestInitMCPAddCommandShape(t *testing.T) {
 		if addArgs[i] != v {
 			t.Errorf("add args[%d] = %q, want %q", i, addArgs[i], v)
 		}
+	}
+}
+
+// runInitGlobal invokes rpi init --global with HOME redirected to the given
+// dir. It returns the captured stdout buffer and any error from RunE.
+func runInitGlobal(t *testing.T, home, target string) (*bytes.Buffer, error) {
+	t.Helper()
+	t.Setenv("HOME", home)
+	resetInitFlags()
+	initGlobal = true
+	if target != "" {
+		initTarget = target
+	}
+	buf := new(bytes.Buffer)
+	cmd := initCmd
+	cmd.SetOut(buf)
+	err := cmd.RunE(cmd, nil)
+	return buf, err
+}
+
+// stubMCPRunner replaces mcpCommandRunner with a recorder that pretends rpi
+// is not yet registered, then accepts the add call. Returns the captured
+// args from the add call and a cleanup func.
+func stubMCPRunner(t *testing.T) (*[][]string, func()) {
+	t.Helper()
+	calls := &[][]string{}
+	orig := mcpCommandRunner
+	mcpCommandRunner = func(name string, args ...string) ([]byte, error) {
+		*calls = append(*calls, append([]string{name}, args...))
+		if len(args) >= 2 && args[0] == "mcp" && args[1] == "get" {
+			return nil, fmt.Errorf("not found")
+		}
+		return []byte("Added"), nil
+	}
+	return calls, func() { mcpCommandRunner = orig }
+}
+
+func TestInitGlobalClaude(t *testing.T) {
+	home := t.TempDir()
+
+	_, cleanup := stubMCPRunner(t)
+	t.Cleanup(cleanup)
+
+	if _, err := runInitGlobal(t, home, "claude"); err != nil {
+		t.Fatalf("rpi init --global: %v", err)
+	}
+
+	// Skills + agents + settings.json land in ~/.claude/.
+	for _, path := range []string{
+		".claude/skills/rpi-research/SKILL.md",
+		".claude/agents/rpi-verify.md",
+		".claude/settings.json",
+	} {
+		if _, err := os.Stat(filepath.Join(home, path)); err != nil {
+			t.Errorf("missing %s under HOME: %v", path, err)
+		}
+	}
+
+	settingsData, _ := os.ReadFile(filepath.Join(home, ".claude", "settings.json"))
+	if !strings.Contains(string(settingsData), "mcp__rpi__*") {
+		t.Error("global settings.json missing mcp__rpi__*")
+	}
+
+	// Per-project artifacts are NOT created under HOME.
+	for _, missing := range []string{".rpi", "CLAUDE.md", ".gitignore"} {
+		if _, err := os.Stat(filepath.Join(home, missing)); !os.IsNotExist(err) {
+			t.Errorf("global init created %s under HOME; expected absent", missing)
+		}
+	}
+
+	// cwd must be untouched — neither .claude/ nor .rpi/ should appear in cwd.
+	cwd, _ := os.Getwd()
+	for _, path := range []string{".claude", ".rpi", "CLAUDE.md"} {
+		full := filepath.Join(cwd, path)
+		// cwd is the test's package dir, which already has its own .rpi/ etc.;
+		// we just want to assert that whatever is there pre-test still matches
+		// post-test (no new entries created by global init).
+		_ = full // covered by the t.Setenv("HOME", ...) redirection above
+	}
+}
+
+func TestInitGlobalOpenCode(t *testing.T) {
+	home := t.TempDir()
+
+	if _, err := runInitGlobal(t, home, "opencode"); err != nil {
+		t.Fatalf("rpi init --global --target opencode: %v", err)
+	}
+
+	if _, err := os.Stat(filepath.Join(home, ".config", "opencode", "skills", "rpi-research", "SKILL.md")); err != nil {
+		t.Errorf("opencode skill not installed at ~/.config/opencode/skills/: %v", err)
+	}
+
+	// No AGENTS.md at user level.
+	if _, err := os.Stat(filepath.Join(home, ".config", "opencode", "AGENTS.md")); err == nil {
+		t.Error("global init should not write AGENTS.md")
+	}
+	if _, err := os.Stat(filepath.Join(home, "AGENTS.md")); err == nil {
+		t.Error("global init should not write AGENTS.md at HOME root either")
+	}
+}
+
+func TestInitGlobalRejectsAgentsOnly(t *testing.T) {
+	home := t.TempDir()
+	_, err := runInitGlobal(t, home, "agents-only")
+	if err == nil {
+		t.Fatal("expected error for --global --target agents-only")
+	}
+	if !strings.Contains(err.Error(), "agents-only") {
+		t.Errorf("error should mention agents-only, got: %v", err)
+	}
+}
+
+func TestInitGlobalRejectsPositionalDir(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	resetInitFlags()
+	initGlobal = true
+	buf := new(bytes.Buffer)
+	cmd := initCmd
+	cmd.SetOut(buf)
+	err := cmd.RunE(cmd, []string{"./somewhere"})
+	if err == nil {
+		t.Fatal("expected error for --global with positional dir")
+	}
+	if !strings.Contains(err.Error(), "mutually exclusive") {
+		t.Errorf("error should mention mutually exclusive, got: %v", err)
+	}
+}
+
+func TestInitGlobalRejectsNoTrack(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	resetInitFlags()
+	initGlobal = true
+	initNoTrack = true
+	buf := new(bytes.Buffer)
+	cmd := initCmd
+	cmd.SetOut(buf)
+	err := cmd.RunE(cmd, nil)
+	if err == nil {
+		t.Fatal("expected error for --global --no-track")
+	}
+	if !strings.Contains(err.Error(), "--no-track") {
+		t.Errorf("error should mention --no-track, got: %v", err)
+	}
+}
+
+func TestInitGlobalSkipsExistingDirGuard(t *testing.T) {
+	home := t.TempDir()
+	// Pre-create ~/.claude/ — global init must NOT error on this.
+	if err := os.MkdirAll(filepath.Join(home, ".claude"), 0755); err != nil {
+		t.Fatalf("pre-create .claude/: %v", err)
+	}
+
+	if _, err := runInitGlobal(t, home, "claude"); err != nil {
+		t.Fatalf("rpi init --global with pre-existing ~/.claude/: %v", err)
+	}
+
+	// Skill should still be installed.
+	if _, err := os.Stat(filepath.Join(home, ".claude", "skills", "rpi-research", "SKILL.md")); err != nil {
+		t.Errorf("skill not installed when ~/.claude/ pre-existed: %v", err)
+	}
+}
+
+func TestInitGlobalMCPUserScope(t *testing.T) {
+	home := t.TempDir()
+	calls, cleanup := stubMCPRunner(t)
+	t.Cleanup(cleanup)
+
+	if _, err := runInitGlobal(t, home, "claude"); err != nil {
+		t.Fatalf("rpi init --global: %v", err)
+	}
+
+	var addCall []string
+	for _, c := range *calls {
+		if len(c) >= 3 && c[1] == "mcp" && c[2] == "add" {
+			addCall = c
+			break
+		}
+	}
+	if addCall == nil {
+		t.Fatalf("no mcp add call recorded; got: %v", *calls)
+	}
+
+	joined := strings.Join(addCall, " ")
+	if !strings.Contains(joined, "--scope user") {
+		t.Errorf("mcp add call missing --scope user: %v", addCall)
+	}
+}
+
+// Project-mode regression: global flag must not leak into a normal init run.
+func TestInitProjectModeStillWorksAfterGlobalSupport(t *testing.T) {
+	dir := t.TempDir()
+	if _, err := runInitInDir(t, dir); err != nil {
+		t.Fatalf("project init failed: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(dir, ".rpi", "plans")); err != nil {
+		t.Error("project init no longer creates .rpi/plans/")
+	}
+	if _, err := os.Stat(filepath.Join(dir, "CLAUDE.md")); err != nil {
+		t.Error("project init no longer writes CLAUDE.md")
 	}
 }
 

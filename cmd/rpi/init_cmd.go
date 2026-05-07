@@ -18,6 +18,7 @@ var (
 	initNoTrack    bool
 	initTarget     string
 	initNoMCP      bool
+	initGlobal     bool
 )
 
 const (
@@ -74,6 +75,7 @@ func init() {
 	initCmd.Flags().BoolVar(&initNoTrack, "no-track", false, "Gitignore the entire .rpi/ tree, including specs (default: ignore artifacts but track .rpi/specs/)")
 	initCmd.Flags().StringVar(&initTarget, "target", "claude", `AI coding tool to initialize for: "claude", "opencode", or "agents-only"`)
 	initCmd.Flags().BoolVar(&initNoMCP, "no-mcp", false, "Skip MCP server configuration")
+	initCmd.Flags().BoolVar(&initGlobal, "global", false, "Install skills/agents/MCP into the user-level config dir (~/.claude or ~/.config/opencode) instead of a project")
 	rootCmd.AddCommand(initCmd)
 }
 
@@ -82,6 +84,30 @@ type targetConfig struct {
 	subdirs   []string
 	rulesFile string // "CLAUDE.md", "AGENTS.md", or "" for agents-only
 	target    workflow.Target
+}
+
+// resolveGlobalTargetDir returns the user-level base directory for the given
+// target plus an adjusted targetConfig whose toolDir is relative to that
+// base, so the rest of the install pipeline composes paths correctly.
+// agents-only is unsupported in global mode.
+func resolveGlobalTargetDir(cfg targetConfig) (string, targetConfig, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", cfg, fmt.Errorf("resolve home dir: %w", err)
+	}
+	globalCfg := cfg
+	switch cfg.target {
+	case workflow.TargetClaude:
+		globalCfg.toolDir = ".claude"
+		return home, globalCfg, nil
+	case workflow.TargetOpenCode:
+		globalCfg.toolDir = filepath.Join(".config", "opencode")
+		return home, globalCfg, nil
+	case workflow.TargetAgentsOnly:
+		return "", cfg, fmt.Errorf("--global is not supported with --target agents-only")
+	default:
+		return "", cfg, fmt.Errorf("unknown target %q", cfg.target)
+	}
 }
 
 func resolveTargetConfig(t string) (targetConfig, error) {
@@ -113,11 +139,6 @@ func resolveTargetConfig(t string) (targetConfig, error) {
 }
 
 func runInit(cmd *cobra.Command, args []string) error {
-	targetDir := "."
-	if len(args) > 0 {
-		targetDir = args[0]
-	}
-
 	cfg, err := resolveTargetConfig(initTarget)
 	if err != nil {
 		return err
@@ -125,16 +146,35 @@ func runInit(cmd *cobra.Command, args []string) error {
 
 	w := cmd.OutOrStdout()
 
-	// Guard: fail if tool dir already exists
-	if cfg.target == workflow.TargetAgentsOnly {
-		agentsPath := filepath.Join(targetDir, ".agents")
-		if _, err := os.Stat(agentsPath); err == nil {
-			return fmt.Errorf(".agents/ already exists; use rpi update to sync")
+	var targetDir string
+	if initGlobal {
+		if len(args) > 0 {
+			return fmt.Errorf("--global and a directory argument are mutually exclusive")
+		}
+		if initNoTrack {
+			return fmt.Errorf("--global is not compatible with --no-track (no .gitignore is touched in global mode)")
+		}
+		targetDir, cfg, err = resolveGlobalTargetDir(cfg)
+		if err != nil {
+			return err
 		}
 	} else {
-		toolDirPath := filepath.Join(targetDir, cfg.toolDir)
-		if _, err := os.Stat(toolDirPath); err == nil {
-			return fmt.Errorf("%s/ already exists; use rpi update to sync", cfg.toolDir)
+		targetDir = "."
+		if len(args) > 0 {
+			targetDir = args[0]
+		}
+
+		// Guard: fail if tool dir already exists
+		if cfg.target == workflow.TargetAgentsOnly {
+			agentsPath := filepath.Join(targetDir, ".agents")
+			if _, err := os.Stat(agentsPath); err == nil {
+				return fmt.Errorf(".agents/ already exists; use rpi update to sync")
+			}
+		} else {
+			toolDirPath := filepath.Join(targetDir, cfg.toolDir)
+			if _, err := os.Stat(toolDirPath); err == nil {
+				return fmt.Errorf("%s/ already exists; use rpi update to sync", cfg.toolDir)
+			}
 		}
 	}
 
@@ -158,7 +198,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 
 	// Configure MCP server (Claude only)
 	if !initNoMCP && cfg.target == workflow.TargetClaude {
-		configureMCP(w, targetDir)
+		configureMCP(w, targetDir, initGlobal)
 	}
 
 	// Sync shared project structure (dirs, skills, templates, rules, settings,
@@ -168,6 +208,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 		cfg:       cfg,
 		skipRules: initNoClaudeMD,
 		noTrack:   initNoTrack,
+		global:    initGlobal,
 		w:         w,
 	})
 }
@@ -215,7 +256,7 @@ var mcpCommandRunner func(name string, args ...string) ([]byte, error) = func(na
 	return exec.Command(name, args...).CombinedOutput()
 }
 
-func configureMCP(w io.Writer, _ string) {
+func configureMCP(w io.Writer, _ string, userScope bool) {
 	if _, err := exec.LookPath("claude"); err != nil {
 		logWarning(w, "claude not found in PATH — skipping MCP server configuration")
 		return
@@ -233,7 +274,12 @@ func configureMCP(w io.Writer, _ string) {
 	}
 
 	// Register the MCP server via claude CLI
-	if out, err := mcpCommandRunner("claude", "mcp", "add", "rpi", "--", "rpi", "serve"); err != nil {
+	args := []string{"mcp", "add", "rpi"}
+	if userScope {
+		args = append(args, "--scope", "user")
+	}
+	args = append(args, "--", "rpi", "serve")
+	if out, err := mcpCommandRunner("claude", args...); err != nil {
 		logWarning(w, fmt.Sprintf("Failed to register MCP server: %s", strings.TrimSpace(string(out))))
 		return
 	}
