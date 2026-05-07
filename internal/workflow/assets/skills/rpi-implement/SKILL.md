@@ -9,7 +9,7 @@ description: Execute an approved plan from .rpi/plans phase by phase with TDD an
 
 Execute an active plan from `.rpi/plans/` phase by phase. Plans come in two forms: pipeline plans (reference designs and research) or standalone plans (self-contained).
 
-After all phases are complete and verified, announce completion and update the plan status.
+After all phases are complete and verified, announce completion and update the plan status. Then suggest → `/rpi-verify <plan-path>` for an independent verification report.
 
 **`--ff` (fast-forward) mode**: if invoked with `--ff`, skip the per-phase pre-review and any manual verification pauses, and after the plan transitions to complete, invoke `/rpi-verify <plan-path>` via the Skill tool as the chain's terminal step. The "On mismatch" gate, the sensitive-content scan, end-of-plan spec verification, and phase failure handling all run unchanged. Error if `--grill` is also passed.
 
