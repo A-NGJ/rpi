@@ -303,6 +303,93 @@ func TestScaffoldPlanWithSpec(t *testing.T) {
 	}
 }
 
+func TestScaffoldPlanWithDependsOn(t *testing.T) {
+	binary := buildBinary(t)
+	repoRoot := findRepoRoot(t)
+	tmplDir := filepath.Join(repoRoot, "internal", "workflow", "assets", "templates")
+	stdout, _, exitCode := runRPI(t, binary,
+		"scaffold", "plan",
+		"--topic", "Sibling B",
+		"--design", ".rpi/designs/2026-05-07-feature.md",
+		"--depends-on", ".rpi/plans/a.md, .rpi/plans/b.md",
+		"--templates-dir", tmplDir,
+	)
+	if exitCode != 0 {
+		t.Fatalf("expected exit 0, got %d", exitCode)
+	}
+	if !strings.Contains(stdout, "depends_on:") {
+		t.Errorf("output should contain depends_on: in frontmatter\n\nGot:\n%s", stdout)
+	}
+	if !strings.Contains(stdout, "- .rpi/plans/a.md") {
+		t.Errorf("output should contain dependency a.md\n\nGot:\n%s", stdout)
+	}
+	if !strings.Contains(stdout, "- .rpi/plans/b.md") {
+		t.Errorf("output should contain dependency b.md (whitespace trimmed)\n\nGot:\n%s", stdout)
+	}
+}
+
+func TestScaffoldPlanWithSiblings(t *testing.T) {
+	binary := buildBinary(t)
+	repoRoot := findRepoRoot(t)
+	tmplDir := filepath.Join(repoRoot, "internal", "workflow", "assets", "templates")
+	stdout, _, exitCode := runRPI(t, binary,
+		"scaffold", "plan",
+		"--topic", "Sibling A",
+		"--design", ".rpi/designs/2026-05-07-feature.md",
+		"--siblings", ".rpi/plans/a.md,.rpi/plans/b.md,.rpi/plans/c.md",
+		"--templates-dir", tmplDir,
+	)
+	if exitCode != 0 {
+		t.Fatalf("expected exit 0, got %d", exitCode)
+	}
+	if !strings.Contains(stdout, "## Sibling plans") {
+		t.Errorf("output should contain `## Sibling plans` heading\n\nGot:\n%s", stdout)
+	}
+	for _, sib := range []string{".rpi/plans/a.md", ".rpi/plans/b.md", ".rpi/plans/c.md"} {
+		if !strings.Contains(stdout, "- "+sib) {
+			t.Errorf("output should contain sibling %q\n\nGot:\n%s", sib, stdout)
+		}
+	}
+}
+
+func TestScaffoldPlanNoDependsOnNoSiblings(t *testing.T) {
+	binary := buildBinary(t)
+	repoRoot := findRepoRoot(t)
+	tmplDir := filepath.Join(repoRoot, "internal", "workflow", "assets", "templates")
+	stdout, _, exitCode := runRPI(t, binary,
+		"scaffold", "plan",
+		"--topic", "Plain plan",
+		"--templates-dir", tmplDir,
+	)
+	if exitCode != 0 {
+		t.Fatalf("expected exit 0, got %d", exitCode)
+	}
+	if strings.Contains(stdout, "depends_on:") {
+		t.Errorf("output should NOT contain depends_on: when --depends-on is omitted\n\nGot:\n%s", stdout)
+	}
+	if strings.Contains(stdout, "## Sibling plans") {
+		t.Errorf("output should NOT contain `## Sibling plans` when --siblings is omitted\n\nGot:\n%s", stdout)
+	}
+}
+
+func TestScaffoldPlanDependsOnEmptyEntriesIgnored(t *testing.T) {
+	binary := buildBinary(t)
+	repoRoot := findRepoRoot(t)
+	tmplDir := filepath.Join(repoRoot, "internal", "workflow", "assets", "templates")
+	stdout, _, exitCode := runRPI(t, binary,
+		"scaffold", "plan",
+		"--topic", "Edge case",
+		"--depends-on", ", , ,",
+		"--templates-dir", tmplDir,
+	)
+	if exitCode != 0 {
+		t.Fatalf("expected exit 0, got %d", exitCode)
+	}
+	if strings.Contains(stdout, "depends_on:") {
+		t.Errorf("output should NOT render depends_on: when all entries are empty/whitespace\n\nGot:\n%s", stdout)
+	}
+}
+
 func TestScaffoldUnknownType(t *testing.T) {
 	binary := buildBinary(t)
 

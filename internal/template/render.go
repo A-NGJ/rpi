@@ -24,12 +24,14 @@ type RenderContext struct {
 	TypeLabel  string // display label ("Research", "Design", etc.)
 
 	// User-provided (passed as flags)
-	Topic    string
-	Ticket   string
-	Research string
-	Design   string
-	Spec     string
-	Tags     string
+	Topic     string
+	Ticket    string
+	Research  string
+	Design    string
+	Spec      string
+	Tags      string
+	DependsOn []string
+	Siblings  []string
 }
 
 // typeLabels maps artifact type to display label.

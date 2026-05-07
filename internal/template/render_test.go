@@ -224,6 +224,119 @@ func TestRenderAllTemplates(t *testing.T) {
 	}
 }
 
+func TestRenderPlanWithDependsOn(t *testing.T) {
+	repoRoot := findRepoRoot(t)
+	templatesDir := filepath.Join(repoRoot, "internal", "workflow", "assets", "templates")
+
+	ctx := &RenderContext{
+		Date:       "2026-05-07T10:00:00+02:00",
+		GitCommit:  "abc1234",
+		Branch:     "main",
+		Repository: "test-repo",
+		Topic:      "Split B",
+		TypeLabel:  "Plan",
+		Design:     ".rpi/designs/2026-05-07-feature.md",
+		DependsOn: []string{
+			".rpi/plans/2026-05-07-feature-a.md",
+			".rpi/plans/2026-05-07-feature-b.md",
+		},
+	}
+
+	result, err := RenderTemplate("plan", ctx, templatesDir)
+	if err != nil {
+		t.Fatalf("RenderTemplate(plan) error: %v", err)
+	}
+
+	if !strings.Contains(result, "depends_on:") {
+		t.Errorf("output should contain depends_on: when DependsOn is non-empty\n\nGot:\n%s", result)
+	}
+	for _, dep := range ctx.DependsOn {
+		if !strings.Contains(result, "- "+dep) {
+			t.Errorf("output should contain dependency entry %q\n\nGot:\n%s", dep, result)
+		}
+	}
+}
+
+func TestRenderPlanWithoutDependsOn(t *testing.T) {
+	repoRoot := findRepoRoot(t)
+	templatesDir := filepath.Join(repoRoot, "internal", "workflow", "assets", "templates")
+
+	ctx := &RenderContext{
+		Date:       "2026-05-07T10:00:00+02:00",
+		GitCommit:  "abc1234",
+		Branch:     "main",
+		Repository: "test-repo",
+		Topic:      "Single",
+		TypeLabel:  "Plan",
+	}
+
+	result, err := RenderTemplate("plan", ctx, templatesDir)
+	if err != nil {
+		t.Fatalf("RenderTemplate(plan) error: %v", err)
+	}
+
+	if strings.Contains(result, "depends_on:") {
+		t.Errorf("output should NOT contain depends_on: when DependsOn is empty\n\nGot:\n%s", result)
+	}
+}
+
+func TestRenderPlanWithSiblings(t *testing.T) {
+	repoRoot := findRepoRoot(t)
+	templatesDir := filepath.Join(repoRoot, "internal", "workflow", "assets", "templates")
+
+	ctx := &RenderContext{
+		Date:       "2026-05-07T10:00:00+02:00",
+		GitCommit:  "abc1234",
+		Branch:     "main",
+		Repository: "test-repo",
+		Topic:      "Split A",
+		TypeLabel:  "Plan",
+		Design:     ".rpi/designs/2026-05-07-feature.md",
+		Siblings: []string{
+			".rpi/plans/2026-05-07-feature-a.md",
+			".rpi/plans/2026-05-07-feature-b.md",
+			".rpi/plans/2026-05-07-feature-c.md",
+		},
+	}
+
+	result, err := RenderTemplate("plan", ctx, templatesDir)
+	if err != nil {
+		t.Fatalf("RenderTemplate(plan) error: %v", err)
+	}
+
+	if !strings.Contains(result, "## Sibling plans") {
+		t.Errorf("output should contain `## Sibling plans` heading when Siblings is non-empty\n\nGot:\n%s", result)
+	}
+	for _, sib := range ctx.Siblings {
+		if !strings.Contains(result, "- "+sib) {
+			t.Errorf("output should contain sibling entry %q\n\nGot:\n%s", sib, result)
+		}
+	}
+}
+
+func TestRenderPlanWithoutSiblings(t *testing.T) {
+	repoRoot := findRepoRoot(t)
+	templatesDir := filepath.Join(repoRoot, "internal", "workflow", "assets", "templates")
+
+	ctx := &RenderContext{
+		Date:       "2026-05-07T10:00:00+02:00",
+		GitCommit:  "abc1234",
+		Branch:     "main",
+		Repository: "test-repo",
+		Topic:      "Single",
+		TypeLabel:  "Plan",
+	}
+
+	result, err := RenderTemplate("plan", ctx, templatesDir)
+	if err != nil {
+		t.Fatalf("RenderTemplate(plan) error: %v", err)
+	}
+
+	if strings.Contains(result, "## Sibling plans") {
+		t.Errorf("output should NOT contain `## Sibling plans` when Siblings is empty\n\nGot:\n%s", result)
+	}
+}
+
 func TestRenderTemplatesWithoutOptionalVars(t *testing.T) {
 	repoRoot := findRepoRoot(t)
 	templatesDir := filepath.Join(repoRoot, "internal", "workflow", "assets", "templates")

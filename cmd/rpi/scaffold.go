@@ -4,20 +4,42 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	tmpl "github.com/A-NGJ/rpi/internal/template"
 	"github.com/spf13/cobra"
 )
 
+// splitCSV splits a comma-separated string into trimmed, non-empty parts.
+// Returns nil for empty input so templates render the field as absent.
+func splitCSV(s string) []string {
+	if s == "" {
+		return nil
+	}
+	parts := strings.Split(s, ",")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if trimmed := strings.TrimSpace(p); trimmed != "" {
+			out = append(out, trimmed)
+		}
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
+}
+
 var (
-	topicFlag    string
-	ticketFlag   string
-	researchFlag string
-	designFlag   string
-	specFlag     string
-	tagsFlag     string
-	writeFlag    bool
-	forceFlag    bool
+	topicFlag     string
+	ticketFlag    string
+	researchFlag  string
+	designFlag    string
+	specFlag      string
+	tagsFlag      string
+	dependsOnFlag string
+	siblingsFlag  string
+	writeFlag     bool
+	forceFlag     bool
 )
 
 // typeDirs maps artifact type to its subdirectory under rpi-dir.
@@ -80,7 +102,13 @@ The rendered file contains YAML frontmatter and section headings from the templa
     → .rpi/designs/2026-03-13-caching-strategy.md
 
   # Preview to stdout without creating a file
-  rpi scaffold spec --topic "user permissions"`,
+  rpi scaffold spec --topic "user permissions"
+
+  # Create a sibling plan in a split, declaring its dependency on another sibling
+  rpi scaffold plan --design .rpi/designs/2026-05-07-foo.md --topic foo-mcp \
+    --depends-on .rpi/plans/2026-05-07-foo-storage.md \
+    --siblings .rpi/plans/2026-05-07-foo-storage.md,.rpi/plans/2026-05-07-foo-mcp.md \
+    --write`,
 	Args: cobra.ExactArgs(1),
 	RunE: runScaffold,
 }
@@ -94,6 +122,8 @@ func init() {
 	scaffoldCmd.Flags().StringVar(&designFlag, "design", "", "Path to design document")
 	scaffoldCmd.Flags().StringVar(&specFlag, "spec", "", "Path to spec document")
 	scaffoldCmd.Flags().StringVar(&tagsFlag, "tags", "", "Comma-separated tags")
+	scaffoldCmd.Flags().StringVar(&dependsOnFlag, "depends-on", "", "Comma-separated paths to plans this plan depends on (split sibling plans)")
+	scaffoldCmd.Flags().StringVar(&siblingsFlag, "siblings", "", "Comma-separated paths to all sibling plans in this split")
 	scaffoldCmd.Flags().BoolVar(&writeFlag, "write", false, "Write to file instead of stdout")
 	scaffoldCmd.Flags().BoolVar(&forceFlag, "force", false, "Allow overwriting existing files")
 
@@ -117,13 +147,15 @@ func runScaffold(cmd *cobra.Command, args []string) error {
 
 	// Build render context
 	ctx := &tmpl.RenderContext{
-		Type:     artifactType,
-		Topic:    topicFlag,
-		Ticket:   ticketFlag,
-		Research: researchFlag,
-		Design:   designFlag,
-		Spec:     specFlag,
-		Tags:     tagsFlag,
+		Type:      artifactType,
+		Topic:     topicFlag,
+		Ticket:    ticketFlag,
+		Research:  researchFlag,
+		Design:    designFlag,
+		Spec:      specFlag,
+		Tags:      tagsFlag,
+		DependsOn: splitCSV(dependsOnFlag),
+		Siblings:  splitCSV(siblingsFlag),
 	}
 
 	// Set type label
