@@ -21,20 +21,23 @@ type syncOptions struct {
 	cfg       targetConfig
 	skipRules bool
 	noTrack   bool
+	global    bool
 	w         io.Writer
 }
 
 func syncProject(opts syncOptions) error {
 	rpiDir := filepath.Join(opts.targetDir, ".rpi")
 
-	// Ensure .rpi/ subdirs exist
-	for _, d := range rpiSubdirs {
-		path := filepath.Join(rpiDir, d)
-		if _, statErr := os.Stat(path); statErr != nil {
-			if mkErr := os.MkdirAll(path, 0755); mkErr != nil {
-				return fmt.Errorf("create %s: %w", path, mkErr)
+	if !opts.global {
+		// Ensure .rpi/ subdirs exist
+		for _, d := range rpiSubdirs {
+			path := filepath.Join(rpiDir, d)
+			if _, statErr := os.Stat(path); statErr != nil {
+				if mkErr := os.MkdirAll(path, 0755); mkErr != nil {
+					return fmt.Errorf("create %s: %w", path, mkErr)
+				}
+				logSuccess(opts.w, fmt.Sprintf("Created .rpi/%s/", d))
 			}
-			logSuccess(opts.w, fmt.Sprintf("Created .rpi/%s/", d))
 		}
 	}
 
@@ -52,21 +55,23 @@ func syncProject(opts syncOptions) error {
 		}
 	}
 
-	// Manage .gitignore for tool dir (skip for agents-only)
-	if opts.cfg.toolDir != "" {
-		if err := ensureGitignoreEntries(opts.w, opts.targetDir, opts.cfg.toolDir+"/"); err != nil {
+	if !opts.global {
+		// Manage .gitignore for tool dir (skip for agents-only)
+		if opts.cfg.toolDir != "" {
+			if err := ensureGitignoreEntries(opts.w, opts.targetDir, opts.cfg.toolDir+"/"); err != nil {
+				logWarning(opts.w, fmt.Sprintf("Failed to update .gitignore: %v", err))
+			}
+		}
+
+		// Manage .gitignore for .rpi/. Default: ignore artifacts but keep specs
+		// tracked. With noTrack: ignore the entire .rpi/ tree.
+		rpiEntries := []string{".rpi/*", "!.rpi/specs/"}
+		if opts.noTrack {
+			rpiEntries = []string{".rpi/"}
+		}
+		if err := ensureGitignoreEntries(opts.w, opts.targetDir, rpiEntries...); err != nil {
 			logWarning(opts.w, fmt.Sprintf("Failed to update .gitignore: %v", err))
 		}
-	}
-
-	// Manage .gitignore for .rpi/. Default: ignore artifacts but keep specs
-	// tracked. With noTrack: ignore the entire .rpi/ tree.
-	rpiEntries := []string{".rpi/*", "!.rpi/specs/"}
-	if opts.noTrack {
-		rpiEntries = []string{".rpi/"}
-	}
-	if err := ensureGitignoreEntries(opts.w, opts.targetDir, rpiEntries...); err != nil {
-		logWarning(opts.w, fmt.Sprintf("Failed to update .gitignore: %v", err))
 	}
 
 	// Install skills
@@ -102,40 +107,42 @@ func syncProject(opts syncOptions) error {
 		}
 	}
 
-	// Install scaffold templates
-	templatesDir := filepath.Join(rpiDir, "templates")
-	tplCount, tplBackups, err := workflow.InstallTemplates(templatesDir)
-	if err != nil {
-		return fmt.Errorf("install templates: %w", err)
-	}
-	if tplCount > 0 {
-		logSuccess(opts.w, fmt.Sprintf("Installed %d template files", tplCount))
-	}
-	if tplBackups > 0 {
-		logSuccess(opts.w, fmt.Sprintf("Backed up %d modified template files", tplBackups))
-	}
+	if !opts.global {
+		// Install scaffold templates
+		templatesDir := filepath.Join(rpiDir, "templates")
+		tplCount, tplBackups, err := workflow.InstallTemplates(templatesDir)
+		if err != nil {
+			return fmt.Errorf("install templates: %w", err)
+		}
+		if tplCount > 0 {
+			logSuccess(opts.w, fmt.Sprintf("Installed %d template files", tplCount))
+		}
+		if tplBackups > 0 {
+			logSuccess(opts.w, fmt.Sprintf("Backed up %d modified template files", tplBackups))
+		}
 
-	// Write rules file — always install latest, back up if existing content differs
-	if !opts.skipRules && opts.cfg.rulesFile != "" {
-		rulesPath := filepath.Join(opts.targetDir, opts.cfg.rulesFile)
-		content, tplErr := templates.Get(opts.cfg.rulesFile)
-		if tplErr != nil {
-			logWarning(opts.w, fmt.Sprintf("get %s template: %v", opts.cfg.rulesFile, tplErr))
-		} else {
-			newData := []byte(content)
-			existing, readErr := os.ReadFile(rulesPath)
-			if readErr == nil && !bytes.Equal(existing, newData) {
-				if bakErr := os.WriteFile(rulesPath+".bak", existing, 0644); bakErr != nil {
-					logWarning(opts.w, fmt.Sprintf("backup %s: %v", opts.cfg.rulesFile, bakErr))
-				} else {
-					logSuccess(opts.w, fmt.Sprintf("Backed up %s to %s.bak", opts.cfg.rulesFile, opts.cfg.rulesFile))
+		// Write rules file — always install latest, back up if existing content differs
+		if !opts.skipRules && opts.cfg.rulesFile != "" {
+			rulesPath := filepath.Join(opts.targetDir, opts.cfg.rulesFile)
+			content, tplErr := templates.Get(opts.cfg.rulesFile)
+			if tplErr != nil {
+				logWarning(opts.w, fmt.Sprintf("get %s template: %v", opts.cfg.rulesFile, tplErr))
+			} else {
+				newData := []byte(content)
+				existing, readErr := os.ReadFile(rulesPath)
+				if readErr == nil && !bytes.Equal(existing, newData) {
+					if bakErr := os.WriteFile(rulesPath+".bak", existing, 0644); bakErr != nil {
+						logWarning(opts.w, fmt.Sprintf("backup %s: %v", opts.cfg.rulesFile, bakErr))
+					} else {
+						logSuccess(opts.w, fmt.Sprintf("Backed up %s to %s.bak", opts.cfg.rulesFile, opts.cfg.rulesFile))
+					}
 				}
-			}
-			if readErr != nil || !bytes.Equal(existing, newData) {
-				if writeErr := os.WriteFile(rulesPath, newData, 0644); writeErr != nil {
-					logWarning(opts.w, fmt.Sprintf("write %s: %v", opts.cfg.rulesFile, writeErr))
-				} else {
-					logSuccess(opts.w, fmt.Sprintf("Installed %s", opts.cfg.rulesFile))
+				if readErr != nil || !bytes.Equal(existing, newData) {
+					if writeErr := os.WriteFile(rulesPath, newData, 0644); writeErr != nil {
+						logWarning(opts.w, fmt.Sprintf("write %s: %v", opts.cfg.rulesFile, writeErr))
+					} else {
+						logSuccess(opts.w, fmt.Sprintf("Installed %s", opts.cfg.rulesFile))
+					}
 				}
 			}
 		}
