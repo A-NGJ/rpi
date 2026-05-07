@@ -85,6 +85,20 @@ Conflicts (each returns an error):
 - `rpi init --global --no-track` — `--no-track` controls `.gitignore` policy, which `--global` never touches.
 - `rpi init --global --target agents-only` — agents-only has no canonical user-level home; not supported in v1.
 
+### Refreshing the global install
+
+```bash
+rpi update --global
+rpi update --global --target opencode
+```
+
+Refreshes skills, agents (Claude target), and the `settings.json`
+hooks/permissions in the user-level config dir. Same `.bak`-on-diff
+semantics as the project-mode update — your customizations are preserved
+to a sibling `.bak` file before the latest embedded version is written.
+No project-level artifacts (`.rpi/`, rules file, `.gitignore`) are
+created or modified.
+
 ## Installation
 
 Build and install the `rpi` binary:

@@ -10,6 +10,124 @@ import (
 
 func resetUpdateFlags() {
 	updateNoClaudeMD = false
+	updateGlobal = false
+	updateTarget = "claude"
+}
+
+// runUpdateGlobal invokes rpi update --global with HOME redirected.
+func runUpdateGlobal(t *testing.T, home, target string) (*bytes.Buffer, error) {
+	t.Helper()
+	t.Setenv("HOME", home)
+	resetUpdateFlags()
+	updateGlobal = true
+	if target != "" {
+		updateTarget = target
+	}
+	buf := new(bytes.Buffer)
+	cmd := updateCmd
+	cmd.SetOut(buf)
+	err := cmd.RunE(cmd, nil)
+	return buf, err
+}
+
+func TestUpdateGlobalRefreshesUserInstall(t *testing.T) {
+	home := t.TempDir()
+
+	calls, cleanup := stubMCPRunner(t)
+	t.Cleanup(cleanup)
+	_ = calls
+
+	if _, err := runInitGlobal(t, home, "claude"); err != nil {
+		t.Fatalf("rpi init --global: %v", err)
+	}
+
+	// Modify a deployed skill.
+	skillPath := filepath.Join(home, ".claude", "skills", "rpi-research", "SKILL.md")
+	if err := os.WriteFile(skillPath, []byte("custom content"), 0644); err != nil {
+		t.Fatalf("modify skill: %v", err)
+	}
+
+	if _, err := runUpdateGlobal(t, home, "claude"); err != nil {
+		t.Fatalf("rpi update --global: %v", err)
+	}
+
+	// Skill restored to embedded version.
+	data, _ := os.ReadFile(skillPath)
+	if string(data) == "custom content" {
+		t.Error("update --global should overwrite modified skill")
+	}
+
+	// Backup carries the modified content.
+	bakData, err := os.ReadFile(skillPath + ".bak")
+	if err != nil {
+		t.Fatalf("missing .bak after update --global: %v", err)
+	}
+	if string(bakData) != "custom content" {
+		t.Error(".bak should contain pre-update content")
+	}
+
+	// No per-project artifacts at HOME.
+	for _, missing := range []string{".rpi", "CLAUDE.md", ".gitignore"} {
+		if _, err := os.Stat(filepath.Join(home, missing)); !os.IsNotExist(err) {
+			t.Errorf("update --global created %s under HOME; expected absent", missing)
+		}
+	}
+}
+
+func TestUpdateGlobalIdempotent(t *testing.T) {
+	home := t.TempDir()
+	_, cleanup := stubMCPRunner(t)
+	t.Cleanup(cleanup)
+
+	if _, err := runInitGlobal(t, home, "claude"); err != nil {
+		t.Fatalf("rpi init --global: %v", err)
+	}
+
+	if _, err := runUpdateGlobal(t, home, "claude"); err != nil {
+		t.Fatalf("first rpi update --global: %v", err)
+	}
+
+	// No .bak should appear in any skill dir after a clean second-run update.
+	skillsDir := filepath.Join(home, ".claude", "skills")
+	entries, _ := os.ReadDir(skillsDir)
+	for _, entry := range entries {
+		bakSkill := filepath.Join(skillsDir, entry.Name(), "SKILL.md.bak")
+		if _, err := os.Stat(bakSkill); err == nil {
+			t.Errorf("idempotent update produced .bak: %s", bakSkill)
+		}
+	}
+}
+
+func TestUpdateGlobalRejectsPositionalDir(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	resetUpdateFlags()
+	updateGlobal = true
+	buf := new(bytes.Buffer)
+	cmd := updateCmd
+	cmd.SetOut(buf)
+	err := cmd.RunE(cmd, []string{"./somewhere"})
+	if err == nil {
+		t.Fatal("expected error for --global with positional dir")
+	}
+	if !strings.Contains(err.Error(), "mutually exclusive") {
+		t.Errorf("error should mention mutually exclusive, got: %v", err)
+	}
+}
+
+func TestUpdateGlobalOpenCodeTarget(t *testing.T) {
+	home := t.TempDir()
+
+	if _, err := runInitGlobal(t, home, "opencode"); err != nil {
+		t.Fatalf("rpi init --global --target opencode: %v", err)
+	}
+	if _, err := runUpdateGlobal(t, home, "opencode"); err != nil {
+		t.Fatalf("rpi update --global --target opencode: %v", err)
+	}
+
+	if _, err := os.Stat(filepath.Join(home, ".config", "opencode", "skills", "rpi-research", "SKILL.md")); err != nil {
+		t.Errorf("opencode skill missing after global update: %v", err)
+	}
 }
 
 func TestUpdateRequiresExistingProject(t *testing.T) {

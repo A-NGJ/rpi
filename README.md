@@ -59,6 +59,18 @@ To sync an existing project with the latest workflow files:
 rpi update          # add missing dirs, update workflow files
 ```
 
+### One-time global setup (optional)
+
+If you work across many repos and don't want to redo `rpi init` per project, install the skills, agents, and MCP server at the user level once:
+
+```bash
+rpi init --global                                # ~/.claude/
+rpi init --global --target opencode              # ~/.config/opencode/
+rpi update --global                              # refresh the global install
+```
+
+`--global` only writes to your user config directory — no `.rpi/`, `CLAUDE.md`, or `.gitignore` is touched at the user level, and your working directory is unchanged. See [docs/rpi-init.md](docs/rpi-init.md) for the full layout and conflict matrix.
+
 ### Try it
 
 ```
