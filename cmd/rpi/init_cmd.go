@@ -306,6 +306,7 @@ var safeBashPatterns = []string{
 	"Bash(rpi frontmatter:*)",
 	"Bash(rpi scaffold:*)",
 	"Bash(rpi archive:*)",
+	"Bash(rm /tmp/claude-handoff-*.md)",
 }
 
 // configureSettings ensures .claude/settings.json contains the mcp__rpi__*
@@ -407,6 +408,17 @@ var rpiHooks = []hookDef{
 		marker:  "rpi_suggest_next",
 		command: "cat <<'HOOK_EOF'\nCall the rpi_suggest_next MCP tool to determine the appropriate next pipeline step.\nHOOK_EOF",
 		logMsg:  "Configured Stop hook for pipeline suggestions",
+	},
+	// Load-bearing recipe — must stay byte-identical to the path computed in
+	// internal/workflow/assets/skills/rpi-handoff/SKILL.md. The drift-guard
+	// test TestSessionHandoffHookRecipePinned enforces the pinned shape.
+	{
+		event:  "SessionStart",
+		marker: "claude-handoff",
+		command: `HANDOFF="/tmp/claude-handoff-$(echo -n "$PWD" | shasum -a 256 | cut -c1-12).md"; [ -f "$HANDOFF" ] && cat <<HOOK_EOF
+Pending handoff at $HANDOFF from a previous session. Read it, summarise its instructions, then rm it (consume-once).
+HOOK_EOF`,
+		logMsg: "Configured SessionStart hook for handoff pickup",
 	},
 }
 

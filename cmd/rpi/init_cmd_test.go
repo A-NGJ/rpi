@@ -1135,6 +1135,7 @@ func TestConfigureHooksAddsAllHooks(t *testing.T) {
 		{"PostCompact", "rpi_context_essentials"},
 		{"SessionStart", "rpi_session_resume"},
 		{"Stop", "rpi_suggest_next"},
+		{"SessionStart", "claude-handoff"},
 	} {
 		if !strings.Contains(content, check.event) {
 			t.Errorf("settings.json missing %s hook", check.event)
@@ -1192,7 +1193,7 @@ func TestConfigureHooksIdempotent(t *testing.T) {
 	content := string(data)
 
 	// Each marker should appear exactly once
-	for _, marker := range []string{"rpi_context_essentials", "rpi_session_resume", "rpi_suggest_next"} {
+	for _, marker := range []string{"rpi_context_essentials", "rpi_session_resume", "rpi_suggest_next", "claude-handoff"} {
 		count := strings.Count(content, marker)
 		if count != 1 {
 			t.Errorf("expected 1 %s reference, got %d", marker, count)
@@ -1250,5 +1251,34 @@ func TestConfigureHooksReplacesOldFormat(t *testing.T) {
 	// Marker should appear exactly once (not duplicated)
 	if count := strings.Count(content, "rpi_context_essentials"); count != 1 {
 		t.Errorf("expected 1 rpi_context_essentials reference, got %d", count)
+	}
+}
+
+// TestSessionHandoffHookRecipePinned locks the load-bearing parts of the
+// claude-handoff hook command so it can't silently drift from the path
+// recipe in internal/workflow/assets/skills/rpi-handoff/SKILL.md. If this
+// test fails, update both sides together — see the SKILL.md "Path recipe"
+// invariant for the matching writer side.
+func TestSessionHandoffHookRecipePinned(t *testing.T) {
+	var entry *hookDef
+	for i := range rpiHooks {
+		if rpiHooks[i].marker == "claude-handoff" {
+			entry = &rpiHooks[i]
+			break
+		}
+	}
+	if entry == nil {
+		t.Fatal("claude-handoff hook entry not found in rpiHooks")
+	}
+
+	for _, fragment := range []string{
+		"/tmp/claude-handoff-",
+		"shasum -a 256",
+		"cut -c1-12",
+		`[ -f "$HANDOFF" ]`,
+	} {
+		if !strings.Contains(entry.command, fragment) {
+			t.Errorf("claude-handoff hook command missing pinned fragment %q\nfull command: %s", fragment, entry.command)
+		}
 	}
 }
