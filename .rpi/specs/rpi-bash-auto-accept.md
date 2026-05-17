@@ -1,8 +1,8 @@
 ---
 domain: rpi init / rpi update settings configuration for Claude target
 feature: rpi-bash-auto-accept
-last_updated: 2026-05-06T00:00:47+02:00
-updated_by: .rpi/designs/2026-05-06-auto-accept-safe-rpi-bash-commands.md
+last_updated: 2026-05-17T23:51:06+02:00
+updated_by: .rpi/designs/2026-05-17-silent-rpi-bootstrap-via-safe-bash-allowlist.md
 ---
 
 # rpi-bash-auto-accept
@@ -48,10 +48,15 @@ Given a project whose permissions file already contains user-managed allow entri
 When `rpi init` or `rpi update` runs for the Claude target
 Then those user entries remain intact, and the safe Bash allowlist entries are appended without removing, reordering, or rewriting them
 
+### Skill-invoked bootstrap is auto-accepted in initialized projects
+Given a project where `rpi init` or `rpi update` has run for the Claude target
+When an `rpi-*` skill's preamble invokes `rpi bootstrap` during a session
+Then Claude Code runs it without prompting the user, because `Bash(rpi bootstrap:*)` is part of the seeded allowlist
+
 ## Constraints
 
 - The allowlist applies only to the Claude target — OpenCode and `agents-only` targets are not modified by this feature.
-- The set of "safe" rpi subcommands is bounded by the rule *"operates on `.rpi/` artifacts only"*; commands that mutate host configuration, the rpi binary, or that run as a long-lived daemon are excluded.
+- The set of "safe" rpi subcommands is bounded by the rule *"does not mutate host config (`~/.claude/`, `~/.config/`), does not mutate the rpi binary, and does not run as a long-lived daemon"*; commands that fail any of those tests are excluded.
 - The allowlist is written to the project-shared permissions file (the one normally checked into version control), not the user-local override.
 - Writing the allowlist must be idempotent across repeated runs and must not overwrite or reorder pre-existing entries.
 - The feature is independent of MCP availability: it must work when MCP is wired and when MCP is skipped.

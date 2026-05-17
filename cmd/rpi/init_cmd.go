@@ -286,10 +286,10 @@ func configureMCP(w io.Writer, _ string, userScope bool) {
 	logSuccess(w, "Configured MCP server via claude mcp add")
 }
 
-// safeBashPatterns lists Claude Code permission patterns for the rpi
-// subcommands that operate on .rpi/ artifacts only. Inclusion rule:
-// safe = operates on .rpi/ artifacts only; unsafe = mutates host config,
-// the rpi binary, or runs long-lived. New `rpi` subcommands default to
+// safeBashPatterns lists Claude Code permission patterns for the safe
+// rpi subcommands. Inclusion rule: safe = does not mutate host config
+// (~/.claude/, ~/.config/), does not mutate the rpi binary, and does
+// not run as a long-lived daemon. New `rpi` subcommands default to
 // unsafe — add them here only if they satisfy the safety contract.
 var safeBashPatterns = []string{
 	"Bash(rpi scan:*)",
@@ -306,6 +306,7 @@ var safeBashPatterns = []string{
 	"Bash(rpi frontmatter:*)",
 	"Bash(rpi scaffold:*)",
 	"Bash(rpi archive:*)",
+	"Bash(rpi bootstrap:*)",
 	"Bash(rm /tmp/claude-handoff-*.md)",
 }
 
