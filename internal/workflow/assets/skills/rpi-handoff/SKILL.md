@@ -4,8 +4,6 @@ description: Capture in-flight conversation context to a deterministic per-proje
 argument-hint: "[focus for next session]"
 ---
 
-> Before doing anything else, run `rpi bootstrap` (silent and idempotent — initializes `.rpi/` if a global install is present and the project hasn't been bootstrapped yet).
-
 # Session Handoff
 
 ## Goal
