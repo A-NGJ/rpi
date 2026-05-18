@@ -416,9 +416,10 @@ var rpiHooks = []hookDef{
 	{
 		event:  "SessionStart",
 		marker: "claude-handoff",
-		command: `HANDOFF="/tmp/claude-handoff-$(echo -n "$PWD" | shasum -a 256 | cut -c1-12).md"; [ -f "$HANDOFF" ] && cat <<HOOK_EOF
+		command: `HANDOFF="/tmp/claude-handoff-$(echo -n "$PWD" | shasum -a 256 | cut -c1-12).md"; if [ -f "$HANDOFF" ]; then cat <<HOOK_EOF
 Pending handoff at $HANDOFF from a previous session. Read it, summarise its instructions, then rm it (consume-once).
-HOOK_EOF`,
+HOOK_EOF
+fi`,
 		logMsg: "Configured SessionStart hook for handoff pickup",
 	},
 }
