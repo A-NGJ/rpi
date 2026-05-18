@@ -155,6 +155,90 @@ func TestGet_FallsBackToEmbedded(t *testing.T) {
 	}
 }
 
+func TestGetCLAUDEMD_ContainsContractBlock(t *testing.T) {
+	setupTestHome(t)
+
+	content, err := Get("CLAUDE.md")
+	if err != nil {
+		t.Fatalf("Get(CLAUDE.md): %v", err)
+	}
+	if !strings.Contains(content, "<!-- rpi:contract:begin") {
+		t.Error("CLAUDE.md missing contract begin marker")
+	}
+	if !strings.Contains(content, "<!-- rpi:contract:end -->") {
+		t.Error("CLAUDE.md missing contract end marker")
+	}
+	if !strings.Contains(content, "## RPI Skill Contract") {
+		t.Error("CLAUDE.md missing '## RPI Skill Contract' heading")
+	}
+}
+
+func TestGetAGENTSMD_ContainsContractBlock(t *testing.T) {
+	setupTestHome(t)
+
+	content, err := Get("AGENTS.md")
+	if err != nil {
+		t.Fatalf("Get(AGENTS.md): %v", err)
+	}
+	if !strings.Contains(content, "<!-- rpi:contract:begin") {
+		t.Error("AGENTS.md missing contract begin marker")
+	}
+	if !strings.Contains(content, "<!-- rpi:contract:end -->") {
+		t.Error("AGENTS.md missing contract end marker")
+	}
+	if !strings.Contains(content, "## RPI Skill Contract") {
+		t.Error("AGENTS.md missing '## RPI Skill Contract' heading")
+	}
+}
+
+func TestGetReplacesSlotOnce(t *testing.T) {
+	setupTestHome(t)
+
+	for _, name := range []string{"CLAUDE.md", "AGENTS.md"} {
+		t.Run(name, func(t *testing.T) {
+			content, err := Get(name)
+			if err != nil {
+				t.Fatalf("Get(%s): %v", name, err)
+			}
+			if strings.Contains(content, "<!-- rpi:contract:slot -->") {
+				t.Error("placeholder slot still present after splice")
+			}
+			if got := strings.Count(content, "<!-- rpi:contract:begin"); got != 1 {
+				t.Errorf("begin marker appears %d times, want 1", got)
+			}
+			if got := strings.Count(content, "<!-- rpi:contract:end -->"); got != 1 {
+				t.Errorf("end marker appears %d times, want 1", got)
+			}
+		})
+	}
+}
+
+func TestGetWithUserTemplateMissingSlot_NoSplice(t *testing.T) {
+	home := setupTestHome(t)
+
+	templatesDir := filepath.Join(home, ".rpi", "templates")
+	if err := os.MkdirAll(templatesDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Legacy user template — no slot placeholder.
+	legacy := "# Custom CLAUDE.md\n\nNo slot here.\n"
+	if err := os.WriteFile(filepath.Join(templatesDir, "CLAUDE.md.template"), []byte(legacy), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := Get("CLAUDE.md")
+	if err != nil {
+		t.Fatalf("Get(CLAUDE.md): %v", err)
+	}
+	if got != legacy {
+		t.Errorf("Get(CLAUDE.md) = %q, want verbatim %q", got, legacy)
+	}
+	if strings.Contains(got, "<!-- rpi:contract:begin") {
+		t.Error("contract block was spliced into legacy template without slot placeholder")
+	}
+}
+
 func TestNames(t *testing.T) {
 	names := Names()
 	if len(names) != 2 {

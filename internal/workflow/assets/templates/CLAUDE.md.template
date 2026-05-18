@@ -42,6 +42,8 @@ Workflow: Research → Propose → Plan → Implement → Verify
 
 Each command suggests the next step. Start with `/rpi-propose` for features, `/rpi-plan` for bug fixes, `/rpi-diagnose` for complex bugs, `/rpi-research` when exploring.
 
+<!-- rpi:contract:slot -->
+
 ## Codebase Navigation
 
 When exploring unfamiliar code, check what navigation tools are available before falling back to text search. Structural overviews and definition lookups are more efficient than scanning files when you need to understand how a codebase is organized or where something is defined.

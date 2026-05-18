@@ -1,0 +1,30 @@
+<!-- rpi:contract:begin v=1 -->
+## RPI Skill Contract
+
+These cross-skill rules apply to every `/rpi-*` invocation. They are written
+by `rpi init` / `rpi update` and refreshed in place. Edit them by re-running
+`rpi update`, not by hand-editing this block.
+
+### Search for prior artifacts before drafting
+Before producing a new research note, design, plan, or diagnosis, search
+`.rpi/` for prior work on the same topic. Prefer semantic search when the
+backend is available (default relevance threshold ~0.4); fall back to keyword
+discovery otherwise. Read snippets first; expand the artifact chain for
+high-relevance hits (≥ 0.7) to see lineage. If a prior artifact covers the
+same scope, surface it and ask whether to extend rather than open a new one.
+
+### --ff and --grill flags
+Any `/rpi-propose`, `/rpi-plan`, or `/rpi-implement` invocation accepts:
+- `--ff`: skip approval gates and auto-chain through the rest of the
+  pipeline. Contract in `.rpi/specs/rpi-fast-forward-mode.md`.
+- `--grill`: invoke the `grill-me` skill at the approval gate. Contract in
+  `.rpi/specs/rpi-grill-mode.md`.
+
+The two flags are mutually exclusive.
+
+### Pipeline order
+research → propose → plan → implement → verify, with `diagnose` (bug
+post-mortem) and `explain` (diff walkthrough) as optional branches. Each
+skill's name identifies its position; skills suggest the next step on
+completion.
+<!-- rpi:contract:end -->

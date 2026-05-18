@@ -39,6 +39,8 @@ Workflow: Research → Propose → Plan → Implement → Verify
 
 Each command suggests the next step. Start with `/rpi-propose` for features, `/rpi-plan` for bug fixes, `/rpi-research` when exploring.
 
+<!-- rpi:contract:slot -->
+
 ## Development Conventions
 
 Before implementing any changes, always: 1) Read the current version of each file you plan to modify, 2) Run the existing test suite to establish a baseline, 3) Implement changes incrementally — one logical unit at a time, 4) Run tests after each unit. If tests fail, fix before proceeding. Do not batch all changes and test at the end.
