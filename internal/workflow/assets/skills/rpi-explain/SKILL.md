@@ -9,7 +9,7 @@ description: Walk through a recent diff and explain what changed and why, focusi
 
 ## Goal
 
-Generate a diff-scoped walkthrough of an implemented solution, explaining what changed and why — with focus on non-obvious decisions. This is an optional post-implement step: research → propose → plan → implement → **explain**.
+Generate a diff-scoped walkthrough of an implemented solution, explaining what changed and why — with focus on non-obvious decisions.
 
 Auto-detect the mode from input:
 - **Artifact path** (path to plan, design, or spec) → resolve the artifact chain for context, then walk through the diff
@@ -21,7 +21,7 @@ After the initial walkthrough, enter conversation mode — the user can ask foll
 
 - If an artifact path is provided, resolve its full chain (plan → design → research) and use as context for attributing rationale (EX-1)
 - If no arguments, identify changed files from git and proceed without artifact context (EX-2)
-- In no-args mode, after identifying changed files, search for related designs, plans, or diagnoses that match the diff's topic — prefer semantic search when available (default relevance threshold ~0.4), and fall back to keyword-based artifact discovery when not. Read snippets first. Use high-relevance hits as additional rationale sources, citing them as "per the design..." rather than "inferred from code". Skip this step in artifact-path mode — explanation should stay grounded in the provided artifact's chain. If semantic search reports an installed-but-failing state, run the recovery command from its hint and retry once; only fall back to keyword discovery (and surface the hint) if the retry still fails. (EX-10)
+- In no-args mode, search for related designs, plans, or diagnoses matching the diff's topic; cite high-relevance hits as "per the design..." (EX-10)
 - If a provided path doesn't exist or has no linked artifacts, proceed with diff-only explanation and note the missing context (EX-3)
 - Read all changed files fully before generating explanations — never use limit/offset
 - Walk through changes file-by-file, providing a factual summary of what changed in each (EX-4)

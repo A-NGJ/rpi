@@ -9,7 +9,7 @@ description: Design a new feature or non-trivial change with tradeoffs — produ
 
 ## Goal
 
-Create a design document (`.rpi/designs/`) and behavioral spec (`.rpi/specs/`) for a given topic or research. This is part of: research → **propose** → plan → implement.
+Create a design document (`.rpi/designs/`) and behavioral spec (`.rpi/specs/`) for a given topic or research.
 
 Auto-detect the mode from input:
 - **Focused decision** (e.g., "should we use X or Y?") → quick investigation, trade-off analysis, write design+spec
@@ -17,23 +17,20 @@ Auto-detect the mode from input:
 - **Updating existing design** (path to existing design) → read it, understand what changed, propose updates in place
 - **Nothing provided** → ask for input with brief examples of each mode
 
-Any mode can be combined with **`--grill`** — pass `--grill` or use phrasing like "grill me on this" / "stress-test this" to invoke the bundled `grill-me` skill at the approval gate (see invariants).
-
-Any mode can be combined with **`--ff`** — pass `--ff` to suppress approval gates and auto-chain through `/rpi-plan`, `/rpi-implement`, and `/rpi-verify`. Mutually exclusive with `--grill`.
-
 When the user approves the spec, suggest → `/rpi-plan <design-path>`.
 
 ## Invariants
 
-- Before drafting, search for prior designs (and optionally specs) on this topic — prefer semantic search when available (default relevance threshold ~0.4), and fall back to keyword-based artifact discovery when not. Read snippets first. For high-relevance hits (score ≥ 0.7), expand the artifact chain to see lineage. Decide whether the new design supersedes or extends prior work; if extending, link via frontmatter. If semantic search reports an installed-but-failing state, run the recovery command from its hint and retry once; only fall back to keyword discovery (and surface the hint) if the retry still fails.
+- Before drafting, search for prior designs and specs on this topic; decide whether to supersede or extend
+- See the project's RPI Skill Contract for `--ff` / `--grill` semantics; both flags apply here and are mutually exclusive
 - If a research doc is provided, read it and resolve its full artifact chain — warn if still draft or already complete
 - Investigate the codebase before proposing — ground decisions in evidence with file:line refs
 - Get user buy-in on trade-offs before writing the design
 - Link the design to upstream research via frontmatter
 - Create a behavioral spec with 5-8 Given/When/Then scenarios describing user-observable behavior — scenarios must not reference internal structure (structs, file paths, function names); include a Constraints section for boundaries and an Out of Scope section. Name the spec file after its `feature` field (e.g., `feature: rpi-status` → `rpi-status.md`)
 - Present the spec for approval — iterate until accepted
-- If the user passed `--ff`, skip the trade-off buy-in, the mid-flight decision checkpoints, and the spec approval gate — auto-accept the drafted design and spec and immediately invoke `/rpi-plan --ff <design-path>` via the Skill tool. Error if `--grill` was also passed.
-- If the user requested grilling (via `--grill` or natural-language phrasing) and `grill-me` is in your available skills, invoke `grill-me` on the drafted design+spec before the approval gate. Apply revisions inline to the design and spec, then present for approval. If `grill-me` is unavailable, tell the user `grill-me` is not currently available and ask whether to proceed with the standard approval gate.
+- Under `--ff`, skip the trade-off buy-in, the mid-flight decision checkpoints, and the spec approval gate — auto-accept the drafted design and spec and immediately invoke `/rpi-plan --ff <design-path>` via the Skill tool
+- Under `--grill` (or matching natural-language phrasing) and when `grill-me` is available, invoke `grill-me` on the drafted design+spec before the approval gate; apply revisions inline. If `grill-me` is unavailable, tell the user and ask whether to proceed with the standard approval gate.
 - Transition artifacts: design → active, research → complete (if fully addressed)
 - For incremental mode: update in place, add an Update Log entry, update affected specs
 

@@ -9,16 +9,12 @@ description: Plan a concrete, scoped change to existing behavior — produce a p
 
 ## Goal
 
-Create phased implementation plans with tasks, success criteria, and verification steps. This is part of: research → propose → **plan** → implement.
+Create phased implementation plans with tasks, success criteria, and verification steps.
 
 Auto-detect the mode from input:
 - **Standalone** (plain task description) → lightweight research, then plan directly (bug fixes, small features, refactors)
 - **Pipeline** (path to a design document) → plan built from prior pipeline work
 - **Nothing provided** → ask for input with brief examples of each mode
-
-Any mode can be combined with **`--grill`** — pass `--grill` or use phrasing like "grill me on this" / "stress-test this" to invoke the bundled `grill-me` skill at the approval gate (see invariants).
-
-Any mode can be combined with **`--ff`** — pass `--ff` to suppress approval gates and auto-chain through `/rpi-implement` and `/rpi-verify`. Mutually exclusive with `--grill`.
 
 When the user confirms the plan, suggest → `/rpi-implement <plan-path>` (or the first sibling plan with no dependencies, if the design was split).
 
@@ -26,7 +22,8 @@ When the user confirms the plan, suggest → `/rpi-implement <plan-path>` (or th
 
 - Check the project's conventions for test/lint/build commands — use these in success criteria, not generic placeholders
 - Read all provided files fully; research proportional to complexity
-- Before drafting, search for prior plans and designs on this topic — prefer semantic search when available (default relevance threshold ~0.4), and fall back to keyword-based artifact discovery when not. Read snippets first; for high-relevance hits (score ≥ 0.7), expand the artifact chain to see lineage. If a prior plan covers the same scope, ask the user whether to extend it instead of opening a new one. Most valuable in standalone mode, where no chain is pre-resolved. If semantic search reports an installed-but-failing state, run the recovery command from its hint and retry once; only fall back to keyword discovery (and surface the hint) if the retry still fails.
+- Before drafting, search for prior plans and designs on this topic; if a prior plan covers the same scope, ask whether to extend it
+- See the project's RPI Skill Contract for `--ff` / `--grill` semantics; both flags apply here and are mutually exclusive
 - Check `.rpi/specs/` for specs covering the affected area — the plan must satisfy these behavioral contracts
 - **Pipeline mode**: validate the design's status, resolve its full artifact chain, read all linked files, spot-check key files against current codebase for drift
 - **Pipeline-mode split**: call the split-score tool on the design path to get the complexity score and per-signal breakdown. If `should_split` is true (score ≥ threshold), propose a labeled breakdown of sibling plans before writing any plan: each plan covers ≥1 design component (use the returned `components.headings` to cluster), the union covers every component, slugs follow `<design-topic>-<scope-slug>`, and dependencies form a DAG. Run accept / edit / single-plan with the user; under `--ff`, accept the auto-generated proposal. On cycle detection, surface the participating plans and re-enter the edit loop without writing files. Splits are pipeline-only.
@@ -38,8 +35,8 @@ When the user confirms the plan, suggest → `/rpi-implement <plan-path>` (or th
 - Map phases to spec scenarios where applicable
 - Get buy-in on proposed phases before writing the full plan
 - **Per sibling plan in a split**: scaffold each plan with its `depends_on:` list and `Sibling plans` body block, write them in topological order, run the per-plan approval gate (or skip under `--ff`), and update the resume marker on the design until the last sibling is written
-- If the user passed `--ff`, skip approval gates — write the full plan(s) immediately, run the existing automated coverage check, transition the design to complete only after every proposed sibling exists on disk, then invoke `/rpi-implement --ff <plan-path>` via the Skill tool for each plan in topological order (waiting for each to finish before starting the next), then `/rpi-verify <last-plan-path>` once at the end. Error if `--grill` was also passed.
-- If the user requested grilling (via `--grill` or natural-language phrasing) and `grill-me` is in your available skills, invoke `grill-me` on the split proposal (when offered) or on the phase outline (single-plan case) before writing the full plan. Apply revisions inline, then continue with normal approval. If `grill-me` is unavailable, tell the user `grill-me` is not currently available and ask whether to proceed with the standard approval gate.
+- Under `--ff`, skip approval gates — write the full plan(s) immediately, run the existing automated coverage check, transition the design to complete only after every proposed sibling exists on disk, then invoke `/rpi-implement --ff <plan-path>` via the Skill tool for each plan in topological order (waiting for each to finish before starting the next), then `/rpi-verify <last-plan-path>` once at the end
+- Under `--grill` (or matching natural-language phrasing) and when `grill-me` is available, invoke `grill-me` on the split proposal (when offered) or on the phase outline (single-plan case) before writing the full plan; apply revisions inline. If `grill-me` is unavailable, tell the user and ask whether to proceed with the standard approval gate.
 - **Pipeline mode**: after writing, verify the plan(s) cover all design decisions — nothing silently dropped. Transition design → complete only when every proposed sibling plan has been written; otherwise leave it active and record remaining plans in the resume marker.
 - Scaffold and save the plan artifact, linking to upstream design and spec
 

@@ -13,10 +13,9 @@ Execute an active plan from `.rpi/plans/` phase by phase. Plans come in two form
 
 After all phases are complete and verified, announce completion and update the plan status. Then suggest → `/rpi-verify <plan-path>` for an independent verification report.
 
-**`--ff` (fast-forward) mode**: if invoked with `--ff`, skip the per-phase pre-review and any manual verification pauses, and after the plan transitions to complete, invoke `/rpi-verify <plan-path>` via the Skill tool as the chain's terminal step. The "On mismatch" gate, the sensitive-content scan, end-of-plan spec verification, and phase failure handling all run unchanged. Error if `--grill` is also passed.
-
 ## Invariants
 
+- See the project's RPI Skill Contract for `--ff` semantics; the per-phase `Under --ff, ...` modifiers below describe how this skill implements that contract
 - Validate the plan's status before starting — draft/active: proceed; complete: warn about duplication
 - Resolve the plan's artifact chain and read all upstream context (designs, research, specs)
 - Read all files mentioned in the plan fully — never use limit/offset
