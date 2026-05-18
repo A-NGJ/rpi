@@ -99,18 +99,13 @@ to a sibling `.bak` file before the latest embedded version is written.
 No project-level artifacts (`.rpi/`, rules file, `.gitignore`) are
 created or modified.
 
-## Auto-bootstrap on first skill use
+## Per-project bootstrap
 
-Once you've run `rpi init --global`, every `rpi-*` skill auto-initializes
-the project's `.rpi/` tree, rules file, and `.gitignore` policy at the
-git root the first time it's invoked in a fresh repo. No `rpi init`
-needed per project.
-
-Each `rpi-*` SKILL.md prompt opens with a one-line preamble:
-
-> Before doing anything else, run `rpi bootstrap` (silent and idempotent
-> — initializes `.rpi/` if a global install is present and the project
-> hasn't been bootstrapped yet).
+Once you've run `rpi init --global`, run `rpi bootstrap` once inside any
+git repo where you want to use the RPI workflow. It initializes the
+project's `.rpi/` tree, the rules file, and the `.gitignore` policy at
+the git root — without re-installing the user-scope skills, agents, or
+MCP server, which the global install already provides.
 
 The `rpi bootstrap` subcommand has four exit paths:
 
@@ -119,16 +114,17 @@ The `rpi bootstrap` subcommand has four exit paths:
 - **Silent no-op** when no user-level install exists at
   `~/.claude/skills/rpi-research/` or `~/.config/opencode/skills/rpi-research/`.
 - **Silent no-op** when the cwd is not inside a git repository.
-- **Auto-init** otherwise: creates `.rpi/<subdirs>/`, the rules file
+- **Initialize** otherwise: creates `.rpi/<subdirs>/`, the rules file
   (`CLAUDE.md` or `AGENTS.md` per detected target), and the standard
   `.rpi/*` + `!.rpi/specs/` `.gitignore` entries — all at the git root,
   regardless of which subdirectory the user is in. Prints exactly one
   line to stderr:
   `✓ Auto-initialized .rpi/ in <git-root> — skills inherited from <global-path>`
 
-You can run `rpi bootstrap` directly any time — it's safe and idempotent.
+The command is safe and idempotent — re-running it on an already-initialized
+project is a no-op.
 
-### What auto-bootstrap does NOT do
+### What `rpi bootstrap` does NOT do
 
 It deliberately keeps the project's footprint minimal:
 
@@ -142,10 +138,8 @@ in `./.claude/`), run `rpi init` explicitly.
 
 ### OpenCode users
 
-Auto-bootstrap is currently triggered by the same skill preamble used
-for the Claude target — the SKILL.md content is shared across both. If
-you're using OpenCode without a global install, simply run
-`rpi bootstrap` manually in a project to get the same lite-init.
+`rpi bootstrap` detects the target from the global install, so OpenCode
+users run the same command to get the same lite-init.
 
 ## Installation
 

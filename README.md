@@ -69,7 +69,15 @@ rpi init --global --target opencode              # ~/.config/opencode/
 rpi update --global                              # refresh the global install
 ```
 
-`--global` only writes to your user config directory — no `.rpi/`, `CLAUDE.md`, or `.gitignore` is touched at the user level, and your working directory is unchanged. After global setup, the first `/rpi-*` skill you invoke in a project auto-initializes `.rpi/` at the git root — no per-project `rpi init` required. See [docs/rpi-init.md](docs/rpi-init.md) for the full layout, conflict matrix, and auto-bootstrap semantics.
+`--global` only writes to your user config directory — no `.rpi/`, `CLAUDE.md`, or `.gitignore` is touched at the user level, and your working directory is unchanged. See [docs/rpi-init.md](docs/rpi-init.md) for the full layout and conflict matrix.
+
+#### Per-project bootstrap
+
+Once a global install is in place, run `rpi bootstrap` from inside any git repo to inherit the global skills into that project — it creates `.rpi/`, the rules file (`CLAUDE.md` or `AGENTS.md`), and the standard `.gitignore` entries at the git root. The command is silent and idempotent: it exits cleanly when `.rpi/` already exists, no global install is present, or the cwd is outside a git repository.
+
+```bash
+rpi bootstrap
+```
 
 ### Try it
 
