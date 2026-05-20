@@ -1,5 +1,7 @@
 # The `rpi init` Command
 
+> **Claude Code users**: prefer the plugin install — see the README's [Install (Claude Code)](../README.md#install-claude-code) section. This document describes the standalone `rpi init` flow, which remains supported for OpenCode targets, locked-down environments, and manual setups.
+
 The `rpi init` command bootstraps the RPI workflow into any project. All workflow files (skills and scaffold templates) are embedded in the binary -- no external dotfiles or source repo needed.
 
 Supports three targets: **Claude Code** (default), **OpenCode**, and **agents-only**.

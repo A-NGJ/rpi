@@ -34,7 +34,24 @@ Breaks work into phases (core module, middleware integration, configuration), ea
 ```
 Implements phase-by-phase -- runs tests, commits, and advances automatically when checks pass. Pauses only when manual verification is needed or something diverges from the plan.
 
-## Quick Start
+## Install (Claude Code)
+
+Install the plugin from the Claude Code marketplace, then run the one-step setup to fetch the matching `rpi` binary:
+
+```
+/plugin install rpi
+/rpi:setup
+```
+
+`/rpi:setup` downloads the binary from GitHub Releases, verifies its SHA256 against `checksums.txt`, and installs it to `~/.rpi/bin/rpi`. It writes nothing outside that directory. Re-running `/rpi:setup` upgrades the binary in place; no other state is touched. See the [plugin README](claude-plugin/README.md) for the marketplace listing.
+
+**Command rename for plugin users.** Skill names are namespaced under `rpi:`, so commands surface as `/rpi:plan`, `/rpi:implement`, `/rpi:verify`, etc. (instead of the standalone `/rpi-plan`, `/rpi-implement`, …). The MCP server name (`rpi`) and tool prefix (`mcp__rpi__*`) are unchanged.
+
+If you previously installed RPI via `rpi init --global`, run `rpi uninstall --global` before `/rpi:setup` — the plugin refuses to overwrite a standalone install.
+
+### Alternative install (opencode / manual / non-Claude-Code)
+
+For environments where the Claude Code plugin marketplace is unavailable (locked-down systems, opencode users, manual setups), use the standalone CLI:
 
 ```bash
 curl -sSfL https://raw.githubusercontent.com/A-NGJ/rpi/main/install.sh | bash
@@ -59,7 +76,7 @@ To sync an existing project with the latest workflow files:
 rpi update          # add missing dirs, update workflow files
 ```
 
-### One-time global setup (optional)
+### One-time global setup (optional, standalone)
 
 If you work across many repos and don't want to redo `rpi init` per project, install the skills, agents, and MCP server at the user level once:
 
