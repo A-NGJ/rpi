@@ -7,10 +7,11 @@ Research → Propose → Plan → Implement → Verify. Spec-Driven Development 
 In Claude Code:
 
 ```
-/plugin install rpi
+/plugin marketplace add A-NGJ/rpi
+/plugin install rpi@rpi
 ```
 
-Then run the one-step setup to fetch the matching `rpi` binary:
+The first command registers this repo as a plugin marketplace (Claude Code reads `.claude-plugin/marketplace.json` at the repo root). The second installs the `rpi` plugin from it. Then run the one-step setup to fetch the matching `rpi` binary:
 
 ```
 /rpi:rpi-setup

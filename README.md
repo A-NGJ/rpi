@@ -10,6 +10,18 @@ AI coding agents are capable -- the challenge is steering them. Without structur
 
 Each stage produces a document you can read, edit, and approve before the next one starts. A compiled Go CLI handles the bookkeeping so the LLM spends its tokens on thinking, not parsing. Built for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and [OpenCode](https://github.com/opencode-ai/opencode), but the methodology works with any AI coding tool.
 
+## Quick Start
+
+In Claude Code:
+
+```
+/plugin marketplace add A-NGJ/rpi
+/plugin install rpi@rpi
+/rpi:rpi-setup
+```
+
+That's it. The first command adds this repo as a plugin marketplace; the second installs the `rpi` plugin from it (skills, hooks, MCP server); `/rpi:rpi-setup` fetches the matching `rpi` binary from GitHub Releases into `~/.rpi/bin/rpi`. Re-running `/rpi:rpi-setup` upgrades the binary. See the [full Installation section](#installation) for OpenCode, standalone CLI, and from-source paths.
+
 ## See It in Action
 
 Add rate limiting to an API in four commands:
@@ -36,14 +48,15 @@ Implements phase-by-phase -- runs tests, commits, and advances automatically whe
 
 ## Install (Claude Code)
 
-Install the plugin from the Claude Code marketplace, then run the one-step setup to fetch the matching `rpi` binary:
+Add this repo as a plugin marketplace, install the `rpi` plugin from it, then run the one-step setup to fetch the matching `rpi` binary:
 
 ```
-/plugin install rpi
+/plugin marketplace add A-NGJ/rpi
+/plugin install rpi@rpi
 /rpi:rpi-setup
 ```
 
-`/rpi:rpi-setup` downloads the binary from GitHub Releases, verifies its SHA256 against `checksums.txt`, and installs it to `~/.rpi/bin/rpi`. It writes nothing outside that directory. Re-running `/rpi:rpi-setup` upgrades the binary in place; no other state is touched. See the [plugin README](claude-plugin/README.md) for the marketplace listing.
+`/plugin marketplace add A-NGJ/rpi` registers this repo's `.claude-plugin/marketplace.json`. `/plugin install rpi@rpi` installs the plugin from it (skills, hooks, MCP server). `/rpi:rpi-setup` downloads the binary from GitHub Releases, verifies its SHA256 against `checksums.txt`, and installs it to `~/.rpi/bin/rpi`. It writes nothing outside that directory. Re-running `/rpi:rpi-setup` upgrades the binary in place; no other state is touched. See the [plugin README](claude-plugin/README.md) for the marketplace listing.
 
 **Command names for plugin users.** Skill folders carry the `rpi-` prefix so the trigger surface stays unambiguous even when Claude Code's slash-command picker strips the plugin namespace. Triggers are `/rpi:rpi-plan`, `/rpi:rpi-implement`, `/rpi:rpi-verify`, etc. (paralleling the standalone `/rpi-plan`, `/rpi-implement`, …). The MCP server name (`rpi`) and tool prefix (`mcp__rpi__*`) are unchanged.
 
@@ -75,6 +88,12 @@ To sync an existing project with the latest workflow files:
 ```bash
 rpi update          # add missing dirs, update workflow files
 ```
+
+To remove a standalone install entirely (skills, agents, MCP server, hooks, permissions, and binary):
+```bash
+rpi uninstall --global
+```
+Detects plugin-mode vs standalone-mode installs and only removes what RPI owns; user-added entries in `~/.claude/settings.json` are preserved.
 
 ### One-time global setup (optional, standalone)
 
@@ -122,6 +141,7 @@ Review the changes, approve, done. See the [full workflow guide](docs/workflow-g
 | `/rpi-explain` | Diff-scoped walkthrough of an implemented solution | Conversation |
 | `/rpi-spec-sync` | Syncs specs to match current codebase (detect drift, rewrite, rename, merge) | Updated `.rpi/specs/` |
 | `/rpi-archive` | Archives completed artifacts to keep `.rpi/` clean | Moves files to `.rpi/archive/` |
+| `/rpi-handoff` | Captures in-flight session context to a per-project temp file so the next session can resume | `/tmp/claude-handoff-<sha>.md` |
 
 > **Note:** `/rpi-propose` and `/rpi-plan` support an opt-in `--grill` mode (or phrasing like "grill me on this") that hands off the approval gate to the bundled `grill-me` skill (sourced from [mattpocock/skills](https://github.com/mattpocock/skills) under MIT) for adversarial, one-question-at-a-time interrogation of the draft. Falls back gracefully if a user has removed the skill from their local installation.
 >
@@ -168,7 +188,21 @@ See the [full workflow guide](docs/workflow-guide.md) for detailed examples of e
 
 ## Installation
 
-### Pre-built binary (recommended)
+### Claude Code plugin (recommended)
+
+In Claude Code, add this repo as a plugin marketplace, install the `rpi` plugin from it, and run the one-step setup to fetch the matching `rpi` binary:
+
+```
+/plugin marketplace add A-NGJ/rpi
+/plugin install rpi@rpi
+/rpi:rpi-setup
+```
+
+`/rpi:rpi-setup` downloads the platform-matching release archive from GitHub, verifies its SHA256 against `checksums.txt`, and installs the binary at `~/.rpi/bin/rpi`. Re-running it upgrades the binary in place. The plugin writes nothing outside that directory — workflow framing is injected via the SessionStart hook, not by editing `CLAUDE.md` or `settings.json`.
+
+Trigger names under the plugin namespace are `/rpi:rpi-plan`, `/rpi:rpi-implement`, `/rpi:rpi-verify`, etc. See the [plugin README](claude-plugin/README.md) for the full marketplace listing and migration notes.
+
+### Pre-built binary (standalone)
 
 ```bash
 curl -sSfL https://raw.githubusercontent.com/A-NGJ/rpi/main/install.sh | bash
@@ -176,7 +210,7 @@ curl -sSfL https://raw.githubusercontent.com/A-NGJ/rpi/main/install.sh | bash
 
 Pin a specific version:
 ```bash
-VERSION=v0.1.0 curl -sSfL https://raw.githubusercontent.com/A-NGJ/rpi/main/install.sh | bash
+VERSION=v0.3.0 curl -sSfL https://raw.githubusercontent.com/A-NGJ/rpi/main/install.sh | bash
 ```
 
 ### From source
@@ -201,6 +235,8 @@ Make sure `~/.local/bin` (or your chosen install dir) is in your PATH.
 ```bash
 rpi upgrade    # download and install the latest release
 ```
+
+Plugin users can re-run `/rpi:rpi-setup`, which delegates to `rpi upgrade` when the binary is already present.
 
 ## MCP Server
 

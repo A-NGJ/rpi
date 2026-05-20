@@ -1,0 +1,25 @@
+{
+  "name": "rpi",
+  "owner": {
+    "name": "A-NGJ",
+    "url": "https://github.com/A-NGJ"
+  },
+  "metadata": {
+    "description": "Self-hosted marketplace for the rpi Claude Code plugin (Research → Propose → Plan → Implement → Verify workflow)."
+  },
+  "plugins": [
+    {
+      "name": "rpi",
+      "source": "./claude-plugin",
+      "description": "Research → Propose → Plan → Implement → Verify workflow for Claude Code. Spec-driven development with persistent artifacts under .rpi/.",
+      "version": "0.3.0",
+      "author": {
+        "name": "A-NGJ",
+        "url": "https://github.com/A-NGJ"
+      },
+      "homepage": "https://github.com/A-NGJ/rpi",
+      "repository": "https://github.com/A-NGJ/rpi",
+      "license": "MIT"
+    }
+  ]
+}
