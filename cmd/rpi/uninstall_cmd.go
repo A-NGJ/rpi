@@ -129,8 +129,215 @@ func runUninstall(cmd *cobra.Command, _ []string) error {
 	if uninstallDryRun {
 		return nil
 	}
-	// Phase 2 will dispatch to removeStandalone / removePluginMode here.
+	switch state.classification() {
+	case installStateNothing:
+		return nil
+	case installStatePluginMode:
+		return removePluginMode(w, state)
+	case installStateStandalone:
+		return removeStandalone(w, state)
+	}
 	return nil
+}
+
+// removeStandalone executes the full standalone uninstall: skill
+// directories, RPI-owned keys in settings.json, then the home-rooted
+// binary/dir if originally present.
+func removeStandalone(w io.Writer, s installState) error {
+	for _, dir := range s.standaloneSkills {
+		if err := os.RemoveAll(dir); err != nil {
+			return fmt.Errorf("remove %s: %w", dir, err)
+		}
+		fmt.Fprintf(w, "removed skill dir %s\n", dir)
+	}
+
+	if s.settingsExists && (s.standaloneMCP || len(s.rpiAllowPatterns) > 0 || len(s.rpiHookMarkers) > 0) {
+		if err := scrubSettings(w, s); err != nil {
+			return err
+		}
+	}
+
+	if s.homeRpiDir {
+		if err := removeHomeRpi(w, s); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// removePluginMode deletes ~/.rpi/bin/rpi and ~/.rpi/ if empty. The
+// plugin's own files live elsewhere (Claude Code's plugin cache) and
+// are untouched.
+func removePluginMode(w io.Writer, s installState) error {
+	return removeHomeRpi(w, s)
+}
+
+// removeHomeRpi removes the binary, then bin/, then ~/.rpi/ — each
+// step is best-effort and only proceeds when the directory is empty.
+func removeHomeRpi(w io.Writer, s installState) error {
+	if _, err := os.Stat(s.pluginBinaryPath); err == nil {
+		if err := os.Remove(s.pluginBinaryPath); err != nil {
+			return fmt.Errorf("remove %s: %w", s.pluginBinaryPath, err)
+		}
+		fmt.Fprintf(w, "removed %s\n", s.pluginBinaryPath)
+	}
+	binDir := filepath.Dir(s.pluginBinaryPath)
+	if isDirEmpty(binDir) {
+		_ = os.Remove(binDir)
+	}
+	if isDirEmpty(s.homeRpiPath) {
+		if err := os.Remove(s.homeRpiPath); err != nil {
+			return fmt.Errorf("remove %s: %w", s.homeRpiPath, err)
+		}
+		fmt.Fprintf(w, "removed %s\n", s.homeRpiPath)
+	}
+	return nil
+}
+
+func isDirEmpty(dir string) bool {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return false
+	}
+	return len(entries) == 0
+}
+
+// scrubSettings rewrites ~/.claude/settings.json in place, removing
+// only RPI-owned keys (mcpServers.rpi when pointed at a non-plugin
+// path, Bash(rpi …) and mcp__rpi__* permissions, and hook entries
+// whose command bodies contain a known RPI marker). Unrelated keys
+// are preserved verbatim — the file is parsed and rewritten, never
+// regenerated from scratch.
+func scrubSettings(w io.Writer, s installState) error {
+	data, err := os.ReadFile(s.settingsPath)
+	if err != nil {
+		return fmt.Errorf("read settings: %w", err)
+	}
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return fmt.Errorf("parse settings: %w", err)
+	}
+	changed := false
+
+	// mcpServers.rpi — only drop when the command is not the plugin path.
+	if mcpRaw, ok := raw["mcpServers"]; ok {
+		var servers map[string]json.RawMessage
+		if err := json.Unmarshal(mcpRaw, &servers); err == nil {
+			if entryRaw, has := servers["rpi"]; has {
+				var entry map[string]any
+				_ = json.Unmarshal(entryRaw, &entry)
+				cmd, _ := entry["command"].(string)
+				if !isPluginBinaryPath(cmd, s.pluginBinaryPath) {
+					delete(servers, "rpi")
+					if len(servers) == 0 {
+						delete(raw, "mcpServers")
+					} else {
+						out, _ := json.Marshal(servers)
+						raw["mcpServers"] = out
+					}
+					fmt.Fprintf(w, "dropped mcpServers.rpi from %s\n", s.settingsPath)
+					changed = true
+				}
+			}
+		}
+	}
+
+	// permissions.allow — drop only RPI-owned patterns.
+	if permsRaw, ok := raw["permissions"]; ok {
+		var perms map[string]json.RawMessage
+		if err := json.Unmarshal(permsRaw, &perms); err == nil {
+			if allowRaw, ok := perms["allow"]; ok {
+				var allow []string
+				if err := json.Unmarshal(allowRaw, &allow); err == nil {
+					var kept []string
+					removed := 0
+					for _, entry := range allow {
+						if isRPIPermission(entry) {
+							removed++
+							continue
+						}
+						kept = append(kept, entry)
+					}
+					if removed > 0 {
+						if len(kept) == 0 {
+							delete(perms, "allow")
+						} else {
+							out, _ := json.Marshal(kept)
+							perms["allow"] = out
+						}
+						if len(perms) == 0 {
+							delete(raw, "permissions")
+						} else {
+							out, _ := json.Marshal(perms)
+							raw["permissions"] = out
+						}
+						fmt.Fprintf(w, "dropped %d RPI permission entries from %s\n", removed, s.settingsPath)
+						changed = true
+					}
+				}
+			}
+		}
+	}
+
+	// hooks — drop matcher entries whose hook body contains an RPI marker.
+	if hooksRaw, ok := raw["hooks"]; ok {
+		var hooks map[string]json.RawMessage
+		if err := json.Unmarshal(hooksRaw, &hooks); err == nil {
+			removed := 0
+			for event, eventRaw := range hooks {
+				var entries []json.RawMessage
+				if err := json.Unmarshal(eventRaw, &entries); err != nil {
+					continue
+				}
+				kept := make([]json.RawMessage, 0, len(entries))
+				for _, e := range entries {
+					if containsRPIHookMarker(string(e)) {
+						removed++
+						continue
+					}
+					kept = append(kept, e)
+				}
+				if len(kept) == 0 {
+					delete(hooks, event)
+				} else {
+					out, _ := json.Marshal(kept)
+					hooks[event] = out
+				}
+			}
+			if removed > 0 {
+				if len(hooks) == 0 {
+					delete(raw, "hooks")
+				} else {
+					out, _ := json.Marshal(hooks)
+					raw["hooks"] = out
+				}
+				fmt.Fprintf(w, "dropped %d RPI hook entries from %s\n", removed, s.settingsPath)
+				changed = true
+			}
+		}
+	}
+
+	if !changed {
+		return nil
+	}
+
+	out, err := json.MarshalIndent(raw, "", "  ")
+	if err != nil {
+		return fmt.Errorf("marshal settings: %w", err)
+	}
+	if err := os.WriteFile(s.settingsPath, append(out, '\n'), 0644); err != nil {
+		return fmt.Errorf("write settings: %w", err)
+	}
+	return nil
+}
+
+func containsRPIHookMarker(s string) bool {
+	for _, m := range rpiHookMarkerSet {
+		if strings.Contains(s, m) {
+			return true
+		}
+	}
+	return false
 }
 
 // detectInstallState inspects the user's home directory for evidence of
