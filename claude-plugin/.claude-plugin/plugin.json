@@ -10,7 +10,7 @@
   "license": "MIT",
   "mcpServers": {
     "rpi": {
-      "command": "~/.rpi/bin/rpi",
+      "command": "${CLAUDE_PLUGIN_ROOT}/bin/rpi-launcher.sh",
       "args": ["serve"]
     }
   },
