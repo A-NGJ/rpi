@@ -831,6 +831,7 @@ func TestInitNoMCPFlag(t *testing.T) {
 // spec:MC-1 spec:MC-6
 func TestInitWritesMCPConfig(t *testing.T) {
 	dir := t.TempDir()
+	stubLookPath(t)
 
 	var calls [][]string
 	orig := mcpCommandRunner
@@ -874,6 +875,7 @@ func TestInitWritesMCPConfig(t *testing.T) {
 // spec:MC-3
 func TestInitCallsClaudeMCPAdd(t *testing.T) {
 	dir := t.TempDir()
+	stubLookPath(t)
 
 	var addCalled bool
 	orig := mcpCommandRunner
@@ -902,6 +904,7 @@ func TestInitCallsClaudeMCPAdd(t *testing.T) {
 // spec:MC-4
 func TestInitWarnsExistingMCPEntry(t *testing.T) {
 	dir := t.TempDir()
+	stubLookPath(t)
 
 	var addCalled bool
 	orig := mcpCommandRunner
@@ -962,6 +965,7 @@ func TestInitSkipsMCPWithFlag(t *testing.T) {
 // spec:MC-6
 func TestInitMCPAddCommandShape(t *testing.T) {
 	dir := t.TempDir()
+	stubLookPath(t)
 
 	var addArgs []string
 	orig := mcpCommandRunner
@@ -1011,11 +1015,28 @@ func runInitGlobal(t *testing.T, home, target string) (*bytes.Buffer, error) {
 	return buf, err
 }
 
+// stubLookPath bypasses the claude/rpi $PATH gate in configureMCP so MCP
+// tests can run on machines where neither binary is installed. Registers
+// its own t.Cleanup to restore the original lookPathRunner.
+func stubLookPath(t *testing.T) {
+	t.Helper()
+	orig := lookPathRunner
+	lookPathRunner = func(name string) (string, error) {
+		if name == "claude" || name == "rpi" {
+			return "/usr/bin/" + name, nil
+		}
+		return "", fmt.Errorf("not found")
+	}
+	t.Cleanup(func() { lookPathRunner = orig })
+}
+
 // stubMCPRunner replaces mcpCommandRunner with a recorder that pretends rpi
 // is not yet registered, then accepts the add call. Returns the captured
-// args from the add call and a cleanup func.
+// args from the add call and a cleanup func. Also stubs lookPathRunner so
+// configureMCP does not early-return on the $PATH gate.
 func stubMCPRunner(t *testing.T) (*[][]string, func()) {
 	t.Helper()
+	stubLookPath(t)
 	calls := &[][]string{}
 	orig := mcpCommandRunner
 	mcpCommandRunner = func(name string, args ...string) ([]byte, error) {

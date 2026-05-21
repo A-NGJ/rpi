@@ -272,12 +272,16 @@ var mcpCommandRunner func(name string, args ...string) ([]byte, error) = func(na
 	return exec.Command(name, args...).CombinedOutput()
 }
 
+// lookPathRunner abstracts exec.LookPath for testing so the MCP configuration
+// path can be exercised without requiring claude/rpi on $PATH.
+var lookPathRunner = exec.LookPath
+
 func configureMCP(w io.Writer, _ string, userScope bool) {
-	if _, err := exec.LookPath("claude"); err != nil {
+	if _, err := lookPathRunner("claude"); err != nil {
 		logWarning(w, "claude not found in PATH — skipping MCP server configuration")
 		return
 	}
-	if _, err := exec.LookPath("rpi"); err != nil {
+	if _, err := lookPathRunner("rpi"); err != nil {
 		logWarning(w, "rpi not found in PATH — skipping MCP server configuration")
 		return
 	}
