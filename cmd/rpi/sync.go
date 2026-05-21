@@ -28,7 +28,7 @@ type syncOptions struct {
 // templates, the rules file, and .gitignore entries. Skills, agents, MCP,
 // and settings.json are intentionally not handled here — those run in the
 // caller (syncProject) for full project init or come from the user-level
-// global install. Designed for reuse by `rpi bootstrap`.
+// global install.
 func liteSyncProject(opts syncOptions) error {
 	rpiDir := filepath.Join(opts.targetDir, ".rpi")
 

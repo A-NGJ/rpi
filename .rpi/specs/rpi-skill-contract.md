@@ -2,7 +2,7 @@
 domain: rpi init / rpi update rules-file management
 feature: rpi-skill-contract
 last_updated: 2026-05-18T12:01:03+02:00
-updated_by: .rpi/plans/2026-05-18-append-missing-rules-file-sections-on-bootstrap-and-update.md
+updated_by: .rpi/archive/2026-05/plan/2026-05-18-append-missing-rules-file-sections-on-bootstrap-and-update.md
 ---
 
 # rpi-skill-contract
@@ -78,7 +78,7 @@ Then the skill still triggers on its description, runs its skill-specific invari
 - Skill bodies remain the source of truth for skill-specific behavior. Only invariants that apply across two or more rpi-* skills migrate into the contract block.
 - The contract block is delimited so that idempotent in-place rewrites are possible across `rpi update` runs; user content outside the delimiters is never modified or reordered. The writer may only *append* missing top-level template sections at EOF — it never edits or replaces user content elsewhere in the file.
 - The contract block carries a visible version marker inside its opening delimiter so future writers can detect and migrate older formats.
-- The bootstrap preamble at the top of every rpi-* skill body is retained — the contract block cannot solve the cold-start case where the rules file does not yet exist.
+- The cold-start preamble at the top of every rpi-* skill body is retained — the contract block cannot solve the cold-start case where the rules file does not yet exist.
 - The contract block is written only when the target writes a rules file. Targets that do not produce a rules file (today: `agents-only`) receive no contract block, and rpi-* skills must still function in that environment.
 - The contract block content is shared between Claude and OpenCode targets — no per-target wording divergence.
 - The writer fails closed: malformed or partially-edited contract blocks cause it to warn and skip, never to attempt repair that could destroy user content.
@@ -86,7 +86,7 @@ Then the skill still triggers on its description, runs its skill-specific invari
 
 ## Out of Scope
 
-- Moving the bootstrap preamble out of skill bodies (handled by a separate, possibly future, hook-based proposal).
+- Moving the cold-start preamble out of skill bodies (handled by a separate, possibly future, hook-based proposal).
 - Trimming skill-specific invariants (the per-skill prose that does not apply across skills stays in skill bodies).
 - A new sidecar file (e.g., `.rpi/CONTRACT.md`) referenced via an include directive — the contract lives inside the existing rules file.
 - Migrating user-local rules files outside the project (`~/.claude/CLAUDE.md`, `~/.config/opencode/AGENTS.md`) — those are touched only by `rpi init --global` / `rpi update --global` under their existing semantics.
