@@ -33,25 +33,43 @@ There are four invocations. Run them in order; stop the flow if any prints a rem
 
 A standalone install — created by `rpi init --global` — leaves skills under `~/.claude/skills/rpi-*` and registers an `rpi` MCP server in `~/.claude/settings.json` outside the plugin. If detected, refuse and instruct the user to clean up first.
 
-This step requires `jq` so the MCP-server check looks at `.mcpServers.rpi` specifically rather than grepping for the bare string `"rpi"` (which false-positives on `extraKnownMarketplaces.rpi` whenever the user has run `/plugin marketplace add A-NGJ/rpi`).
+The MCP-server check uses `jq` if available (looks at `.mcpServers.rpi` specifically — a plain grep for `"rpi"` would false-positive on `extraKnownMarketplaces.rpi`). If `jq` is absent, falls back to a targeted `grep -A5` scoped to the `mcpServers` block.
 
 ```sh
-if ! command -v jq >/dev/null 2>&1; then
-  echo "jq is required for /rpi:rpi-setup. Install via your package manager (Homebrew: 'brew install jq'; Debian/Ubuntu: 'apt install jq'), then re-run /rpi:rpi-setup."
-  exit 1
+skills_conflict=0
+mcp_conflict=0
+
+if find "$HOME/.claude/skills" -maxdepth 1 -name 'rpi-*' -type d 2>/dev/null | grep -q .; then
+  skills_conflict=1
 fi
 
-conflict=0
-if ls -d "$HOME/.claude/skills/rpi-"* >/dev/null 2>&1; then conflict=1; fi
-if [ -f "$HOME/.claude/settings.json" ] && jq -e '.mcpServers.rpi // empty' "$HOME/.claude/settings.json" >/dev/null 2>&1; then
-  # Look at the mcpServers.rpi key specifically — a plain grep for "rpi"
-  # would also match marketplace entries (extraKnownMarketplaces.rpi) and
-  # any other place the string happens to appear.
-  conflict=1
+if ! command -v jq >/dev/null 2>&1; then
+  # jq not available — use a targeted grep as fallback.
+  # Match "rpi" only when preceded by a double-quote within 5 lines after "mcpServers".
+  if [ -f "$HOME/.claude/settings.json" ] && grep -A5 '"mcpServers"' "$HOME/.claude/settings.json" 2>/dev/null | grep -q '"rpi"'; then
+    mcp_conflict=1
+  fi
+else
+  if [ -f "$HOME/.claude/settings.json" ] && jq -e '.mcpServers.rpi // empty' "$HOME/.claude/settings.json" >/dev/null 2>&1; then
+    mcp_conflict=1
+  fi
 fi
-if [ "$conflict" = 1 ]; then
-  echo "Standalone rpi install detected (skills under ~/.claude/skills/rpi-* or mcpServers.rpi entry in ~/.claude/settings.json)."
-  echo "Run 'rpi uninstall --global' to remove the standalone install, then re-run /rpi:rpi-setup."
+
+if [ "$skills_conflict" = 1 ]; then
+  echo "Standalone rpi skills found at ~/.claude/skills/rpi-*."
+  echo "This conflicts with the plugin install."
+  echo "To remove: run 'rpi uninstall --global' (or '~/.rpi/bin/rpi uninstall --global' if rpi is not in PATH)."
+  echo "Or manually: rm -rf ~/.claude/skills/rpi-*"
+  echo "Then re-run /rpi:rpi-setup."
+fi
+if [ "$mcp_conflict" = 1 ]; then
+  echo "An 'rpi' MCP server entry was found under mcpServers in ~/.claude/settings.json."
+  echo "This conflicts with the plugin's own MCP server."
+  echo "To remove: run 'rpi uninstall --global', or manually delete the 'rpi' key from"
+  echo "the mcpServers section of ~/.claude/settings.json."
+  echo "Then re-run /rpi:rpi-setup."
+fi
+if [ "$skills_conflict" = 1 ] || [ "$mcp_conflict" = 1 ]; then
   exit 1
 fi
 ```
@@ -92,7 +110,7 @@ After the install succeeds, surface this message in your reply (do not skip it):
 
 ## Behavioral guarantees
 
-- After step 1 fires with `conflict=1`, no further steps run — the binary is not downloaded.
+- After step 1 fires with `skills_conflict=1` or `mcp_conflict=1`, no further steps run — the binary is not downloaded.
 - After step 2 succeeds (delegated upgrade), the script returns the binary's own upgrade exit code; no files under the plugin directory are modified.
 - Step 3 delegates to `install.sh`, which downloads to its own `mktemp -d` and registers an `EXIT` trap inside its own shell — every exit path (including SHA256 mismatch) cleans up the temp dir. The only file ever written outside `$tmp` is `$HOME/.rpi/bin/rpi`.
 - `install.sh` only downloads binaries from official `A-NGJ/rpi` GitHub Releases. The plugin never points elsewhere.
