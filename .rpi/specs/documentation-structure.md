@@ -1,8 +1,8 @@
 ---
 domain: documentation
 feature: documentation-structure
-last_updated: 2026-04-08T12:14:26+02:00
-updated_by: .rpi/designs/2026-04-08-documentation-restructure-for-external-users.md
+last_updated: 2026-05-21T16:40:00+02:00
+updated_by: .rpi/designs/2026-05-21-tighten-readme-opener-best-fit-line-and-pain-decomposition.md
 ---
 
 # documentation-structure
@@ -47,6 +47,16 @@ Then they find a documentation section that links to workflow guide, stage descr
 Given a developer reads the opening paragraph
 When they interpret the framing of AI coding agents
 Then the text conveys that agents are capable and the challenge is directing them, not that agents are unreliable or produce bad code
+
+### Best-fit line states the workflow value
+Given a developer reads the opener
+When they reach the end of the opener block
+Then they see a single "Best fit:" line that names the workflow RPI enables — control over the dev flow with reviewability, a durable trace of decisions, and multi-session continuity — covering both solo developers and teams
+
+### Pain decomposition maps each difficulty to a specific command
+Given a developer wants to know which RPI command addresses which problem
+When they reach the "What RPI helps with" section between Quick Start and the walkthrough
+Then they see a table pairing each named difficulty with the specific RPI artifact or command that addresses it, with phrasing that frames difficulty as the work (not as agent failure)
 
 ## Constraints
 - README is a single file — no splitting across multiple READMEs

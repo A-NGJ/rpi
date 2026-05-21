@@ -10,6 +10,8 @@ AI coding agents are capable -- the challenge is steering them. Without structur
 
 Each stage produces a document you can read, edit, and approve before the next one starts. A compiled Go CLI handles the bookkeeping so the LLM spends its tokens on thinking, not parsing. Built for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and [OpenCode](https://github.com/opencode-ai/opencode), but the methodology works with any AI coding tool.
 
+Best fit: solo devs and teams who want control over their AI dev flow — review where it matters, keep a durable trace of decisions, and split work across sessions without losing context.
+
 ## Quick Start
 
 In Claude Code:
@@ -21,6 +23,16 @@ In Claude Code:
 ```
 
 That's it. The first command adds this repo as a plugin marketplace; the second installs the `rpi` plugin from it (skills, hooks, MCP server); `/rpi:rpi-setup` fetches the matching `rpi` binary from GitHub Releases into `~/.rpi/bin/rpi`. Re-running `/rpi:rpi-setup` upgrades the binary. **First-time only: restart Claude Code after `/rpi:rpi-setup`** so the `rpi` MCP server can launch — it tried to start at session-open but the binary wasn't there yet. See the [full Installation section](#installation) for OpenCode, standalone CLI, and from-source paths.
+
+## What RPI helps with
+
+| What's hard | RPI's answer |
+|---|---|
+| Pointing the agent at what's already in your codebase before it acts | `/rpi-research` (primary), `/rpi-propose` for tradeoff decisions |
+| Keeping a durable source of truth for what the system is supposed to do | `.rpi/specs/` (living behavioral contracts) |
+| Confirming the code matches intent, not just that it compiles | `/rpi-verify` (severity-classified spec conformance) |
+| Reviewing big changes before they're written, not after | per-phase verification + checkboxes in `/rpi-implement` |
+| Splitting work across sessions without re-explaining context | persistent `.rpi/` artifacts + `rpi resume` |
 
 ## See It in Action
 
