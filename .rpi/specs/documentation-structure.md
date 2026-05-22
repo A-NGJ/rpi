@@ -1,8 +1,8 @@
 ---
 domain: documentation
 feature: documentation-structure
-last_updated: 2026-05-21T16:40:00+02:00
-updated_by: .rpi/designs/2026-05-21-tighten-readme-opener-best-fit-line-and-pain-decomposition.md
+last_updated: 2026-05-22T11:35:00+02:00
+updated_by: .rpi/designs/2026-05-22-shrink-readme-dedupe-install-and-semantic-search.md
 ---
 
 # documentation-structure
@@ -58,16 +58,52 @@ Given a developer wants to know which RPI command addresses which problem
 When they reach the "What RPI helps with" section between Quick Start and the walkthrough
 Then they see a table pairing each named difficulty with the specific RPI artifact or command that addresses it, with phrasing that frames difficulty as the work (not as agent failure)
 
+### Install instructions appear in one canonical section
+Given a developer scans the README for how to install RPI
+When they look across all sections of the file
+Then the Claude Code plugin install commands appear in at most two places — a short Quick Start near the top and one canonical Installation section — never repeated in a third intermediate block
+
+### Quick Start points readers to the canonical Installation section
+Given a developer reads the Quick Start at the top of the README
+When they finish the install commands and want more options (OpenCode, standalone binary, from source, global setup)
+Then they see a single pointer to the canonical Installation section rather than a parallel block of alternative install instructions
+
+### Canonical Installation section covers every supported path
+Given a developer needs an install path other than the Claude Code plugin
+When they reach the canonical Installation section
+Then they find subsections for the Claude Code plugin, OpenCode and standalone CLI (including `rpi init` with `--target opencode`), one-time global setup (`rpi init --global`), from-source builds, and upgrading — each present exactly once
+
+### Migration note for previous standalone users is visible at install
+Given a developer previously installed RPI via `rpi init --global` and wants to switch to the Claude Code plugin
+When they read the plugin install instructions
+Then they see a migration note that tells them to run `rpi uninstall --global` before `/rpi:rpi-setup`
+
+### Semantic search is pitched in the README and configured in docs/
+Given a developer skims the README for optional capabilities
+When they reach the semantic-search section
+Then they see a short paragraph describing what `rpi_search` does and how skills use it, plus a link to `docs/semantic-search.md` — without inline qmd install commands, warmup detail, or status-contract specifics
+
+### Documentation index lists every docs/ file
+Given a developer wants deeper documentation on a specific topic
+When they look at the Documentation section of the README
+Then they see a link entry for every supporting docs/ file that the README references — including `docs/semantic-search.md` when semantic-search content lives there
+
 ## Constraints
 - README is a single file — no splitting across multiple READMEs
 - No inline images or GIFs (visual assets are out of scope)
 - Must reference both Claude Code and OpenCode as supported tools
 - Badges use shields.io and GitHub-native badge URLs only
 - Hero example uses stable command names that exist in the current slash command set
-- docs/ files are not modified — README links to them as supporting references
+- Existing docs/ files are not modified by README structure work; new docs/ files may be created when README content is migrated out (e.g., setup or troubleshooting that exceeds the README's pitch-level depth)
+- The Claude Code plugin install commands (`/plugin marketplace add`, `/plugin install`, `/rpi:rpi-setup`) appear at most twice in the README — once in Quick Start, once in the canonical Installation section
 
 ## Out of Scope
 - Visual assets (GIF, screencast, terminal recordings)
-- Changes to any file in docs/
+- Modifications to existing docs/ files (creating new docs/ files is allowed when migrating content out of the README)
 - Documentation site generation (MkDocs, Docusaurus, etc.)
 - Localization or multi-language support
+
+## Update Log
+
+- **2026-05-22** (`.rpi/designs/2026-05-22-shrink-readme-dedupe-install-and-semantic-search.md`): Added scenarios for install-instruction dedup (single canonical Installation section, Quick Start as pointer, migration note placement) and semantic-search migration to `docs/semantic-search.md`. Softened the "docs/ files are not modified" constraint to allow creating new docs/ files when migrating content out of the README, while still forbidding edits to existing docs/ files. Added an explicit cap of two occurrences for the plugin install commands.
+- **2026-05-21** (`.rpi/designs/2026-05-21-tighten-readme-opener-best-fit-line-and-pain-decomposition.md`): Added scenarios for the empowering opener tone, the "Best fit:" line covering solo devs and teams, and the "What RPI helps with" pain-to-command table.

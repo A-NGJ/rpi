@@ -22,7 +22,7 @@ In Claude Code:
 /rpi:rpi-setup
 ```
 
-That's it. The first command adds this repo as a plugin marketplace; the second installs the `rpi` plugin from it (skills, hooks, MCP server); `/rpi:rpi-setup` fetches the matching `rpi` binary from GitHub Releases into `~/.rpi/bin/rpi`. Re-running `/rpi:rpi-setup` upgrades the binary. **First-time only: restart Claude Code after `/rpi:rpi-setup`** so the `rpi` MCP server can launch — it tried to start at session-open but the binary wasn't there yet. See the [full Installation section](#installation) for OpenCode, standalone CLI, and from-source paths.
+These register the marketplace, install the plugin (skills, hooks, MCP server), and fetch the `rpi` binary into `~/.rpi/bin/rpi`. **First-time only: restart Claude Code after the third command** so the `rpi` MCP server can launch. For OpenCode, standalone, global, or from-source installs, see [Installation](#installation).
 
 ## What RPI helps with
 
@@ -36,90 +36,29 @@ That's it. The first command adds this repo as a plugin marketplace; the second 
 
 ## See It in Action
 
-Add rate limiting to an API in four commands:
+You have a product with real data — and users keep asking, "can I just ask it questions in plain English?" Add an agentic workflow on top of what you already have, without rebuilding it:
 
 ```
-/rpi-research How does the API middleware chain work?
+/rpi-research What do we have today, and where could an agent plug in?
 ```
-Claude explores your codebase conversationally. You discuss findings, no artifact required.
-
-```
-/rpi-propose Add per-endpoint rate limiting for authenticated and anonymous users
-```
-Claude presents 2-3 options with pros/cons tied to your codebase. You pick one. Writes `.rpi/designs/`.
+Brainstorm with Claude: it explores the data model, the query path, and the auth boundary, then surfaces the natural seams where an agent can attach. Optionally writes findings to `.rpi/research/`.
 
 ```
-/rpi-plan .rpi/designs/2026-03-04-api-rate-limiting.md
+/rpi-propose Add an AI chat over our data
 ```
-Breaks work into phases (core module, middleware integration, configuration), each with file changes, verification commands, and success criteria. Writes `.rpi/plans/`.
-
-```
-/rpi-implement .rpi/plans/2026-03-04-api-rate-limiting.md
-```
-Implements phase-by-phase -- runs tests, commits, and advances automatically when checks pass. Pauses only when manual verification is needed or something diverges from the plan.
-
-## Install (Claude Code)
-
-Add this repo as a plugin marketplace, install the `rpi` plugin from it, then run the one-step setup to fetch the matching `rpi` binary:
+Crystallizes the brainstorm into 2-3 concrete approaches — each with tradeoffs grounded in what research found. You pick. Writes `.rpi/designs/` and a behavioral spec.
 
 ```
-/plugin marketplace add A-NGJ/rpi
-/plugin install rpi@rpi
-/rpi:rpi-setup
+/rpi-plan .rpi/designs/2026-03-04-data-agent.md
 ```
+Decomposes into phases — each with file changes, verification commands, and success criteria. Writes `.rpi/plans/`.
 
-`/plugin marketplace add A-NGJ/rpi` registers this repo's `.claude-plugin/marketplace.json`. `/plugin install rpi@rpi` installs the plugin from it (skills, hooks, MCP server). `/rpi:rpi-setup` downloads the binary from GitHub Releases, verifies its SHA256 against `checksums.txt`, and installs it to `~/.rpi/bin/rpi`. It writes nothing outside that directory. Re-running `/rpi:rpi-setup` upgrades the binary in place; no other state is touched. See the [plugin README](claude-plugin/README.md) for the marketplace listing.
-
-**Command names for plugin users.** Skill folders carry the `rpi-` prefix so the trigger surface stays unambiguous even when Claude Code's slash-command picker strips the plugin namespace. Triggers are `/rpi:rpi-plan`, `/rpi:rpi-implement`, `/rpi:rpi-verify`, etc. (paralleling the standalone `/rpi-plan`, `/rpi-implement`, …). The MCP server name (`rpi`) and tool prefix (`mcp__rpi__*`) are unchanged.
-
-If you previously installed RPI via `rpi init --global`, run `rpi uninstall --global` before `/rpi:rpi-setup` — the plugin refuses to overwrite a standalone install.
-
-### Alternative install (opencode / manual / non-Claude-Code)
-
-For environments where the Claude Code plugin marketplace is unavailable (locked-down systems, opencode users, manual setups), use the standalone CLI:
-
-```bash
-curl -sSfL https://raw.githubusercontent.com/A-NGJ/rpi/main/install.sh | bash
-rpi init                                         # current directory, Claude Code
-rpi init /path/to/project                        # different directory
-rpi init /path/to/project --target opencode      # OpenCode
 ```
-
-This creates:
-- `.claude/` (or `.opencode/`) -- Agent Skills
-- `.rpi/` -- Directory for all pipeline artifacts (tracked in git by default)
-- `CLAUDE.md` (or `AGENTS.md`) -- Project-level instructions for the AI
-- MCP server registration (Claude Code only) -- auto-registers `rpi serve` so the AI calls typed tools instead of shelling out
-
-To update the `rpi` binary itself:
-```bash
-rpi upgrade         # download and install the latest release
+/rpi-implement .rpi/plans/2026-03-04-data-agent.md
 ```
+Executes phase-by-phase: tests between each, commits as it goes, pauses only on manual verification or plan divergence.
 
-To sync an existing project with the latest workflow files:
-```bash
-rpi update          # add missing dirs, update workflow files
-```
-
-To remove a standalone install entirely (skills, agents, MCP server, hooks, permissions, and binary):
-```bash
-rpi uninstall --global
-```
-Detects plugin-mode vs standalone-mode installs and only removes what RPI owns; user-added entries in `~/.claude/settings.json` are preserved.
-
-### One-time global setup (optional, standalone)
-
-If you work across many repos and don't want to redo `rpi init` per project, install the skills, agents, and MCP server at the user level once:
-
-```bash
-rpi init --global                                # ~/.claude/
-rpi init --global --target opencode              # ~/.config/opencode/
-rpi update --global                              # refresh the global install
-```
-
-`--global` only writes to your user config directory — no `.rpi/`, `CLAUDE.md`, or `.gitignore` is touched at the user level, and your working directory is unchanged. See [docs/rpi-init.md](docs/rpi-init.md) for the full layout and conflict matrix.
-
-### Try it
+## Try it
 
 ```
 /rpi-plan Fix the date formatter in utils/dates.ts that returns "NaN" for ISO strings
@@ -131,7 +70,7 @@ Claude investigates, writes a phased plan to `.rpi/plans/`.
 ```
 Review the changes, approve, done. See the [full workflow guide](docs/workflow-guide.md) for more.
 
-### The Slash Commands
+## The Slash Commands
 
 | Command | What It Does | Output |
 |---------|-------------|--------|
@@ -147,9 +86,7 @@ Review the changes, approve, done. See the [full workflow guide](docs/workflow-g
 | `/rpi-archive` | Archives completed artifacts to keep `.rpi/` clean | Moves files to `.rpi/archive/` |
 | `/rpi-handoff` | Captures in-flight session context to a per-project temp file so the next session can resume | `/tmp/claude-handoff-<sha>.md` |
 
-> **Note:** `/rpi-propose` and `/rpi-plan` support an opt-in `--grill` mode (or phrasing like "grill me on this") that hands off the approval gate to the bundled `grill-me` skill (sourced from [mattpocock/skills](https://github.com/mattpocock/skills) under MIT) for adversarial, one-question-at-a-time interrogation of the draft. Falls back gracefully if a user has removed the skill from their local installation.
->
-> `/rpi-propose`, `/rpi-plan`, and `/rpi-implement` also support an opt-in `--ff` (fast-forward) mode that suppresses approval gates and auto-chains through the rest of the pipeline ending at `/rpi-verify`. Use it when you trust the defaults and want autopilot -- the chain stops only on safety gates (codebase drift, sensitive content). Mutually exclusive with `--grill`; the explicit `--ff` flag is required (no natural-language form).
+> **Modes.** `/rpi-propose` and `/rpi-plan` accept `--grill` (or "grill me on this") — hands off to the bundled [`grill-me`](https://github.com/mattpocock/skills) skill for adversarial, one-question-at-a-time interrogation of the draft. `/rpi-propose`, `/rpi-plan`, and `/rpi-implement` also accept `--ff` (fast-forward) — suppresses approval gates and auto-chains to `/rpi-verify`, stopping only on safety gates (codebase drift, sensitive content). Mutually exclusive with `--grill`.
 
 ## How RPI Is Different
 
@@ -169,9 +106,7 @@ Not every task needs every stage. Match the path to your task's complexity:
 
 Not sure where to start? Use `/rpi-research` with any question -- it handles both focused investigation and open-ended research. For complex bugs, use `/rpi-diagnose` to iterate on root-cause analysis.
 
-Not sure what's in flight? Run `rpi status` for a single-screen dashboard of all artifacts, progress, and what's ready to archive.
-
-Coming back to a project after a break? Run `rpi resume` -- or just ask the AI "where did I leave my work?" -- for a session-level overview: active and draft artifacts, the current phase and next unchecked items of the most recent active plan, and a suggested next pipeline action. The default output is a readable text summary; pass `--format json` for the same structured shape the `rpi_session_resume` MCP tool returns. Claude Code calls this automatically on session start (via the MCP tool and a `SessionStart` hook) so the assistant orients itself before you type.
+Not sure what's in flight, or coming back after a break? Run `rpi status` for a dashboard of artifacts and progress, or `rpi resume` for a session-level overview — active/draft artifacts, the current phase of the most recent plan, and a suggested next action. Claude Code calls `rpi resume` automatically on session start so the assistant orients itself before you type.
 
 <details>
 <summary><code>rpi status</code> example output</summary>
@@ -189,12 +124,13 @@ See the [full workflow guide](docs/workflow-guide.md) for detailed examples of e
 - [`.rpi/` Directory](docs/thoughts-directory.md) -- Artifact structure, naming, status lifecycle, and team sharing
 - [`rpi init`](docs/rpi-init.md) -- CLI bootstrapping, flags, shell completion, and OpenCode support
 - [Architecture](docs/architecture.md) -- Why a Go binary, CLI commands, and project structure
+- [Semantic Search](docs/semantic-search.md) -- Optional qmd backend setup, warmup, status contract, and troubleshooting
 
 ## Installation
 
 ### Claude Code plugin (recommended)
 
-In Claude Code, add this repo as a plugin marketplace, install the `rpi` plugin from it, and run the one-step setup to fetch the matching `rpi` binary:
+In Claude Code:
 
 ```
 /plugin marketplace add A-NGJ/rpi
@@ -202,34 +138,50 @@ In Claude Code, add this repo as a plugin marketplace, install the `rpi` plugin 
 /rpi:rpi-setup
 ```
 
-`/rpi:rpi-setup` downloads the platform-matching release archive from GitHub, verifies its SHA256 against `checksums.txt`, and installs the binary at `~/.rpi/bin/rpi`. Re-running it upgrades the binary in place. The plugin writes nothing outside that directory — workflow framing is injected via the SessionStart hook, not by editing `CLAUDE.md` or `settings.json`.
+The first two register the marketplace and install the plugin (skills, hooks, MCP server). The third downloads the matching release, verifies its SHA256 against `checksums.txt`, and installs the binary at `~/.rpi/bin/rpi`. Re-running upgrades in place. The plugin writes nothing outside `~/.rpi/bin/`.
 
-Trigger names under the plugin namespace are `/rpi:rpi-plan`, `/rpi:rpi-implement`, `/rpi:rpi-verify`, etc. See the [plugin README](claude-plugin/README.md) for the full marketplace listing and migration notes.
+**Plugin command names.** Triggers are `/rpi:rpi-plan`, `/rpi:rpi-implement`, `/rpi:rpi-verify`, etc. — skill folders keep the `rpi-` prefix so Claude Code's namespace-stripping picker stays unambiguous. The MCP server name (`rpi`) and tool prefix (`mcp__rpi__*`) are unchanged.
 
-### Pre-built binary (standalone)
+If you previously installed via `rpi init --global`, run `rpi uninstall --global` before `/rpi:rpi-setup` — the plugin refuses to overwrite a standalone install. See the [plugin README](claude-plugin/README.md) for the full marketplace listing.
+
+### OpenCode and standalone CLI
+
+For OpenCode users or environments without the Claude Code plugin marketplace:
 
 ```bash
 curl -sSfL https://raw.githubusercontent.com/A-NGJ/rpi/main/install.sh | bash
+rpi init                                         # current directory, Claude Code
+rpi init /path/to/project --target opencode      # OpenCode in a different directory
 ```
 
-Pin a specific version:
+`rpi init` creates the Agent Skills directory (`.claude/` or `.opencode/`), `.rpi/` for pipeline artifacts, a project instructions file (`CLAUDE.md` or `AGENTS.md`), and (Claude Code only) MCP server registration.
+
 ```bash
-VERSION=v0.3.0 curl -sSfL https://raw.githubusercontent.com/A-NGJ/rpi/main/install.sh | bash
+VERSION=v0.3.0 curl -sSfL https://raw.githubusercontent.com/A-NGJ/rpi/main/install.sh | bash   # pin a version
+rpi upgrade               # update the binary
+rpi update                # sync project workflow files
+rpi uninstall --global    # remove everything RPI owns (detects plugin- vs standalone-mode; user entries in settings.json preserved)
 ```
+
+### One-time global setup
+
+Optional, for users who work across many repos. Installs skills, agents, and the MCP server at the user level once:
+
+```bash
+rpi init --global                          # ~/.claude/
+rpi init --global --target opencode        # ~/.config/opencode/
+rpi update --global                        # refresh the global install
+```
+
+`--global` writes only to your user config directory — no `.rpi/`, `CLAUDE.md`, or `.gitignore` is touched. See [docs/rpi-init.md](docs/rpi-init.md) for the full layout.
 
 ### From source
 
-Requires Go 1.25+.
+Requires Go 1.25+. Either install directly or clone and build:
 
 ```bash
-go install github.com/A-NGJ/rpi/cmd/rpi@latest
-```
-
-Or clone and build:
-```bash
-git clone https://github.com/A-NGJ/rpi
-cd rpi
-make install   # builds and copies to ~/.local/bin
+go install github.com/A-NGJ/rpi/cmd/rpi@latest                              # direct
+git clone https://github.com/A-NGJ/rpi && cd rpi && make install            # clone + build (copies to ~/.local/bin)
 ```
 
 Make sure `~/.local/bin` (or your chosen install dir) is in your PATH.
@@ -239,8 +191,7 @@ Make sure `~/.local/bin` (or your chosen install dir) is in your PATH.
 ```bash
 rpi upgrade    # download and install the latest release
 ```
-
-Plugin users can re-run `/rpi:rpi-setup`, which delegates to `rpi upgrade` when the binary is already present.
+Plugin users can re-run `/rpi:rpi-setup` (which delegates to `rpi upgrade`).
 
 ## MCP Server
 
@@ -250,30 +201,13 @@ The `rpi` binary doubles as an [MCP](https://modelcontextprotocol.io/) server. R
 
 ## Optional: Semantic Search
 
-`rpi serve` exposes an `rpi_search` MCP tool that returns ranked, semantically relevant `.rpi/` artifacts for a natural-language query. When the optional [qmd](https://github.com/tobi/qmd) backend is installed and warmed up, seven skills (`rpi-research`, `rpi-propose`, `rpi-plan`, `rpi-verify`, `rpi-explain`, `rpi-diagnose`, `rpi-spec-sync`) call `rpi_search` automatically before producing or verifying artifacts, so prior designs, plans, research, diagnoses, and verify-reports get surfaced without keyword guesswork.
+`rpi serve` exposes an `rpi_search` MCP tool that returns ranked, semantically relevant `.rpi/` artifacts for a natural-language query. When the optional [qmd](https://github.com/tobi/qmd) backend is installed, seven skills (`rpi-research`, `rpi-propose`, `rpi-plan`, `rpi-verify`, `rpi-explain`, `rpi-diagnose`, `rpi-spec-sync`) call it automatically before producing artifacts. Without qmd, the same skills fall back to keyword scan — RPI ships fully functional without it.
 
-**One-time setup:**
-
-```bash
-npm install -g @tobilu/qmd      # or: bun install -g @tobilu/qmd
-rpi search --warmup             # spawns qmd's HTTP MCP daemon and downloads ~2 GB of GGUF models
-```
-
-The warmup is a one-time cost (qmd caches models in `~/.cache/qmd/models/`). Subsequent searches are fast — the daemon keeps models loaded in VRAM, and an internal debounce skips redundant index refreshes for back-to-back skill calls. Expect bimodal latency: most queries return in milliseconds; the call right after a batch of writes pays a re-index cost (and embed inference if files changed).
-
-**When qmd is installed but cold** (daemon down or models not yet downloaded), the calling skills run `rpi search --warmup` on the user's behalf and retry the query — so the user sees the install hint only when qmd is genuinely missing, not on transient first-run states.
-
-**Without qmd**, `rpi_search` returns `backend_unavailable` with an install hint, and skills fall back to `rpi_scan` + keyword grep automatically. RPI ships fully functional without qmd; semantic search is a strict upgrade, not a requirement.
-
-**Status contract.** `rpi_search` returns one of four states — `ok` (hits returned), `empty` (no matches), `backend_error` (qmd installed but failing — daemon down, models missing, parse error), or `backend_unavailable` (qmd not on PATH). Each non-`ok` status carries an actionable hint so the failure mode is unambiguous.
+See [docs/semantic-search.md](docs/semantic-search.md) for installation, warmup, the status contract, and troubleshooting.
 
 ## Acknowledgments
 
-Inspired by [HumanLayer](https://github.com/humanlayer/humanlayer) -- their work on human-in-the-loop patterns for AI agents informed the design of this workflow.
-
-## Credits
-
-RPI bundles the [`grill-me`](https://github.com/mattpocock/skills/blob/main/skills/productivity/grill-me/SKILL.md) skill by Matt Pocock under the MIT license. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the full attribution.
+Inspired by [HumanLayer](https://github.com/humanlayer/humanlayer) — their work on human-in-the-loop patterns for AI agents informed this workflow. RPI bundles the [`grill-me`](https://github.com/mattpocock/skills/blob/main/skills/productivity/grill-me/SKILL.md) skill by Matt Pocock under MIT; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the full attribution.
 
 ## License
 
