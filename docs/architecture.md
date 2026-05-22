@@ -1,8 +1,13 @@
 # Architecture
 
-## Why a Go Binary
+## Why a Go Binary (and an MCP server in front of it)
 
-The `rpi` CLI exists to keep mechanical work out of the LLM's context window. Every token an LLM spends on parsing YAML frontmatter, resolving file links, or generating boilerplate is a token not spent on design thinking or code generation.
+The `rpi` CLI exists to keep mechanical work out of the LLM's context window. Every token an LLM spends on parsing YAML frontmatter, resolving file links, walking directories, or generating boilerplate is a token not spent on design thinking or code generation. On a multi-stage feature this is the difference between a session that compacts halfway through and one that finishes cleanly.
+
+The architecture has two halves working together:
+
+1. **A compiled Go binary** that handles all deterministic, error-prone-for-LLMs operations natively, fast, and identically every time.
+2. **An MCP server in front of it** (`rpi serve`) that exposes every operation as a typed tool. The LLM calls a tool like `rpi_chain` with a JSON argument and receives a small, validated JSON payload back -- it never sees the raw file contents, the directory walk, or the shell output. This is where the bulk of the token savings come from: instead of dumping a 200-line markdown file or a recursive `find` output into the context window so the LLM can hunt through it, the CLI returns exactly the slice the next step needs.
 
 The binary handles operations that are **deterministic and error-prone for LLMs**:
 

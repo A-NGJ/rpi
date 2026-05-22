@@ -121,9 +121,20 @@ You:  /rpi-research What could we improve about error handling?
 
 ## After Implementation
 
-Several optional commands help close the loop:
+### Verify -- not optional, the closing checkpoint
 
-- **`/rpi-verify`** -- Validates that your implementation matches the proposal artifacts. Checks completeness, correctness, and coherence. Run it after `/rpi-implement` or anytime you want a second opinion on whether the code matches the plan.
+`/rpi-verify` is the step most people are tempted to skip, and the one that pays off the most. A passing test suite tells you the code is internally consistent; it does **not** tell you the implementation matches what you actually designed. Verify is what catches the gap.
+
+```
+/rpi-verify .rpi/plans/2026-03-04-my-feature.md
+```
+
+It checks three dimensions -- **completeness** (are all planned changes present?), **correctness** (do the Given/When/Then scenarios in the linked specs match the actual code and tests, with file:line citations?), and **coherence** (do the pieces fit together?). The output is a severity-classified report in `.rpi/reviews/`, not a green/red gate, so you keep ownership of which findings to act on. Re-run after fixes -- it's cheap and idempotent.
+
+Treat verify as part of the normal Plan → Implement → Verify rhythm, not an optional add-on. If you used `--ff`, it already runs automatically at the end of the chain; if you didn't, run it yourself.
+
+### Other commands that close the loop
+
 - **`/rpi-explain`** -- Walks through the diff with a file-by-file explanation. Useful for self-review or explaining changes to a teammate.
 - **`/rpi-spec-sync`** -- Syncs specs in `.rpi/specs/` to match the current codebase. Run it after a batch of changes to detect drift, rewrite stale scenarios, rename or merge specs, and archive obsolete ones.
 - **`/rpi-archive`** -- Moves completed artifacts to `.rpi/archive/` to keep the active directory clean. Run it when a feature is fully shipped and you no longer need the research/designs/plan documents in the active directories.

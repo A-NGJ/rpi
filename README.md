@@ -58,6 +58,11 @@ Decomposes into phases — each with file changes, verification commands, and su
 ```
 Executes phase-by-phase: tests between each, commits as it goes, pauses only on manual verification or plan divergence.
 
+```
+/rpi-verify .rpi/plans/2026-03-04-data-agent.md
+```
+Closes the loop. Extracts Given/When/Then scenarios from the linked specs, checks each against the actual code and tests, and emits a severity-classified report in `.rpi/reviews/`. **Don't skip this** -- "tests pass" is not the same as "the implementation matches what you designed." Verify is what catches the gap between intent and code before it ships.
+
 ## Try it
 
 ```
@@ -90,11 +95,19 @@ Review the changes, approve, done. See the [full workflow guide](docs/workflow-g
 
 ## How RPI Is Different
 
-RPI combines two things other tools don't: **reviewable artifacts that keep a human in the loop at every stage**, and a **compiled Go CLI that keeps mechanical work out of the LLM's context window**. The CLI handles scaffolding, frontmatter, artifact linking, and verification so the LLM focuses on the actual problem. Separating thinking from doing -- research gathers facts, propose makes decisions, plan specifies changes, implement executes them -- means review checkpoints catch bad decisions early, not after 500 lines of wrong code. All artifacts live in `.rpi/`, so context persists across sessions and teams. And by breaking work into stages, each conversation stays scoped to one job, keeping the context window small and output quality high.
+RPI combines two things other tools don't: **reviewable artifacts that keep a human in the loop at every stage**, and a **compiled Go CLI exposed over MCP that keeps mechanical work out of the LLM's context window**. Scaffolding, frontmatter parsing, artifact-chain traversal, status transitions, checkbox counting, and section extraction all run in the binary -- the LLM sees a small JSON result, not the raw files or shell output. That alone saves thousands of tokens per multi-stage feature and lets the model spend its budget on the actual problem. Separating thinking from doing -- research gathers facts, propose makes decisions, plan specifies changes, implement executes them -- means review checkpoints catch bad decisions early, not after 500 lines of wrong code. All artifacts live in `.rpi/`, so context persists across sessions and teams. And by breaking work into stages, each conversation stays scoped to one job, keeping the context window small and output quality high.
 
 **vs. [OpenSpec](https://github.com/Fission-AI/OpenSpec)** -- OpenSpec gives the AI more autonomy, implementing an entire plan in one pass. RPI gives you fine-grained control -- you review each implementation phase before it's executed, with git commits between phases for versioning and easy rollback. RPI also gives you full ownership of every command and skill -- they're plain markdown files you can read, edit, and customize after `rpi init`. OpenSpec's prompts are compiled into its npm package and regenerated on `openspec update`, so the workflow logic stays inside the tool rather than in your project.
 
 **vs. unstructured prompting** -- Without stage boundaries, the LLM researches, designs, and implements in a single pass -- no checkpoints, no review, no way to course-correct before code is written.
+
+## MCP Server (big token savings)
+
+The `rpi` binary doubles as an [MCP](https://modelcontextprotocol.io/) server. Running `rpi serve` starts a stdio-based server that exposes all CLI operations as typed tools (`rpi_scaffold`, `rpi_scan`, `rpi_chain`, `rpi_frontmatter_get`, etc.). AI assistants call these tools with validated JSON schemas instead of constructing shell commands.
+
+**Why it matters.** The MCP layer is the single biggest reason RPI stays cheap to run on long projects. Every artifact lookup, frontmatter read, status transition, chain traversal, checkbox count, and section extraction is done by the Go binary -- the LLM never sees the raw YAML, the directory walk, the git output, or the markdown bodies it doesn't need. Each MCP call returns a small, validated JSON payload instead of dumping a file (or a directory) into the context window. On a typical multi-stage feature the savings stack into thousands of tokens per session, which translates directly into a smaller context, longer sessions before compaction, and better output quality. Skills and `rpi` agents call these tools automatically; you don't have to think about it.
+
+`rpi init` (and the Claude Code plugin install) auto-registers the MCP server when both `rpi` and `claude` are in your PATH. Use `--no-mcp` to skip this. See [Architecture](docs/architecture.md) for the full list of operations the binary handles for you.
 
 ## Choosing Your Path
 
@@ -192,12 +205,6 @@ Make sure `~/.local/bin` (or your chosen install dir) is in your PATH.
 rpi upgrade    # download and install the latest release
 ```
 Plugin users can re-run `/rpi:rpi-setup` (which delegates to `rpi upgrade`).
-
-## MCP Server
-
-The `rpi` binary doubles as an [MCP](https://modelcontextprotocol.io/) server. Running `rpi serve` starts a stdio-based server that exposes all CLI operations as typed tools (`rpi_scaffold`, `rpi_scan`, `rpi_chain`, `rpi_frontmatter_get`, etc.). AI assistants call these tools with validated JSON schemas instead of constructing shell commands.
-
-`rpi init` auto-registers the MCP server with Claude Code when both `rpi` and `claude` are in your PATH. Use `--no-mcp` to skip this. See [Architecture](docs/architecture.md) for details.
 
 ## Optional: Semantic Search
 

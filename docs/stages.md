@@ -80,14 +80,16 @@ You can use `/rpi-commit` standalone anytime, or let `/rpi-implement` handle com
 
 ## Verify (`/rpi-verify`)
 
-**Purpose:** Validate that an implementation matches its proposal artifacts.
+**Purpose:** Validate that an implementation matches its proposal artifacts. **This is the closing checkpoint of the pipeline -- not an optional add-on.**
+
+A passing test suite proves the code is internally consistent; it does not prove the implementation matches the design. Verify is the step that catches the gap between intent and code, and it's the one that's easiest to skip and most worth running. Treat it as part of the normal Plan → Implement → Verify rhythm.
 
 Checks three dimensions:
 - **Completeness** -- Are all planned changes implemented?
 - **Correctness** -- Does the code match the proposal decisions? Extracts Given/When/Then scenarios from linked specs and verifies each against actual code and tests, reporting pass/fail per scenario with file:line references.
 - **Coherence** -- Do the pieces work together as intended?
 
-Can auto-detect what to verify from recent git changes and active plans, or you can point it at a specific proposal, plan, or research doc. Produces a severity-classified report. Purely advisory -- it doesn't block anything, and can be re-run after fixes.
+Can auto-detect what to verify from recent git changes and active plans, or you can point it at a specific proposal, plan, or research doc. Produces a severity-classified report in `.rpi/reviews/`. It's advisory rather than a blocking gate -- you keep ownership of which findings to act on -- and it's idempotent, so re-run it freely after fixes. When you invoke `/rpi-implement --ff`, verify runs automatically at the end of the chain; otherwise, run it yourself.
 
 ## Diagnose (`/rpi-diagnose`)
 
