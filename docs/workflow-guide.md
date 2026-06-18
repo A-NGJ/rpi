@@ -131,6 +131,17 @@ You:  /rpi-research What could we improve about error handling?
 
 It checks three dimensions -- **completeness** (are all planned changes present?), **correctness** (do the Given/When/Then scenarios in the linked specs match the actual code and tests, with file:line citations?), and **coherence** (do the pieces fit together?). The output is a severity-classified report in `.rpi/reviews/`, not a green/red gate, so you keep ownership of which findings to act on. Re-run after fixes -- it's cheap and idempotent.
 
+When a review has a blocker or more than a few findings, verify runs a second read-only **grounding** pass (the `rpi-ground` subagent) that re-anchors each finding against the actual repo and demotes anything it can't confirm. Each finding gains a verdict and an evidence pointer, and the summary reports the before/after blocker count, e.g.:
+
+```
+Blockers: 3 drafted → 2 Verified, 1 Falsified (dropped)
+- [Verified]  Missing migration for the new column (db/schema.sql:1 — column absent)
+- [Verified]  No test covers the retry path (internal/queue/retry_test.go — no case)
+- [Falsified] `parseConfig` was removed (still defined at internal/config/parse.go:42)
+```
+
+Only `Verified` findings stay in the blocking set, so the blockers you read are the ones the repo actually backs. On non-Claude targets the subagent isn't installed and verify falls back to a single-pass review with a "grounding skipped" note.
+
 Treat verify as part of the normal Plan → Implement → Verify rhythm, not an optional add-on. If you used `--ff`, it already runs automatically at the end of the chain; if you didn't, run it yourself.
 
 ### Other commands that close the loop

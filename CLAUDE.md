@@ -36,7 +36,7 @@ Workflow: Research → Propose → Plan → Implement → Verify
 - **Propose** (`/rpi-propose`): Analyze trade-offs, write design + spec (behavioral contract). Approval gate.
 - **Plan** (`/rpi-plan`): Create phased implementation plan from approved spec.
 - **Implement** (`/rpi-implement`): Execute plan phase-by-phase with verification.
-- **Verify** (`/rpi-verify`): Validate spec conformance.
+- **Verify** (`/rpi-verify`): Validate spec conformance. A read-only grounding pass re-anchors each finding against repo state and demotes blockers it can't confirm.
 - **Diagnose** (`/rpi-diagnose`): Iterative root-cause analysis and fix for complex bugs. Optional.
 - **Explain** (`/rpi-explain`): Diff-scoped walkthrough of an implemented solution. Optional.
 

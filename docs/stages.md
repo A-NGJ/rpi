@@ -91,6 +91,8 @@ Checks three dimensions:
 
 Can auto-detect what to verify from recent git changes and active plans, or you can point it at a specific proposal, plan, or research doc. Produces a severity-classified report in `.rpi/reviews/`. It's advisory rather than a blocking gate -- you keep ownership of which findings to act on -- and it's idempotent, so re-run it freely after fixes. When you invoke `/rpi-implement --ff`, verify runs automatically at the end of the chain; otherwise, run it yourself.
 
+**Grounding pass.** When a review draft contains at least one blocker or more than three findings, verify hands its findings to a read-only `rpi-ground` subagent that re-anchors each one against actual repository state and tags it `Verified | Weakened | Falsified` with a one-line evidence pointer. Only `Verified` findings keep blocker severity; `Weakened` findings are demoted out of the blocking set with a caveat, and `Falsified` findings (contradicted by the code) are excluded -- so you see fewer false-positive blockers. Trivial reviews skip grounding, and on non-Claude targets where the subagent isn't installed, verify degrades to a single-pass review with an explicit "grounding skipped" note.
+
 ## Diagnose (`/rpi-diagnose`)
 
 **Purpose:** Iteratively diagnose and fix complex bugs through root-cause analysis.

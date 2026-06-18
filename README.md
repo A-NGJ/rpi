@@ -61,7 +61,7 @@ Executes phase-by-phase: tests between each, commits as it goes, pauses only on 
 ```
 /rpi-verify .rpi/plans/2026-03-04-data-agent.md
 ```
-Closes the loop. Extracts Given/When/Then scenarios from the linked specs, checks each against the actual code and tests, and emits a severity-classified report in `.rpi/reviews/`. **Don't skip this** -- "tests pass" is not the same as "the implementation matches what you designed." Verify is what catches the gap between intent and code before it ships.
+Closes the loop. Extracts Given/When/Then scenarios from the linked specs, checks each against the actual code and tests, and emits a severity-classified report in `.rpi/reviews/`. A read-only grounding pass then re-anchors each finding against the actual repo and demotes any blocker it can't confirm, so you get fewer false-positive blockers. **Don't skip this** -- "tests pass" is not the same as "the implementation matches what you designed." Verify is what catches the gap between intent and code before it ships.
 
 ## Try it
 
