@@ -21,8 +21,13 @@ If no path provided, auto-detect from recent git changes. If artifacts found, an
 - **Correctness**: extract scenarios from linked specs using the verify spec tool, then verify each scenario against actual code and tests with pass/fail per scenario and file:line references; check API contracts match design, flag silent deviations
 - **Coherence**: verify naming conventions, error handling, code organization follow existing patterns; check for unnecessary dependencies
 - Classify each finding as: blocker (must fix), warning (should fix), or note (consider fixing)
+- **Grounding gate**: after drafting findings, run the grounding pass only when the draft has at least one blocker OR more than 3 total findings; otherwise skip grounding and present the review without verdicts
+- **Grounding invocation**: pass the drafted finding list (each with its dimension, severity, claim text, and cited anchor) to the read-only `rpi-ground` subagent — it adjudicates the existing findings against repo state, it does not re-derive them
+- **Verdict application**: the blocking set presented to the user is the post-grounding set — a finding keeps blocker severity only if `rpi-ground` marks it Verified with a citable anchor; Weakened findings are demoted out of the blocking set with a caveat; Falsified findings are excluded (dropped, or struck-through for transparency)
+- **Grounding annotation**: each surviving finding shows its verdict (Verified | Weakened | Falsified) and a one-line evidence pointer; the summary reports before/after counts (e.g. "3 blockers → 2 Verified, 1 Falsified (dropped)")
+- **Graceful degradation**: if the `rpi-ground` subagent is unavailable (e.g. opencode / agents-only targets), present the drafted findings with no grounding annotation and an explicit "grounding skipped (subagent unavailable)" note — never a half-annotated review
 - Scaffold a verification report, fill in findings grouped by dimension and severity
-- Present summary: overall status, counts by severity, report path; list blockers directly
+- Present summary: overall status, counts by severity, report path; list the post-grounding blockers directly
 
 ## Principles
 

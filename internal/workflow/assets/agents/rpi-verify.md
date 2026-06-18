@@ -31,3 +31,5 @@ Return a structured summary:
 - **Warnings**: issues that should be fixed but are not blocking
 
 Be specific — every finding must include a file:line reference. Do not modify any files.
+
+Note: grounding adjudication of these findings (tagging each Verified | Weakened | Falsified and demoting unconfirmed blockers) is a separate read-only pass performed by the `rpi-ground` subagent, invoked by the verify skill — not by this agent.
