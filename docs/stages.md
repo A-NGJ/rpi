@@ -89,6 +89,27 @@ Resumable: if you invoke `/rpi-implement` on a partially-completed plan, it pick
 
 **Fast-forward mode (opt-in):** Pass `--ff` to skip the per-phase pre-review and any manual verification pauses. After the plan completes, `/rpi-verify <plan-path>` is invoked automatically, producing a verification report in `.rpi/reviews/` as the chain's terminal artifact. The "On mismatch" gate, the sensitive-content scan, end-of-plan spec verification, and phase failure handling all run unchanged -- `--ff` is a review override, not a safety override. Mutually exclusive with `--grill`.
 
+## Revise (`/rpi-revise`)
+
+**Purpose:** Amend an *existing* plan in `.rpi/plans/` when a new constraint or a review finding lands after the plan is drafted or partially implemented -- without redoing finished work or skipping the audit a fresh plan would get.
+
+Use it when the situation changed under a plan you already have: an API shifted, a requirement was added, or a `/rpi-verify` review surfaced a gap. This is distinct from `/rpi-plan`, which creates a *fresh* scoped change from scratch. A change that invalidates the underlying design routes back through `/rpi-propose` instead -- revise operates on the plan layer only.
+
+The amendment loop:
+
+1. Captures a *before* snapshot of every checked/unchecked item (with its phase and `**File**:` context) as the preservation baseline
+2. Identifies the changed-phase set the request touches and presents it for buy-in before writing
+3. Edits only the affected phases, leaving unaffected phases byte-stable; affected items are re-keyed by their text (not line position) so reordering preserves `[x]`, new items arrive unchecked, removed items disappear
+4. Re-runs the slice / pre-lock audit on the changed phases only -- this is `/rpi-plan`'s audit applied to what changed, not a reimplementation; a renumbering seam counts as changed so the ordered-phase invariant is re-checked across it
+5. Captures an *after* snapshot and asserts no completed item was silently reset -- if a change would reopen finished work, it stops and shows exactly which items and asks for explicit confirmation
+6. Hands back to `/rpi-implement`, which resumes from the first unchecked item
+
+A `draft` plan stays `draft` and an `active` plan stays `active`, amended in place. A `complete` plan is never silently reopened: revise stops and offers an explicit choice -- a guarded, confirmed reopen, or supersede it via `/rpi-plan` carrying the unchanged phases into a successor plan.
+
+This closes the **verify → revise → implement** loop: a verification finding becomes the change request, the affected phase is amended, and implementation resumes -- no fresh design pass required.
+
+**Fast-forward / grill (opt-in):** Per the shared flag contract, `--ff` skips the approval gate and auto-chains back into `/rpi-implement --ff <plan-path>` -- but the protection against silently undoing completed work is **not** an approval gate and still fires (a revision that would reopen finished work stops and reports). `--grill` stress-tests the proposed changed-phase amendment before writing. Mutually exclusive.
+
 ## Commit (`/rpi-commit`)
 
 **Purpose:** Create clean, focused git commits without thinking about `git add` and message formatting.

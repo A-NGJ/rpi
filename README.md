@@ -84,6 +84,7 @@ Review the changes, approve, done. See the [full workflow guide](docs/workflow-g
 | `/rpi-plan` | Creates phased implementation plan with success criteria | `.rpi/plans/YYYY-MM-DD-topic.md` |
 | `/rpi-blueprint` | Fused shortcut: research note or short problem statement → phased plan in one pass, no separate design | `.rpi/plans/YYYY-MM-DD-topic.md` + `.rpi/specs/feature.md` |
 | `/rpi-implement` | Executes a plan phase-by-phase with verification | Code, tests, and commits |
+| `/rpi-revise` | Amends an existing plan for a new constraint or review finding -- preserves completed work, re-audits only changed phases, hands back to implement | Updated `.rpi/plans/YYYY-MM-DD-topic.md` |
 | `/rpi-commit` | Creates focused git commits with smart grouping | Git commits |
 | `/rpi-verify` | Validates implementation matches design artifacts | `.rpi/reviews/YYYY-MM-DD-topic.md` |
 | `/rpi-diagnose` | Iterative root-cause analysis for complex bugs | `.rpi/diagnoses/YYYY-MM-DD-topic.md` + fix |

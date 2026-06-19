@@ -192,6 +192,29 @@ Only `Verified` findings stay in the blocking set, so the blockers you read are 
 
 Treat verify as part of the normal Plan → Implement → Verify rhythm, not an optional add-on. If you used `--ff`, it already runs automatically at the end of the chain; if you didn't, run it yourself.
 
+### Revise -- when the plan has to change after it's drafted
+
+Plans don't survive contact with reality unchanged. A constraint lands mid-implementation, or a verify pass finds a gap, and the plan you already have needs to absorb it. Editing the plan file by hand is risky: it's easy to clobber the `[x]` of work you already finished, or to amend a phase without the audit a fresh plan would get. `/rpi-revise` does the amendment safely -- it edits only the affected phases, preserves the checkbox state of everything else, re-audits just what changed, and refuses to silently reopen completed work.
+
+It's distinct from `/rpi-plan`: revise *amends an existing plan*, while plan *creates a fresh one*. (A change that invalidates the underlying design goes back through `/rpi-propose` instead.)
+
+**Case 1 -- a constraint arrives mid-implementation.** You're partway through the rate-limiting plan when the team standardizes on Redis for shared state:
+```
+You:  /rpi-revise .rpi/plans/2026-03-04-api-rate-limiting.md the limiter must use Redis, not in-memory, so it works across instances
+```
+Claude snapshots the current checkbox state, identifies that only the limiter-core phase is affected, shows you that changed-phase set, rewrites just that phase (the already-checked middleware-integration work stays checked), re-runs the audit on the changed phase, confirms no completed item was reset, and suggests `/rpi-implement` -- which resumes at the first unchecked item.
+
+**Case 2 -- a review finding flows back into the plan (verify → revise → implement).** A verify run flags a missing concern:
+```
+You:  /rpi-verify .rpi/plans/2026-03-04-api-rate-limiting.md
+      → Blocker: no phase covers limiter eviction / TTL cleanup
+You:  /rpi-revise .rpi/plans/2026-03-04-api-rate-limiting.md add eviction + TTL cleanup with tests to the limiter-core phase
+You:  /rpi-implement .rpi/plans/2026-03-04-api-rate-limiting.md
+```
+The affected phase is amended to close the gap, unaffected phases keep their state, and implementation picks up the new work -- closing the loop without a fresh design pass.
+
+A `complete` plan is never silently reopened: revise stops and offers an explicit choice -- a guarded, confirmed reopen, or supersede it via `/rpi-plan` carrying the unchanged phases forward. Under `--ff` the approval pause is skipped, but the protection against silently undoing completed work still fires.
+
 ### Other commands that close the loop
 
 - **`/rpi-explain`** -- Walks through the diff with a file-by-file explanation. Useful for self-review or explaining changes to a teammate.
