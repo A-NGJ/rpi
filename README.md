@@ -46,12 +46,12 @@ Brainstorm with Claude: it explores the data model, the query path, and the auth
 ```
 /rpi-propose Add an AI chat over our data
 ```
-Crystallizes the brainstorm into 2-3 concrete approaches — each with tradeoffs grounded in what research found. You pick. Writes `.rpi/designs/` and a behavioral spec. A read-only pre-lock audit checks the drafted components cohere — coverage, cross-component mismatch, decision-drift — before you approve.
+Crystallizes the brainstorm into 2-3 concrete approaches — each with tradeoffs grounded in what research found. You pick. Writes `.rpi/designs/` and a behavioral spec. A read-only pre-lock audit checks the drafted components cohere — coverage, cross-component mismatch, decision-drift — before you approve. Decisions recorded upstream are carried forward into an `## Inherited Decisions` block with provenance, so every commitment traces back to where it was first made.
 
 ```
 /rpi-plan .rpi/designs/2026-03-04-data-agent.md
 ```
-Decomposes into phases — each with file changes, verification commands, and success criteria. Writes `.rpi/plans/`. A read-only pre-lock audit flags forward-references and coverage gaps in the drafted phases before you approve.
+Decomposes into phases — each with file changes, verification commands, and success criteria. Writes `.rpi/plans/`. A read-only pre-lock audit flags forward-references and coverage gaps in the drafted phases before you approve. Upstream decisions ride forward into the plan's `## Inherited Decisions`, each attributed to its origin artifact across hops.
 
 ```
 /rpi-implement .rpi/plans/2026-03-04-data-agent.md

@@ -61,6 +61,8 @@ Claude reads the proposal, spot-checks the codebase against the docs, and breaks
 
 Each phase has specific file changes, code snippets, automated verification commands (pulled from your `CLAUDE.md`), and manual verification steps.
 
+**Decisions travel with the work.** Suppose during Step 1 you and Claude settled *"Decided to rate-limit by API key, not client IP, because anonymous traffic shares NATs"* and it landed in the research note's `## Decisions`. When you propose (Step 2), that decision is carried into the design under `## Inherited Decisions`, grouped `From .rpi/research/2026-03-04-api-middleware.md:` and quoted verbatim -- kept separate from any new decision the design itself makes. When you plan (Step 3), it rides forward again into the plan's `## Inherited Decisions`, **still attributed to the research note where it originated** -- not to the design it passed through on the way. Two hops later you can still read the commitment, and see its source, without opening the original file. If an upstream artifact recorded no decisions, no inherited block is added.
+
 **Step 4: Implement**
 ```
 You:  /rpi-implement .rpi/plans/2026-03-04-api-rate-limiting.md
