@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/A-NGJ/rpi/internal/coverage"
 	"github.com/A-NGJ/rpi/internal/frontmatter"
 	"github.com/A-NGJ/rpi/internal/git"
 	"github.com/spf13/cobra"
@@ -219,65 +220,35 @@ func runVerifyMarkers(filePath, format string) error {
 }
 
 var (
-	uncheckedRe = regexp.MustCompile(`^(\s*)- \[ \] (.+)`)
-	checkedRe   = regexp.MustCompile(`^(\s*)- \[x\] (.+)`)
-	phaseRe     = regexp.MustCompile(`^## Phase \d+`)
-	sectionRe   = regexp.MustCompile(`^### (.+)`)
-	planFileRe  = regexp.MustCompile(`\*\*File\*\*:\s*` + "`" + `([^` + "`" + `]+)` + "`")
-	markerRe    = regexp.MustCompile(`\b(TODO|FIXME|HACK)\b(.*)`)
+	markerRe = regexp.MustCompile(`\b(TODO|FIXME|HACK)\b(.*)`)
 )
 
+// parseCheckboxes delegates to the shared coverage extractor (the single plan
+// parser) and assembles the completeness-shaped CheckboxResult.
 func parseCheckboxes(content string) CheckboxResult {
 	result := CheckboxResult{
 		UncheckedItems: []CheckboxItem{},
 	}
 
-	var currentPhase, currentSection string
-
-	for _, line := range strings.Split(content, "\n") {
-		if phaseRe.MatchString(line) {
-			currentPhase = strings.TrimSpace(strings.TrimPrefix(line, "## "))
-			currentSection = ""
-		} else if m := sectionRe.FindStringSubmatch(line); m != nil {
-			currentSection = strings.TrimSpace(m[1])
-		}
-
-		if uncheckedRe.MatchString(line) {
-			result.Total++
-			result.Unchecked++
-			m := uncheckedRe.FindStringSubmatch(line)
-			result.UncheckedItems = append(result.UncheckedItems, CheckboxItem{
-				Text:    m[2],
-				Phase:   currentPhase,
-				Section: currentSection,
-			})
-		} else if checkedRe.MatchString(line) {
-			result.Total++
+	for _, cb := range coverage.ParseCheckboxes(content) {
+		result.Total++
+		if cb.Checked {
 			result.Checked++
+			continue
 		}
+		result.Unchecked++
+		result.UncheckedItems = append(result.UncheckedItems, CheckboxItem{
+			Text:    cb.Text,
+			Phase:   cb.Phase,
+			Section: cb.Section,
+		})
 	}
 
 	return result
 }
 
 func extractPlanFiles(content string) []string {
-	var files []string
-	seen := map[string]bool{}
-
-	for _, line := range strings.Split(content, "\n") {
-		if m := planFileRe.FindStringSubmatch(line); m != nil {
-			path := m[1]
-			if !seen[path] {
-				files = append(files, path)
-				seen[path] = true
-			}
-		}
-	}
-
-	if files == nil {
-		return []string{}
-	}
-	return files
+	return coverage.ExtractPlanFiles(content)
 }
 
 func comparePlanVsGit(planFiles, gitFiles []string) CompareResult {

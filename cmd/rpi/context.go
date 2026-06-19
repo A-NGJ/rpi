@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/A-NGJ/rpi/internal/chain"
+	"github.com/A-NGJ/rpi/internal/coverage"
 	"github.com/A-NGJ/rpi/internal/frontmatter"
 	"github.com/A-NGJ/rpi/internal/git"
 	"github.com/A-NGJ/rpi/internal/scanner"
@@ -96,29 +97,21 @@ func runContext(cmd *cobra.Command, args []string) error {
 // detectCurrentPhase walks plan content and returns the name of the first
 // phase that has unchecked items, plus up to maxNextItems unchecked item texts.
 func detectCurrentPhase(content string) (string, []string) {
-	var currentPhase string
 	var foundPhase string
-	var nextItems []string
+	nextItems := []string{}
 
-	for _, line := range strings.Split(content, "\n") {
-		if phaseRe.MatchString(line) {
-			currentPhase = strings.TrimSpace(strings.TrimPrefix(line, "## "))
+	for _, cb := range coverage.ParseCheckboxes(content) {
+		if cb.Checked {
+			continue
 		}
-
-		if uncheckedRe.MatchString(line) {
-			if foundPhase == "" {
-				foundPhase = currentPhase
-			}
-			if currentPhase == foundPhase && len(nextItems) < maxNextItems {
-				m := uncheckedRe.FindStringSubmatch(line)
-				nextItems = append(nextItems, m[2])
-			}
+		if foundPhase == "" {
+			foundPhase = cb.Phase
+		}
+		if cb.Phase == foundPhase && len(nextItems) < maxNextItems {
+			nextItems = append(nextItems, cb.Text)
 		}
 	}
 
-	if nextItems == nil {
-		nextItems = []string{}
-	}
 	return foundPhase, nextItems
 }
 
