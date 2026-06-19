@@ -365,12 +365,19 @@ func TestInstallAgents_InstallsAllAgents(t *testing.T) {
 	if err != nil {
 		t.Fatalf("InstallAgents error: %v", err)
 	}
-	if count != 2 {
-		t.Errorf("expected 2 agent files installed, got %d", count)
+
+	// Expected count is derived from the embedded asset set so adding a new
+	// agent never silently breaks this assertion.
+	entries, err := fs.ReadDir(assets, "assets/agents")
+	if err != nil {
+		t.Fatalf("read embedded agents: %v", err)
+	}
+	if count != len(entries) {
+		t.Errorf("expected %d agent files installed, got %d", len(entries), count)
 	}
 
-	// Verify agent files exist
-	for _, name := range []string{"rpi-verify.md", "rpi-ground.md"} {
+	// Verify known agent files exist
+	for _, name := range []string{"rpi-verify.md", "rpi-ground.md", "rpi-slice-audit.md"} {
 		path := filepath.Join(agentsDir, name)
 		if _, err := os.Stat(path); err != nil {
 			t.Errorf("agent file %s not installed: %v", name, err)
