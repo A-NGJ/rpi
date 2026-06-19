@@ -33,8 +33,8 @@ This project uses a `.rpi/` directory for persistent context:
 Workflow: Research → Propose → Plan → Implement → Verify
 
 - **Research** (`/rpi-research`): Investigate the question (codebase or external). Optional.
-- **Propose** (`/rpi-propose`): Analyze trade-offs, write design + spec (behavioral contract). Approval gate.
-- **Plan** (`/rpi-plan`): Create phased implementation plan from approved spec.
+- **Propose** (`/rpi-propose`): Analyze trade-offs, write design + spec (behavioral contract). Approval gate. A read-only pre-lock audit checks the drafted Components cohere (coverage, cross-Component mismatch, decision-drift) before the gate.
+- **Plan** (`/rpi-plan`): Create phased implementation plan from approved spec. A read-only pre-lock audit checks the drafted phases cohere (coverage, forward-references, decision-drift) before the buy-in gate.
 - **Implement** (`/rpi-implement`): Execute plan phase-by-phase with verification.
 - **Verify** (`/rpi-verify`): Validate spec conformance. A read-only grounding pass re-anchors each finding against repo state and demotes blockers it can't confirm.
 - **Diagnose** (`/rpi-diagnose`): Iterative root-cause analysis and fix for complex bugs. Optional.

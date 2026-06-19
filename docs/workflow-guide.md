@@ -119,6 +119,22 @@ Use `/rpi-research` even when you have a vague idea. It handles focused codebase
 You:  /rpi-research What could we improve about error handling?
 ```
 
+## Before You Approve
+
+### The pre-lock audit -- catching incoherent plans before you commit to them
+
+When `/rpi-propose` drafts a design's components or `/rpi-plan` drafts a plan's phases, a read-only `rpi-slice-audit` pass runs **before** you're asked to approve. It catches the defects a single authoring pass routinely misses:
+
+- **Coverage** -- a success criterion or planned file that maps to no real work, or a file slated for commit that no task produces.
+- **Forward-references** -- a phase that edits or depends on something only a later phase creates.
+- **Decision-drift** -- a slice whose behavior contradicts a decision recorded upstream (or earlier in the same design).
+
+A clean audit is invisible -- you see a one-line "audit: clean" note and proceed to the normal gate. When it finds something, each finding names the slice and what it collides with. **Resolve** it (revise the slice) or **waive** it (acknowledge and proceed) -- you can't approve an interactive plan or design until every finding is resolved or waived.
+
+**Under `--ff`**, findings are recorded with the artifact and do **not** stop the run -- with one exception. A **hard coverage gap** (a criterion or planned file mapping to no work) stops the chain even under `--ff`, because it would waste the entire downstream autopilot run on a plan that can't deliver what it promises. This is the only pre-lock finding that blocks `--ff`; forward-references and decision-drift are recorded but never block fast-forward.
+
+A trivial single-phase standalone plan skips the cross-slice audit (one slice can't forward-reference a sibling) and runs only the lightweight coverage check.
+
 ## After Implementation
 
 ### Verify -- not optional, the closing checkpoint

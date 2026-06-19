@@ -21,11 +21,13 @@ Three modes, auto-detected:
 
 The propose stage is interactive. Claude investigates the codebase, presents options with concrete trade-offs (grounded in your actual codebase, not generic advice), makes a recommendation, and waits for your direction. After you choose, it validates that your combined choices work together before documenting the design in `.rpi/designs/`. If the proposal changes existing behavior documented in `.rpi/specs/`, it can flag those specs with `pending_changes` for update after implementation.
 
+**Pre-lock audit:** Before the design/spec approval gate, a read-only `rpi-slice-audit` pass checks the drafted Components hold together -- every `## File Structure` entry is introduced by some Component and vice-versa (coverage), no Component references a file or symbol no Component defines (mismatch), and no Component contradicts a decision recorded earlier in the design (decision-drift). Findings surface at the gate and block approval until resolved or waived. A single-Component design runs only the lightweight coverage check.
+
 **Grill mode (opt-in):** Pass `--grill` (or use phrasing like "grill me on this", "stress-test this") to invoke the bundled `grill-me` skill (sourced from [mattpocock/skills](https://github.com/mattpocock/skills) under MIT) at the approval gate. Once the design and spec are drafted, `grill-me` interrogates them one question at a time, walking every branch of the decision tree before you accept the artifact. Findings are applied inline to the design and spec; no separate audit log is written. Grilling is single-pass -- re-invoke if you want a second round.
 
 If a user has removed the bundled `grill-me` skill, you'll be told and asked whether to proceed with the standard approval gate.
 
-**Fast-forward mode (opt-in):** Pass `--ff` to suppress all approval gates (trade-off buy-in, mid-flight checkpoints, spec approval) and auto-chain into `/rpi-plan --ff <design-path>` immediately. The chain continues through `/rpi-implement` and ends at `/rpi-verify`, producing a verification report in `.rpi/reviews/` as the terminal artifact. Mutually exclusive with `--grill`; the explicit flag is required (no natural-language trigger). Use when you trust the defaults and want full autopilot. Safety gates (codebase drift detection, sensitive-content scan) still stop the chain.
+**Fast-forward mode (opt-in):** Pass `--ff` to suppress all approval gates (trade-off buy-in, mid-flight checkpoints, spec approval) and auto-chain into `/rpi-plan --ff <design-path>` immediately. The chain continues through `/rpi-implement` and ends at `/rpi-verify`, producing a verification report in `.rpi/reviews/` as the terminal artifact. Mutually exclusive with `--grill`; the explicit flag is required (no natural-language trigger). Use when you trust the defaults and want full autopilot. Safety gates (codebase drift detection, sensitive-content scan) and a hard pre-lock coverage gap still stop the chain.
 
 ## Plan (`/rpi-plan`)
 
@@ -44,9 +46,11 @@ Every plan phase includes:
 
 All open questions must be resolved before the plan is finalized.
 
+**Pre-lock audit:** Before the phase-outline buy-in gate, a read-only `rpi-slice-audit` pass checks the drafted phases hold together -- every success criterion and planned file maps to real work (coverage), no phase edits a file only a later phase creates (forward-reference), and no phase contradicts a decision recorded upstream (decision-drift). Findings surface at the gate and block approval until resolved or waived. A single-phase standalone plan skips the cross-slice pass and runs only the lightweight coverage check; in a split, the audit runs per sibling plan.
+
 **Grill mode (opt-in):** Pass `--grill` (or use phrasing like "grill me on this") to invoke the bundled `grill-me` skill on the *phase outline* before the full plan is written. Same fall-back behavior as Propose -- if a user has removed `grill-me` locally, you'll be asked whether to proceed without it.
 
-**Fast-forward mode (opt-in):** Pass `--ff` to skip the phase outline buy-in and auto-chain into `/rpi-implement --ff <plan-path>`, terminating at `/rpi-verify`. Pre-flight checks (design status, artifact chain, drift spot-check) and the design-coverage check still run and can stop the chain. Mutually exclusive with `--grill`.
+**Fast-forward mode (opt-in):** Pass `--ff` to skip the phase outline buy-in and auto-chain into `/rpi-implement --ff <plan-path>`, terminating at `/rpi-verify`. Pre-flight checks (design status, artifact chain, drift spot-check) and the design-coverage check still run and can stop the chain. Pre-lock audit findings are recorded rather than blocking under `--ff` -- **except a hard coverage gap** (a success criterion or planned file mapping to no work), which stops the chain even under `--ff`, since it would waste the entire downstream run. Mutually exclusive with `--grill`.
 
 ## Implement (`/rpi-implement`)
 
