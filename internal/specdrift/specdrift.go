@@ -37,6 +37,10 @@ type ScanOptions struct {
 	RatioHigh    float64
 	SpecsDir     string
 	ArtifactsDir string // if empty, defaults to filepath.Dir(SpecsDir)
+	// Now is the reference time staleness is measured against. The zero value
+	// means "use time.Now()"; tests inject a fixed time so fixtures with fixed
+	// last_updated dates do not age into staleness as wall-clock time passes.
+	Now time.Time
 }
 
 // DefaultOptions returns the thresholds documented in the design.
@@ -134,7 +138,11 @@ func detectStaleLastUpdated(doc *frontmatter.Document, opts ScanOptions) *Signal
 	if !ok {
 		return nil
 	}
-	daysSince := int(time.Since(t).Hours() / 24)
+	now := opts.Now
+	if now.IsZero() {
+		now = time.Now()
+	}
+	daysSince := int(now.Sub(t).Hours() / 24)
 	if daysSince < opts.StaleDays {
 		return nil
 	}

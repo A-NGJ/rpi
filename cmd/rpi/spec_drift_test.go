@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func TestSpecDriftCmd_RegisteredOnRoot(t *testing.T) {
@@ -69,7 +70,9 @@ func TestRunSpecDriftScan_FlagOverrides(t *testing.T) {
 		t.Fatalf("mkdir: %v", err)
 	}
 	// Recent spec — with default --stale-days=30 it should not be stale.
-	writeSpec(t, filepath.Join(specsDir, "fresh.md"), "fresh", "2026-05-19T10:00:00+02:00")
+	// Dated relative to now so it never ages past the window as the suite ages.
+	freshDate := time.Now().AddDate(0, 0, -5).Format("2006-01-02T15:04:05-07:00")
+	writeSpec(t, filepath.Join(specsDir, "fresh.md"), "fresh", freshDate)
 
 	// Default thresholds: no stale signal.
 	withSpecDriftFlags(t, 30, 0.5, 3.0, specsDir)

@@ -4,9 +4,16 @@ import (
 	"encoding/json"
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/A-NGJ/rpi/internal/frontmatter"
 )
+
+// fixtureNow is the reference time the testdata fixtures are authored against:
+// the non-stale fixtures use last_updated 2026-05-15 (fresh within 30 days),
+// stale.md uses 2025-01-01 (clearly stale). Pinning the clock here keeps the
+// staleness signal deterministic regardless of when the suite runs.
+var fixtureNow = time.Date(2026, 6, 1, 0, 0, 0, 0, time.UTC)
 
 func TestScan_TableDriven(t *testing.T) {
 	// Force the git-unavailable branch so detectStaleLastUpdated fires on the
@@ -15,6 +22,7 @@ func TestScan_TableDriven(t *testing.T) {
 
 	opts := DefaultOptions()
 	opts.SpecsDir = "testdata"
+	opts.Now = fixtureNow
 
 	records, err := Scan(opts)
 	if err != nil {
