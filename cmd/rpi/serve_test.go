@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/A-NGJ/rpi/internal/coverage"
 	"github.com/A-NGJ/rpi/internal/frontmatter"
 	"github.com/A-NGJ/rpi/internal/scanner"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -412,6 +413,7 @@ func TestIntegration_AllToolsRegistered(t *testing.T) {
 		"rpi_extract",
 		"rpi_extract_list_sections",
 		"rpi_verify_completeness",
+		"rpi_verify_coverage",
 		"rpi_verify_markers",
 		"rpi_verify_spec",
 		"rpi_context_essentials",
@@ -608,6 +610,36 @@ func TestHandleVerifyCompleteness(t *testing.T) {
 	}
 	if m["unchecked"] != float64(2) {
 		t.Errorf("expected 2 unchecked, got %v", m["unchecked"])
+	}
+}
+
+func TestHandleVerifyCoverage(t *testing.T) {
+	dir := t.TempDir()
+	plan := filepath.Join(dir, "plan.md")
+	// Phase 1 does real work; Phase 2 lists a success criterion with no
+	// emitting work → an orphaned criterion → hardFailure.
+	body := "## Phase 1: Work\n" +
+		"**File**: `pkg/z.go` (NEW)\n" +
+		"### Success Criteria:\n- [ ] z works\n" +
+		"### Commit:\n- **Stage**: `pkg/z.go`\n\n" +
+		"## Phase 2: Orphan\n" +
+		"### Success Criteria:\n- [ ] orphaned thing\n"
+	os.WriteFile(plan, []byte(body), 0644)
+
+	result, _, err := handleVerifyCoverage(context.Background(), nil, verifyCoverageInput{PlanPath: plan, PreLock: true})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	text := extractText(t, result)
+	var r coverage.Result
+	if err := json.Unmarshal([]byte(text), &r); err != nil {
+		t.Fatalf("invalid JSON: %v\ntext: %s", err, text)
+	}
+	if !r.HardFailure {
+		t.Errorf("expected hardFailure=true, got %+v", r)
+	}
+	if len(r.Coverage.OrphanedCriteria) != 1 || r.Coverage.OrphanedCriteria[0] != "orphaned thing" {
+		t.Errorf("expected [orphaned thing], got %+v", r.Coverage.OrphanedCriteria)
 	}
 }
 

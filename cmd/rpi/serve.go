@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/A-NGJ/rpi/internal/chain"
+	"github.com/A-NGJ/rpi/internal/coverage"
 	"github.com/A-NGJ/rpi/internal/frontmatter"
 	"github.com/A-NGJ/rpi/internal/git"
 	"github.com/A-NGJ/rpi/internal/scanner"
@@ -161,6 +162,11 @@ func registerTools(s *mcp.Server) {
 		Name:        "rpi_verify_completeness",
 		Description: mcpDescriptionWithPrefix("Check plan progress: checkbox counts and file coverage.", verifyCmd),
 	}, handleVerifyCompleteness)
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "rpi_verify_coverage",
+		Description: mcpDescriptionWithPrefix("Pre-lock audit of a drafted plan: coverage gaps, phase-ordering forward-references, and edit-target existence, with a hardFailure flag.", verifyCmd),
+	}, handleVerifyCoverage)
 
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "rpi_verify_markers",
@@ -334,6 +340,11 @@ type extractListSectionsInput struct {
 
 type verifyCompletenessInput struct {
 	PlanPath string `json:"plan_path" jsonschema:"path to the plan file"`
+}
+
+type verifyCoverageInput struct {
+	PlanPath string `json:"plan_path" jsonschema:"path to the drafted plan file"`
+	PreLock  bool   `json:"pre_lock,omitempty" jsonschema:"run in pre-lock mode (drafted plan, no git diff); currently the only supported mode"`
 }
 
 type verifyMarkersInput struct {
@@ -538,6 +549,19 @@ func handleVerifyCompleteness(_ context.Context, _ *mcp.CallToolRequest, input v
 		CheckboxResult: checkboxes,
 		CompareResult:  compare,
 	}
+	return jsonResult(result)
+}
+
+func handleVerifyCoverage(_ context.Context, _ *mcp.CallToolRequest, input verifyCoverageInput) (*mcp.CallToolResult, any, error) {
+	content, err := os.ReadFile(input.PlanPath)
+	if err != nil {
+		return nil, nil, fmt.Errorf("reading plan: %w", err)
+	}
+	root, err := os.Getwd()
+	if err != nil {
+		root = ""
+	}
+	result := coverage.Analyze(string(content), root)
 	return jsonResult(result)
 }
 
