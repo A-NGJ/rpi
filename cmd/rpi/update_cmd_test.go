@@ -474,8 +474,8 @@ func TestUpdatePreservesExistingCommandsDir(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read .claude/skills/: %v", err)
 	}
-	if len(entries) != 12 {
-		t.Errorf("expected 12 skill dirs in .claude/skills/, got %d", len(entries))
+	if len(entries) != 13 {
+		t.Errorf("expected 13 skill dirs in .claude/skills/, got %d", len(entries))
 	}
 
 	// Bundled third-party LICENSE files survive update.
@@ -569,8 +569,8 @@ func TestUpdateDetectsAgentsOnlyTarget(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read .agents/skills/: %v", err)
 	}
-	if len(entries) != 12 {
-		t.Errorf("expected 12 skill dirs, got %d", len(entries))
+	if len(entries) != 13 {
+		t.Errorf("expected 13 skill dirs, got %d", len(entries))
 	}
 
 	// No tool-specific dirs should be created

@@ -54,14 +54,14 @@ func TestInitCreatesAllDirs(t *testing.T) {
 		}
 	}
 
-	// AS-2: .claude/skills/ has 12 skill dirs with SKILL.md files (11 first-party + grill-me).
+	// AS-2: .claude/skills/ has 13 skill dirs with SKILL.md files (12 first-party + grill-me).
 	claudeSkills := filepath.Join(dir, ".claude", "skills")
 	entries, err := os.ReadDir(claudeSkills)
 	if err != nil {
 		t.Fatalf(".claude/skills/ not created: %v", err)
 	}
-	if len(entries) != 12 {
-		t.Errorf("expected 12 skill dirs in .claude/skills/, got %d", len(entries))
+	if len(entries) != 13 {
+		t.Errorf("expected 13 skill dirs in .claude/skills/, got %d", len(entries))
 	}
 
 	// Bundled third-party skills ship their upstream LICENSE alongside SKILL.md.
@@ -413,8 +413,8 @@ func TestInitOpenCode(t *testing.T) {
 	if err != nil {
 		t.Fatalf(".opencode/skills/ not created: %v", err)
 	}
-	if len(entries) != 12 {
-		t.Errorf("expected 12 skill dirs in .opencode/skills/, got %d", len(entries))
+	if len(entries) != 13 {
+		t.Errorf("expected 13 skill dirs in .opencode/skills/, got %d", len(entries))
 	}
 
 	// Verify AGENTS.md generated, CLAUDE.md absent
@@ -588,8 +588,8 @@ func TestInitAgentsOnly(t *testing.T) {
 	if err != nil {
 		t.Fatalf(".agents/skills/ not created: %v", err)
 	}
-	if len(entries) != 12 {
-		t.Errorf("expected 12 skill dirs, got %d", len(entries))
+	if len(entries) != 13 {
+		t.Errorf("expected 13 skill dirs, got %d", len(entries))
 	}
 
 	// No .claude/ or .opencode/ directories

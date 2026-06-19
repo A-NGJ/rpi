@@ -34,6 +34,11 @@ Each step has a skill. Each skill suggests the next.
   /rpi:rpi-plan       Plan a scoped, concrete change → phased implementation plan.
                   Use for narrow tweaks or bug fixes; use /rpi:rpi-propose for
                   changes that require weighing tradeoffs.
+  /rpi:rpi-blueprint  Fused shortcut: a research note or short problem statement
+                  straight to a plan in one pass — no separate design to review
+                  (distinct from --ff, which runs the full pipeline fast but
+                  still produces a design). Refuses and redirects to
+                  /rpi:rpi-propose on tradeoffs or high blast radius.
   /rpi:rpi-implement  Execute an approved plan phase by phase with per-phase
                   verification.
   /rpi:rpi-verify     Validate an implementation against its design and spec.
@@ -57,6 +62,7 @@ Each step has a skill. Each skill suggests the next.
 
   Features (new behavior, tradeoffs):     /rpi:rpi-propose
   Concrete narrow change or bug fix:      /rpi:rpi-plan
+  Low-stakes solo work, research → plan:  /rpi:rpi-blueprint
   Complex bug with unclear cause:         /rpi:rpi-diagnose
   Open-ended exploration:                 /rpi:rpi-research
 

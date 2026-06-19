@@ -19,6 +19,7 @@ import (
 // named like `rpi-foo` is never collateral damage.
 var rpiAuthoredSkills = map[string]bool{
 	"rpi-archive":   true,
+	"rpi-blueprint": true,
 	"rpi-commit":    true,
 	"rpi-diagnose":  true,
 	"rpi-explain":   true,

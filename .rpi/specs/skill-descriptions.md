@@ -29,7 +29,7 @@ When the trigger sentence is inspected
 Then it quotes at least three user phrasings inside single or double quotes
 
 ### Overlapping skills include explicit negative gates
-Given two RPI skills that share natural-language surface area — specifically `rpi-plan`↔`rpi-propose`, `rpi-research`↔`rpi-propose`, and `rpi-research`↔`rpi-diagnose`
+Given two RPI skills that share natural-language surface area — specifically `rpi-plan`↔`rpi-propose`, `rpi-research`↔`rpi-propose`, `rpi-research`↔`rpi-diagnose`, `rpi-blueprint`↔`rpi-propose`, and `rpi-blueprint`↔`rpi-plan`
 When each skill's description is inspected
 Then it contains a sentence of the form `Do NOT invoke for X — use rpi-Y instead`, where rpi-Y is the named sibling
 
@@ -66,3 +66,4 @@ Then the prompt set is stored as a markdown file under the design's eval directo
 
 ## Update Log
 - 2026-05-22 — Extended the manual eval with external-research probes per `.rpi/designs/2026-05-22-expand-rpi-research-to-cover-external-investigation.md`. The 20-prompt subset is preserved; the extended set adds at least one positive external-survey trigger and disambiguation probes against `rpi-propose` and `rpi-diagnose`. ≥80% threshold now applies to the extended set total.
+- 2026-06-19 — Added `rpi-blueprint` to the overlapping-skills negative-gate coverage with the pairs `rpi-blueprint`↔`rpi-propose` and `rpi-blueprint`↔`rpi-plan` per `.rpi/designs/2026-06-17-rpi-blueprint-fused-fast-path.md`. The blueprint description must defer to `rpi-propose` on tradeoffs / high blast radius and to `rpi-plan` on narrow scoped changes.

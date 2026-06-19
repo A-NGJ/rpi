@@ -12,10 +12,10 @@ import (
 // --- Agent Skills format compliance tests ---
 
 func TestAllSkillsPresent(t *testing.T) {
-	// AS-12: All 12 skills must be present (11 first-party pipeline skills +
+	// AS-12: All 13 skills must be present (12 first-party pipeline skills +
 	// 1 bundled third-party skill: grill-me from mattpocock/skills under MIT).
 	expected := []string{
-		"rpi-research", "rpi-propose", "rpi-plan", "rpi-implement",
+		"rpi-research", "rpi-propose", "rpi-plan", "rpi-blueprint", "rpi-implement",
 		"rpi-verify", "rpi-diagnose", "rpi-explain", "rpi-commit", "rpi-archive",
 		"rpi-spec-sync", "rpi-handoff",
 		"grill-me",
@@ -139,18 +139,18 @@ func TestInstallSkills(t *testing.T) {
 	if err != nil {
 		t.Fatalf("InstallSkills error: %v", err)
 	}
-	// 11 first-party SKILL.md + grill-me's SKILL.md + grill-me's LICENSE = 13.
-	if count != 13 {
-		t.Errorf("expected 13 files installed, got %d", count)
+	// 12 first-party SKILL.md + grill-me's SKILL.md + grill-me's LICENSE = 14.
+	if count != 14 {
+		t.Errorf("expected 14 files installed, got %d", count)
 	}
 
-	// Verify all 12 skill dirs exist (11 first-party + grill-me).
+	// Verify all 13 skill dirs exist (12 first-party + grill-me).
 	entries, err := os.ReadDir(skillsDir)
 	if err != nil {
 		t.Fatalf("read skills dir: %v", err)
 	}
-	if len(entries) != 12 {
-		t.Errorf("expected 12 skill dirs, got %d", len(entries))
+	if len(entries) != 13 {
+		t.Errorf("expected 13 skill dirs, got %d", len(entries))
 	}
 
 	// Verify deployed files have no tool-specific fields.
@@ -279,7 +279,7 @@ func TestInstallSkills_CopiesSiblingFiles(t *testing.T) {
 
 func TestPromptStructure_HasRequiredSections(t *testing.T) {
 	pipelineSkills := []string{
-		"rpi-research", "rpi-propose", "rpi-plan", "rpi-implement",
+		"rpi-research", "rpi-propose", "rpi-plan", "rpi-blueprint", "rpi-implement",
 		"rpi-verify", "rpi-diagnose", "rpi-explain", "rpi-commit", "rpi-archive",
 		"rpi-spec-sync",
 	}
@@ -300,7 +300,7 @@ func TestPromptStructure_HasRequiredSections(t *testing.T) {
 
 func TestPromptStructure_LineCount(t *testing.T) {
 	pipelineSkills := []string{
-		"rpi-research", "rpi-propose", "rpi-plan", "rpi-implement",
+		"rpi-research", "rpi-propose", "rpi-plan", "rpi-blueprint", "rpi-implement",
 		"rpi-verify", "rpi-diagnose", "rpi-explain", "rpi-commit", "rpi-archive",
 		"rpi-spec-sync",
 	}
