@@ -196,9 +196,9 @@ func TestRenderAllTemplates(t *testing.T) {
 		name         string
 		wantInOutput []string
 	}{
-		{"research", []string{"# Research: Test Topic", "researcher: Claude", "git_commit: abc1234"}},
-		{"plan", []string{"# cli-007: Test Topic", "ticket: \"cli-007\"", `spec: ".rpi/specs/test.md"`}},
-		{"design", []string{"# Design: Test Topic"}},
+		{"research", []string{"# Research: Test Topic", "researcher: Claude", "git_commit: abc1234", "## Decisions"}},
+		{"plan", []string{"# cli-007: Test Topic", "ticket: \"cli-007\"", `spec: ".rpi/specs/test.md"`, "## Decisions"}},
+		{"design", []string{"# Design: Test Topic", "## Decisions"}},
 		{"verify-report", []string{"# Verification Report: Test Topic", "## Completeness"}},
 		{"spec", []string{"domain: Test Topic", "## Purpose", "## Scenarios", "## Constraints", "## Out of Scope", "feature:"}},
 	}
