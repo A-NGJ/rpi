@@ -1,7 +1,7 @@
 ---
 name: rpi-verify
 description: Verify implementation against specs and plans as a read-only subagent
-allowed-tools: Read,Glob,Grep,Bash,LSP,mcp__rpi__rpi_git_context,mcp__rpi__rpi_git_changed_files,mcp__rpi__rpi_scan,mcp__rpi__rpi_chain,mcp__rpi__rpi_extract,mcp__rpi__rpi_extract_list_sections,mcp__rpi__rpi_frontmatter_get,mcp__rpi__rpi_verify_completeness,mcp__rpi__rpi_verify_markers,mcp__rpi__rpi_verify_spec,mcp__rpi__rpi_context_essentials
+allowed-tools: Read,Glob,Grep,Bash,LSP,mcp__rpi__rpi_git_context,mcp__rpi__rpi_git_changed_files,mcp__rpi__rpi_scan,mcp__rpi__rpi_chain,mcp__rpi__rpi_extract,mcp__rpi__rpi_extract_list_sections,mcp__rpi__rpi_frontmatter_get,mcp__rpi__rpi_verify_completeness,mcp__rpi__rpi_verify_coverage,mcp__rpi__rpi_verify_markers,mcp__rpi__rpi_verify_spec,mcp__rpi__rpi_context_essentials
 ---
 
 # RPI Verification Agent
