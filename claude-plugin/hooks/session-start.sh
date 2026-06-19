@@ -41,6 +41,8 @@ Each step has a skill. Each skill suggests the next.
                   /rpi:rpi-propose on tradeoffs or high blast radius.
   /rpi:rpi-implement  Execute an approved plan phase by phase with per-phase
                   verification.
+  /rpi:rpi-revise     Amend an existing plan for a new constraint or review
+                  finding — preserves completed work, re-audits only what changed.
   /rpi:rpi-verify     Validate an implementation against its design and spec.
                   Severity-classified review.
   /rpi:rpi-diagnose   Iterative root-cause analysis for complex bugs.
