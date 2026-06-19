@@ -82,6 +82,7 @@ Review the changes, approve, done. See the [full workflow guide](docs/workflow-g
 | `/rpi-research` | Investigates a question -- codebase or external, with conversational fact-finding | Conversation (optionally `.rpi/research/YYYY-MM-DD-topic.md`) |
 | `/rpi-propose` | Investigates, analyzes, and designs solutions with trade-offs | `.rpi/designs/YYYY-MM-DD-topic.md` + `.rpi/specs/feature.md` |
 | `/rpi-plan` | Creates phased implementation plan with success criteria | `.rpi/plans/YYYY-MM-DD-topic.md` |
+| `/rpi-blueprint` | Fused shortcut: research note or short problem statement → phased plan in one pass, no separate design | `.rpi/plans/YYYY-MM-DD-topic.md` + `.rpi/specs/feature.md` |
 | `/rpi-implement` | Executes a plan phase-by-phase with verification | Code, tests, and commits |
 | `/rpi-commit` | Creates focused git commits with smart grouping | Git commits |
 | `/rpi-verify` | Validates implementation matches design artifacts | `.rpi/reviews/YYYY-MM-DD-topic.md` |
@@ -116,6 +117,7 @@ Not every task needs every stage. Match the path to your task's complexity:
 - **Small tasks** (bug fixes, config changes) -- skip straight to **Plan -> Implement**. `/rpi-plan` does lightweight research on the fly.
 - **Medium tasks** (focused features, single-concern changes) -- use **Propose -> Plan -> Implement**. Optionally run `/rpi-research` first if the codebase is unfamiliar.
 - **Large tasks** (multi-concern features, major refactors) -- use **Propose -> Plan -> Implement**, where `/rpi-plan` decomposes the proposal into independently plannable units.
+- **Low-stakes solo work** -- use `/rpi-blueprint` to go from a research note or short problem statement straight to a plan in one pass, skipping the separate design deliverable (it still writes a minimal spec and records its design reasoning in a `## Design Notes` plan block). This is the *fused* shortcut, distinct from `--ff` (runs the full pipeline fast but still produces a design) and from `/rpi-plan` (scoped change to existing behavior, no design reasoning). It refuses and redirects to `/rpi-propose` when the work carries genuine tradeoffs or wide blast radius.
 
 Not sure where to start? Use `/rpi-research` with any question -- it handles both focused investigation and open-ended research. For complex bugs, use `/rpi-diagnose` to iterate on root-cause analysis.
 

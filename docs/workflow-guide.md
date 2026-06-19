@@ -111,6 +111,38 @@ You:  /rpi-implement .rpi/plans/2026-03-04-notification-system.md
 
 Claude implements unit by unit. You can stop between units, come back the next day, and pick up where you left off -- the `.rpi/` directory preserves all context and checkboxes track progress.
 
+## Fused Shortcut (low-stakes solo work)
+
+**Path: Blueprint -> Implement**
+
+When you have a research note or a small, well-understood change and you *don't* want a separate design to review, `/rpi-blueprint` fuses Propose and Plan into one pass: it does condensed design reasoning inline and emits a phased plan directly, plus a minimal behavioral spec. The design reasoning that would have lived in a design file is recorded in a `## Design Notes` block at the top of the plan.
+
+**Example -- from a research note straight to a plan:**
+```
+You:  /rpi-blueprint .rpi/research/2026-03-04-cache-warmup.md
+```
+Claude reads the research, commits to the obvious approach (recording the alternatives it dropped and why in `## Design Notes`), writes a phased plan and a minimal spec to `.rpi/plans/` and `.rpi/specs/`, then suggests `/rpi-implement`. No design artifact is produced.
+
+**Example -- from a short problem statement:**
+```
+You:  /rpi-blueprint Add a --quiet flag to the CLI that suppresses progress output
+```
+Small enough to reason about in one pass -- Claude emits the plan + minimal spec directly.
+
+**Power-user composition:**
+```
+You:  /rpi-blueprint --ff .rpi/research/2026-03-04-cache-warmup.md
+```
+Skips the plan-outline approval pause and auto-chains into `/rpi-implement --ff`, terminating at `/rpi-verify`.
+
+### Where blueprint draws the line (refuse-and-redirect)
+
+Blueprint is for low-stakes work, so it **declines and redirects to `/rpi-propose`** when the work deserves a reviewed design -- when condensed reasoning surfaces more than one approach a reasonable engineer would defend, or the change is wide-reaching / multi-component (high blast radius). Instead of landing a thin plan, it explains in a sentence or two why the work needs a design and points you at `/rpi-propose <input>`.
+
+This refusal is a **hard gate, not a review pause**: it fires even under `--ff` and *stops* the run rather than silently escalating into `rpi-propose --ff`. Escalating autopilot across a deliverable boundary you didn't ask for would be surprising -- so blueprint stops and leaves the choice of the design path to you.
+
+**Fused vs fast-forward.** Don't conflate the two "fast" concepts: `--ff` runs the *full* pipeline fast (suppressing review pauses) but still produces a design; `/rpi-blueprint` *omits the design deliverable* entirely, fusing its reasoning into the plan. They compose (`rpi-blueprint --ff`) but they are different axes.
+
 ## Not Sure Where to Start?
 
 Use `/rpi-research` even when you have a vague idea. It handles focused codebase questions ("how does auth work?"), open-ended exploration ("what could we improve about error handling?"), and external surveys ("what agentic frameworks exist for X?", "what's the state of vector databases in 2026?"). It's conversational -- you discuss findings interactively and decide whether to save research or move straight to `/rpi-propose`.

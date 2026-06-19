@@ -52,6 +52,21 @@ All open questions must be resolved before the plan is finalized.
 
 **Fast-forward mode (opt-in):** Pass `--ff` to skip the phase outline buy-in and auto-chain into `/rpi-implement --ff <plan-path>`, terminating at `/rpi-verify`. Pre-flight checks (design status, artifact chain, drift spot-check) and the design-coverage check still run and can stop the chain. Pre-lock audit findings are recorded rather than blocking under `--ff` -- **except a hard coverage gap** (a success criterion or planned file mapping to no work), which stops the chain even under `--ff`, since it would waste the entire downstream run. Mutually exclusive with `--grill`.
 
+## Blueprint (`/rpi-blueprint`)
+
+**Purpose:** Fuse Propose and Plan into a single pass for low-stakes solo work -- go from a research note or a short problem statement straight to a phased plan, without producing a separate reviewable design.
+
+Blueprint does *condensed* design reasoning inline (it commits to the obvious approach and weighs it against the obvious alternatives, without the parallel option-exploration `/rpi-propose` runs) and emits the plan directly. Two things it never drops:
+
+- **A minimal behavioral spec.** SDD is non-negotiable -- every plan that lands behavior is backed by a spec. The blueprint spec is *minimal* (3-5 user-observable scenarios) rather than the 5-8 a full propose spec carries, reflecting the small scope that qualifies for this path. A blueprint plan with no linked spec is a contract violation.
+- **The design reasoning.** Because there is no design file, the chosen approach, the alternatives considered and dropped, and the blast-radius judgment are recorded in a `## Design Notes` block near the top of the plan -- keeping the rationale auditable and giving `/rpi-verify` something to check against.
+
+**Fused vs fast-forward -- the deliverable axis.** This is the distinction to keep straight. `--ff` runs the *full* pipeline fast: it suppresses review *pauses* but still produces a design artifact in `.rpi/designs/`. `/rpi-blueprint` is orthogonal -- it structurally *omits* the design *deliverable*, fusing the design reasoning into the plan. The two compose: `rpi-blueprint --ff` means "fuse the design into the plan *and* don't pause for plan approval, then auto-run implement → verify." And `/rpi-blueprint` differs from `/rpi-plan` in the other direction: `/rpi-plan` standalone is scoped to changes to *existing* behavior with no tradeoffs and carries no design reasoning, while blueprint does condensed design reasoning and is research-grounded.
+
+**Refuse-and-redirect (hard gate).** Blueprint is for low-stakes work. It declines and points you at `/rpi-propose` when the work surfaces genuine tradeoffs, more than one approach a reasonable engineer would defend, or high blast radius (using the same complexity *signals* `rpi split-score` encodes -- component count, directory spread, multi-spec -- as one input). This is an integrity gate, not a review pause: it fires **even under `--ff`** and stops the chain rather than silently escalating into `rpi-propose --ff`, leaving you to choose the full design path deliberately.
+
+**Fast-forward / grill (opt-in):** `--ff` skips the plan-outline approval pause, writes the plan + minimal spec, then auto-chains `/rpi-implement --ff <plan-path>` and terminates at `/rpi-verify`. `--grill` runs a single-pass interrogation of the condensed design reasoning + phase outline before the plan is written. Mutually exclusive, per the shared flag contract; the refuse gate still stops a fast-forward run.
+
 ## Implement (`/rpi-implement`)
 
 **Purpose:** Execute a plan phase-by-phase with verification at each step.
