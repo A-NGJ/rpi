@@ -24,6 +24,11 @@ Actions:
                             git changed files. Reports checked/unchecked counts
                             with phase context, plus file coverage (missing from
                             git, unexpected in git).
+  coverage --pre-lock <plan-path>
+                            Pre-lock audit of a drafted plan (no git diff): reports
+                            coverage gaps (orphaned criteria, uncovered/unjustified
+                            files), phase-ordering forward-references and cycles,
+                            and edit-target existence, with a hardFailure flag.
   markers [file-path]       Scan for TODO/FIXME/HACK markers. Without a file
                             argument, scans git-changed files (excluding .tmpl/.tpl
                             templates).
@@ -42,6 +47,10 @@ Output is JSON by default.`,
   # Scan a specific file
   rpi verify markers cmd/rpi/scan.go
 
+  # Pre-lock coverage audit of a drafted plan
+  rpi verify coverage --pre-lock .rpi/plans/2026-03-13-auth.md
+  # → {"coverage": {...}, "ordering": {...}, "existence": {...}, "hardFailure": false}
+
   # Parse spec scenarios
   rpi verify spec .rpi/specs/my-feature.md
   # → {"spec": "...", "feature": "...", "scenarios": [...], "total": 6}`,
@@ -49,8 +58,11 @@ Output is JSON by default.`,
 	RunE: runVerify,
 }
 
+var preLockFlag bool
+
 func init() {
 	addFormatFlag(verifyCmd)
+	verifyCmd.Flags().BoolVar(&preLockFlag, "pre-lock", false, "Run coverage in pre-lock mode (drafted plan, no git diff)")
 	rootCmd.AddCommand(verifyCmd)
 }
 
@@ -143,6 +155,11 @@ func runVerify(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("completeness requires a plan path: rpi verify completeness <plan-path>")
 		}
 		return runVerifyCompleteness(filePath, format)
+	case "coverage":
+		if filePath == "" {
+			return fmt.Errorf("coverage requires a plan path: rpi verify coverage --pre-lock <plan-path>")
+		}
+		return runVerifyCoverage(filePath, format)
 	case "markers":
 		return runVerifyMarkers(filePath, format)
 	case "spec":
@@ -151,7 +168,7 @@ func runVerify(cmd *cobra.Command, args []string) error {
 		}
 		return runVerifySpec(filePath, format)
 	default:
-		return fmt.Errorf("unknown action: %s (expected completeness, markers, or spec)", action)
+		return fmt.Errorf("unknown action: %s (expected completeness, coverage, markers, or spec)", action)
 	}
 }
 
@@ -175,6 +192,37 @@ func runVerifyCompleteness(planPath, format string) error {
 		CheckboxResult: checkboxes,
 		CompareResult:  compare,
 	}
+
+	switch format {
+	case "json":
+		data, _ := json.MarshalIndent(result, "", "  ")
+		fmt.Println(string(data))
+	default:
+		return fmt.Errorf("unknown format: %s (expected json)", format)
+	}
+	return nil
+}
+
+// runVerifyCoverage runs the deterministic pre-lock coverage/ordering/existence
+// audit over a drafted plan and prints the JSON verdict. Unlike completeness,
+// it consults no git diff — it reasons purely about whether the drafted plan
+// coheres with itself.
+func runVerifyCoverage(planPath, format string) error {
+	if !preLockFlag {
+		return fmt.Errorf("rpi verify coverage currently supports only --pre-lock mode; pass --pre-lock")
+	}
+
+	content, err := os.ReadFile(planPath)
+	if err != nil {
+		return fmt.Errorf("reading plan: %w", err)
+	}
+
+	root, err := os.Getwd()
+	if err != nil {
+		root = ""
+	}
+
+	result := coverage.Analyze(string(content), root)
 
 	switch format {
 	case "json":
