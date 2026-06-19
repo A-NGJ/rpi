@@ -22,6 +22,7 @@ When the user approves the spec, suggest → `/rpi:rpi-plan <design-path>`.
 - Before drafting, search for prior designs and specs on this topic; decide whether to supersede or extend
 - See the project's RPI Skill Contract for `--ff` / `--grill` semantics; both flags apply here and are mutually exclusive
 - If a research doc is provided, read it and resolve its full artifact chain — warn if still draft or already complete
+- **Inherit upstream decisions**: when a research doc (or any upstream artifact) is provided, extend the chain resolution above to collect every non-empty `## Decisions` section from each artifact in the resolved chain. Render them in the new design under a `## Inherited Decisions` heading, each block grouped under `From <source-artifact-path>:` and quoted verbatim, attributed to the artifact that recorded it — the true origin, not the immediate parent or hop depth, so each inherited decision names exactly one source. Keep `## Inherited Decisions` (upstream, carried forward, with source) distinct from the design's own `## Decisions` (commitments made at this stage). If the chain has no `## Decisions` sections, omit `## Inherited Decisions` entirely — never fabricate an empty or invented block.
 - Investigate the codebase before proposing — ground decisions in evidence with file:line refs
 - Get user buy-in on trade-offs before writing the design
 - Link the design to upstream research via frontmatter
