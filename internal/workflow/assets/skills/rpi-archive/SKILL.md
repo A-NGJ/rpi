@@ -30,3 +30,5 @@ Two modes:
 - Keep operations atomic — if something fails mid-archive, report what succeeded and what didn't
 - The archive directory is append-only — never modify existing archived artifacts
 - Skip artifacts with no status field in frontmatter
+
+**Recommended model:** cheap tier, low effort — file moves and frontmatter are CLI-backed. Advisory; see `docs/model-routing.md`.

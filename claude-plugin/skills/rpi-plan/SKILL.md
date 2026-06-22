@@ -47,3 +47,5 @@ When the user confirms the plan, suggest → `/rpi:rpi-implement <plan-path>` (o
 - Trust prior stages (pipeline) — don't redo research or design work
 - Grilling is opt-in and single-pass — re-invoke if a second round is needed
 - Splits are user-confirmed (or `--ff`-accepted) — never silently break a design into siblings without surfacing the breakdown first
+
+**Recommended model:** premium tier, high effort — phase decomposition and dependency reasoning. Advisory; see `docs/model-routing.md`.

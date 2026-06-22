@@ -27,3 +27,5 @@ Create git commits for changes in the working tree with user approval. This incl
 
 - Review conversation history to understand intent behind changes
 - Inspect manually-edited files (staged but not discussed) before committing
+
+**Recommended model:** cheap tier, low effort — message and scans are CLI-backed. Advisory; see `docs/model-routing.md`.

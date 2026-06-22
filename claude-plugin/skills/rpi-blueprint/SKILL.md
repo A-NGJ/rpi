@@ -50,3 +50,5 @@ On success, suggest → `/rpi:rpi-implement <plan-path>` (or, under `--ff`, the 
 - Omit the deliverable, keep the reasoning — `## Design Notes` makes the dropped design auditable so `/rpi:rpi-verify` has something to check against
 - Blueprint is fused deliverables; `--ff` is suppressed pauses — they compose cleanly, but they are not the same axis
 - Grilling is opt-in and single-pass — re-invoke if a second round is needed
+
+**Recommended model:** premium tier, high effort — fused research → design → plan reasoning in one pass. Advisory; see `docs/model-routing.md`.

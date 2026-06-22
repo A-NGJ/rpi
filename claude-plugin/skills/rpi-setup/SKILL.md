@@ -128,3 +128,5 @@ After the install succeeds, surface this message in your reply (do not skip it):
 - After step 2 succeeds (delegated upgrade), the script returns the binary's own upgrade exit code; no files under the plugin directory are modified.
 - Step 3 delegates to `install.sh`, which downloads to its own `mktemp -d` and registers an `EXIT` trap inside its own shell — every exit path (including SHA256 mismatch) cleans up the temp dir. The only file ever written outside `$tmp` is `$HOME/.rpi/bin/rpi`.
 - `install.sh` only downloads binaries from official `A-NGJ/rpi` GitHub Releases. The plugin never points elsewhere.
+
+**Recommended model:** cheap tier, low effort — binary install/upgrade is mechanical. Advisory; see `docs/model-routing.md`.

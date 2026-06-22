@@ -41,3 +41,5 @@ When the user approves the spec, suggest → `/rpi:rpi-plan <design-path>`.
 - Scale effort to complexity — a focused decision needs less investigation than a new subsystem
 - Specs are the contract — every design culminates in a spec
 - Grilling is opt-in and single-pass — re-invoke if a second round is needed
+
+**Recommended model:** premium tier, high effort — tradeoff analysis and spec authoring are the hardest reasoning. Advisory; see `docs/model-routing.md`.

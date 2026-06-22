@@ -33,3 +33,5 @@ When the bug is fixed, announce completion and suggest → `/rpi:rpi-commit` to 
 - Bugs are spec deviations — frame diagnosis as closing the gap between expected and actual behavior
 - Escalate, don't force — a clear diagnosis artifact handed off to `/rpi:rpi-plan` is more valuable than a fragile hack
 - Right-size iteration — simple bugs may be fixed on the first attempt; don't over-investigate when the fix is obvious
+
+**Recommended model:** premium tier, high effort — iterative root-cause needs deep reasoning. Advisory; see `docs/model-routing.md`.

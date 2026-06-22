@@ -35,3 +35,5 @@ If no path provided, auto-detect from recent git changes. If artifacts found, an
 - Severity matters — distinguish genuine blockers from style nits
 - Scale effort — small implementations get lighter verification; large ones get thorough checks
 - Re-runnable — each run produces a new report file
+
+**Recommended model:** premium tier, high effort — adversarial conformance checking, where false negatives are costly (the verify subagent itself is pinned to premium). Advisory; see `docs/model-routing.md`.

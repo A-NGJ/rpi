@@ -44,6 +44,8 @@ Workflow: Research → Propose → Plan → Implement → Verify
 
 Each command suggests the next step. Start with `/rpi-propose` for features, `/rpi-plan` for bug fixes, `/rpi-blueprint` for low-stakes solo work that wants a plan without a separate design, `/rpi-diagnose` for complex bugs, `/rpi-research` when exploring.
 
+**Model routing.** Each stage has a recommended model tier (`premium`/`cheap`) and reasoning-effort level — see `docs/model-routing.md`. This is advisory: apply it with `/model` before running a stage. Claude Code has no per-skill model override, and a skill's `SKILL.md` frontmatter is restricted to `name` + `description` only (see `.rpi/specs/agent-skills.md`) — **do not add a `model:` field to a SKILL.md**. Only subagent profiles under `internal/workflow/assets/agents/` may carry `model:` (today `rpi-verify` is pinned to the premium tier).
+
 ## Codebase Navigation
 
 When exploring unfamiliar code, check what navigation tools are available before falling back to text search. Structural overviews and definition lookups are more efficient than scanning files when you need to understand how a codebase is organized or where something is defined.

@@ -51,3 +51,5 @@ Compose the handoff body in this order. Omit `## Focus for next session` when `$
 This skill writes only. Pickup is handled automatically by the SessionStart hook entry that project setup installs in `.claude/settings.json` (marker `claude-handoff`). The hook checks for the file at the same per-`$PWD` path and, if present, emits a one-line nudge telling the next session to read the file and remove it after reading. The cleanup is allowlisted via `Bash(rm /tmp/claude-handoff-*.md)`, so it runs without a permission prompt.
 
 If the next-session pickup ever stops working, first check that the path recipe in this skill matches the recipe in the `claude-handoff` hook entry — they must stay byte-identical.
+
+**Recommended model:** cheap tier, low effort — context capture to a temp file. Advisory; see `docs/model-routing.md`.

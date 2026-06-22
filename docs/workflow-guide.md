@@ -233,3 +233,4 @@ A `complete` plan is never silently reopened: revise stops and offers an explici
 - **Redirect during research.** When `/rpi-research` shows initial findings, tell it to focus on specific areas rather than researching everything.
 - **Skip stages when they don't add value.** The full pipeline exists for complex work. Most daily tasks only need Plan -> Implement.
 - **Review the pre-review.** `/rpi-implement` shows you exactly what it plans to change before writing code. This is your last checkpoint -- use it.
+- **Match the model to the stage.** Hard reasoning stages (propose, verify, plan, diagnose, blueprint, revise) are worth a premium model at high effort; mechanical stages (commit, archive, spec-sync, handoff, explain) run fine on a cheap, fast tier. Set it with `/model` before you start a stage -- see [Model & reasoning-effort routing](model-routing.md) for the full per-stage table.

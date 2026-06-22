@@ -35,3 +35,5 @@ After a successful revision, suggest → `/rpi:rpi-implement <plan-path>`, which
 - Scope tightly — re-examine only what the change touches; the renumbering seam is the only sanctioned widening
 - Amend, don't recreate — a plan that has grown past the split threshold defers to the planning skill's split flow rather than splitting mid-revision
 - Stay coupled by reference — the audit lives in the planning skill; inherit it, don't fork it
+
+**Recommended model:** premium tier, high effort — re-plans affected phases with dependency/ordering re-checks. Advisory; see `docs/model-routing.md`.

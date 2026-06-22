@@ -38,3 +38,5 @@ After the initial walkthrough, enter conversation mode — the user can ask foll
 - Attribute your sources — when rationale comes from an artifact, cite it; when inferred, say so; when uncertain, flag it
 - Scale to the diff — large diffs get grouped by theme; small diffs get file-by-file detail
 - Prioritize the non-obvious — mechanical changes (renames, imports, formatting) get a brief mention; design decisions and behavioral changes get thorough explanation
+
+**Recommended model:** cheap tier, low effort — narrating an existing diff is mechanical. Advisory; see `docs/model-routing.md`.

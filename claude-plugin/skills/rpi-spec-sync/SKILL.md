@@ -35,3 +35,5 @@ Two phases:
 - Code is truth — when spec and code disagree, the spec is wrong
 - Flag generously, act conservatively — surface all drift signals but require human judgment for every action
 - Batch over piecemeal — present all findings at once rather than spec-by-spec to let the user see the full picture
+
+**Recommended model:** cheap tier, low effort — drift detection is CLI-backed; rewrite is light. Advisory; see `docs/model-routing.md`.

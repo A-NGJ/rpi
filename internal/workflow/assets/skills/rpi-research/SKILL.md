@@ -29,3 +29,5 @@ When insights crystallize into something actionable, suggest → `/rpi-propose` 
 - Be interactive — stop interviewing when you have enough; ask more if findings raise new questions
 - Facts first, opinions when warranted — present what exists before suggesting what should change
 - Follow-ups welcome — append to existing research docs rather than creating new ones
+
+**Recommended model:** premium tier, medium effort — broad investigation; strong model, less peak effort. Advisory; see `docs/model-routing.md`.

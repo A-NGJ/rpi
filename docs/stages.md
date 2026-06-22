@@ -1,5 +1,19 @@
 # How Each Stage Works
 
+## Recommended model per stage
+
+Each stage has a recommended **model tier** and **reasoning-effort** level so you
+spend premium budget on hard reasoning and a cheap tier on mechanical work. This is
+advisory — apply it with `/model` (Claude Code does not auto-switch a skill's model;
+only subagents are enforced). See **[Model & reasoning-effort routing](model-routing.md)**
+for the rationale, the tier → concrete-model mapping, and the deferred config layer.
+
+| Tier + effort | Stages |
+|---------------|--------|
+| premium / high | propose, verify, plan, diagnose, blueprint, revise |
+| premium / medium | research, implement, grill-me |
+| cheap / low | explain, commit, archive, spec-sync, handoff, setup |
+
 ## Research (`/rpi-research`)
 
 **Purpose:** Investigate the question -- codebase exploration or external systems/libraries/frameworks, with conversational fact-finding and an optional research artifact.
