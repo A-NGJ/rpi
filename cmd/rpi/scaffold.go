@@ -50,11 +50,12 @@ var typeDirs = map[string]string{
 	"diagnosis":     "diagnoses",
 	"verify-report": "reviews",
 	"spec":          "specs",
+	"goal":          "goals",
 }
 
 // validTypes lists all supported artifact types.
 var validTypes = []string{
-	"research", "design", "diagnosis", "plan", "verify-report", "spec",
+	"research", "design", "diagnosis", "plan", "verify-report", "spec", "goal",
 }
 
 var scaffoldCmd = &cobra.Command{
@@ -69,6 +70,7 @@ Types and their subdirectories:
   plan          → .rpi/plans/
   verify-report → .rpi/reviews/
   spec          → .rpi/specs/
+  goal          → .rpi/goals/
 
 By default, outputs rendered markdown to stdout. Use --write to create the file
 at .rpi/<subdir>/YYYY-MM-DD-<slugified-topic>.md.
@@ -166,6 +168,7 @@ func runScaffold(cmd *cobra.Command, args []string) error {
 		"diagnosis":     "Diagnosis",
 		"verify-report": "Verification Report",
 		"spec":          "Spec",
+		"goal":          "Goal",
 	}
 	ctx.TypeLabel = typeLabels[artifactType]
 
@@ -195,7 +198,7 @@ func runScaffold(cmd *cobra.Command, args []string) error {
 
 func validateRequiredFlags(artifactType string) error {
 	switch artifactType {
-	case "research", "plan", "design", "diagnosis", "verify-report", "spec":
+	case "research", "plan", "design", "diagnosis", "verify-report", "spec", "goal":
 		if topicFlag == "" {
 			return fmt.Errorf("--topic is required for type %q", artifactType)
 		}

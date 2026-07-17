@@ -216,6 +216,8 @@ func inferType(path string) string {
 			return "spec"
 		case "archive":
 			return "archive"
+		case "goals":
+			return "goal"
 		}
 	}
 	return "unknown"

@@ -192,6 +192,7 @@ func TestScaffoldAllTypes(t *testing.T) {
 		{"diagnosis", []string{"--topic", "Test diagnosis"}},
 		{"verify-report", []string{"--topic", "Test verify"}},
 		{"spec", []string{"--topic", "Test spec"}},
+		{"goal", []string{"--topic", "Test goal"}},
 	}
 
 	for _, tt := range tests {

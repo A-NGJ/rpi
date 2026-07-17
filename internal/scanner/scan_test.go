@@ -342,6 +342,32 @@ func TestScanTypeFilterSpec(t *testing.T) {
 	}
 }
 
+func TestInferType(t *testing.T) {
+	cases := []struct {
+		path string
+		want string
+	}{
+		{".rpi/plans/foo.md", "plan"},
+		{".rpi/designs/foo.md", "design"},
+		{".rpi/research/foo.md", "research"},
+		{".rpi/prs/foo.md", "pr"},
+		{".rpi/reviews/foo.md", "review"},
+		{".rpi/specs/foo.md", "spec"},
+		{".rpi/diagnoses/foo.md", "diagnosis"},
+		{".rpi/goals/foo.md", "goal"},
+		{"random/path.md", "unknown"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.path, func(t *testing.T) {
+			got := InferType(tc.path)
+			if got != tc.want {
+				t.Errorf("InferType(%q) = %q, want %q", tc.path, got, tc.want)
+			}
+		})
+	}
+}
+
 func TestScanEmptyDir(t *testing.T) {
 	dir := t.TempDir()
 

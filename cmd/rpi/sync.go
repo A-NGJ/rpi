@@ -12,7 +12,7 @@ import (
 
 var rpiSubdirs = []string{
 	"research", "designs", "diagnoses",
-	"plans", "specs", "reviews", "archive",
+	"plans", "specs", "reviews", "goals", "archive",
 }
 
 type syncOptions struct {

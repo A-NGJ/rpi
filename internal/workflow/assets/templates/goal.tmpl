@@ -1,0 +1,39 @@
+---
+date: {{.Date}}
+{{- if .Spec}}
+spec: "{{.Spec}}"
+{{- end}}
+{{- if .Design}}
+design: "{{.Design}}"
+{{- end}}
+{{- if .Research}}
+related_research: "{{.Research}}"
+{{- end}}
+status: draft
+topic: "{{.Topic}}"
+tags: [goal{{if .Tags}}, {{.Tags}}{{end}}]
+---
+
+# {{.Topic}} — Goal Envelope
+
+## Goal Condition
+<!-- TODO: ready-to-paste `/goal` text — one measurable end state, a
+reference to this envelope's Verification commands and Requirements
+checklist, the constraints that must hold en route, and a turn-bounding
+clause. Keep this under 4,000 characters. -->
+
+## Requirements
+<!-- TODO: concrete checklist the executing agent updates as it works -->
+- [ ]
+
+## Scope
+<!-- TODO: affected areas with file paths; explicit must-not-change boundaries -->
+
+## Verification
+<!-- TODO: commands with expected results — the machine-checkable done-conditions -->
+
+## Design Notes
+<!-- TODO: condensed design reasoning -->
+
+## Inherited Decisions
+<!-- Omitted when the resolved chain carries no ## Decisions sections. -->

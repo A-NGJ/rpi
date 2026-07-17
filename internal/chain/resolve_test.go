@@ -257,6 +257,7 @@ func TestInferType(t *testing.T) {
 		{".rpi/reviews/foo.md", "review"},
 		{".rpi/specs/foo.md", "spec"},
 		{".rpi/archive/plans/foo.md", "archive"},
+		{".rpi/goals/foo.md", "goal"},
 		{"random/path.md", "unknown"},
 	}
 
