@@ -93,7 +93,7 @@ func renderResumeJSON(cmd *cobra.Command, r *ResumeResult) error {
 }
 
 // resumeArtifactTypeOrder is the canonical type order for the Artifacts section.
-var resumeArtifactTypeOrder = []string{"design", "diagnosis", "plan", "research"}
+var resumeArtifactTypeOrder = []string{"design", "diagnosis", "goal", "plan", "research"}
 
 func renderResumeText(cmd *cobra.Command, r *ResumeResult) error {
 	if len(r.Artifacts) == 0 && r.ActivePlan == nil {

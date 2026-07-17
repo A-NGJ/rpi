@@ -220,6 +220,24 @@ func TestArchiveMoveRefsWithForce(t *testing.T) {
 	}
 }
 
+func TestArchiveMoveGoalCorrectPath(t *testing.T) {
+	dir := setupArchiveTestDir(t)
+	writeArchiveFile(t, dir, "goals/g1.md",
+		"---\ntopic: \"Goal One\"\nstatus: complete\n---\n# G1\n")
+	now := time.Date(2026, 3, 8, 0, 0, 0, 0, time.UTC)
+	targetPath := filepath.Join(dir, "goals/g1.md")
+
+	result, err := doArchiveMove(targetPath, dir, true, now)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	expectedDest := filepath.Join(dir, "archive", "2026-03", "goal", "g1.md")
+	if result.To != expectedDest {
+		t.Errorf("expected dest %s, got %s", expectedDest, result.To)
+	}
+}
+
 func TestArchiveMoveNonexistent(t *testing.T) {
 	dir := setupArchiveTestDir(t)
 	now := time.Date(2026, 3, 8, 0, 0, 0, 0, time.UTC)

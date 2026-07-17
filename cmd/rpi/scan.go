@@ -25,7 +25,7 @@ var scanCmd = &cobra.Command{
 each .md file, and return artifacts matching filter criteria.
 
 Filters can be combined; all filters must match (AND logic).
-Valid types: plan, design, research, spec, review
+Valid types: plan, design, research, spec, review, goal
 Valid statuses: draft, active, complete, superseded, archived
 
 Output is JSON by default; use --format md for a markdown table.`,

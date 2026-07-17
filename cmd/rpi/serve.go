@@ -289,7 +289,7 @@ func handleArchiveScan(_ context.Context, _ *mcp.CallToolRequest, _ emptyInput) 
 // --- Parameterized tool input structs ---
 
 type scanInput struct {
-	Type       string `json:"type,omitempty" jsonschema:"filter by artifact type (plan, design, research, spec, review)"`
+	Type       string `json:"type,omitempty" jsonschema:"filter by artifact type (plan, design, research, spec, review, goal)"`
 	Status     string `json:"status,omitempty" jsonschema:"filter by status (draft, active, complete, superseded)"`
 	Design     string `json:"design,omitempty" jsonschema:"filter by frontmatter design field"`
 	References string `json:"references,omitempty" jsonschema:"find files that reference this path"`
@@ -297,7 +297,7 @@ type scanInput struct {
 }
 
 type scaffoldInput struct {
-	Type     string `json:"type" jsonschema:"artifact type: research, design, diagnosis, plan, verify-report, spec"`
+	Type     string `json:"type" jsonschema:"artifact type: research, design, diagnosis, plan, verify-report, spec, goal"`
 	Topic    string `json:"topic" jsonschema:"topic or title for the artifact"`
 	Ticket   string `json:"ticket,omitempty" jsonschema:"ticket ID"`
 	Research string `json:"research,omitempty" jsonschema:"path to research document"`

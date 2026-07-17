@@ -297,3 +297,59 @@ func TestResolveSpecLink(t *testing.T) {
 		t.Errorf("second artifact type = %s, want spec", result.Artifacts[1].Type)
 	}
 }
+
+func TestResolveDesignSpecLink(t *testing.T) {
+	dir := t.TempDir()
+
+	specPath := writeFile(t, dir, ".rpi/specs/test-spec.md",
+		"---\ndomain: \"Test Spec\"\n---\n# Test Spec\n")
+
+	designPath := writeFile(t, dir, ".rpi/designs/test-design.md",
+		"---\ntopic: \"Test Design\"\nstatus: draft\nspec: "+specPath+"\n---\n# Design\n")
+
+	result, err := Resolve(designPath, ResolveOptions{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(result.Artifacts) != 2 {
+		t.Fatalf("got %d artifacts, want 2", len(result.Artifacts))
+	}
+	if result.Artifacts[0].Type != "design" {
+		t.Errorf("first artifact type = %s, want design", result.Artifacts[0].Type)
+	}
+	if result.Artifacts[1].Path != specPath {
+		t.Errorf("second artifact path = %s, want %s", result.Artifacts[1].Path, specPath)
+	}
+	if result.Artifacts[1].Type != "spec" {
+		t.Errorf("second artifact type = %s, want spec", result.Artifacts[1].Type)
+	}
+}
+
+func TestResolveGoalSpecLink(t *testing.T) {
+	dir := t.TempDir()
+
+	specPath := writeFile(t, dir, ".rpi/specs/test-spec.md",
+		"---\ndomain: \"Test Spec\"\n---\n# Test Spec\n")
+
+	goalPath := writeFile(t, dir, ".rpi/goals/test-goal.md",
+		"---\ntopic: \"Test Goal\"\nstatus: draft\nspec: "+specPath+"\n---\n# Goal\n")
+
+	result, err := Resolve(goalPath, ResolveOptions{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(result.Artifacts) != 2 {
+		t.Fatalf("got %d artifacts, want 2", len(result.Artifacts))
+	}
+	if result.Artifacts[0].Type != "goal" {
+		t.Errorf("first artifact type = %s, want goal", result.Artifacts[0].Type)
+	}
+	if result.Artifacts[1].Path != specPath {
+		t.Errorf("second artifact path = %s, want %s", result.Artifacts[1].Path, specPath)
+	}
+	if result.Artifacts[1].Type != "spec" {
+		t.Errorf("second artifact type = %s, want spec", result.Artifacts[1].Type)
+	}
+}

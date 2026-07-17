@@ -18,7 +18,7 @@ var chainCmd = &cobra.Command{
 	Long: `Follow frontmatter link fields recursively from a root artifact and return
 the full dependency chain as a flat metadata list.
 
-Link fields followed: research, design, ticket, depends_on, related_research.
+Link fields followed: research, design, ticket, depends_on, related_research, spec.
 Recurses up to depth 10 and detects cycles. Falls back to scanning
 "## Source Documents" / "## References" sections for .rpi/ paths.
 

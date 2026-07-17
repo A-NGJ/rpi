@@ -308,6 +308,76 @@ func TestHandleScaffold_Write(t *testing.T) {
 	}
 }
 
+func TestHandleScaffold_GoalType(t *testing.T) {
+	dir := t.TempDir()
+	os.WriteFile(filepath.Join(dir, "goal.tmpl"), []byte(`---
+date: {{.Date}}
+topic: "{{.Topic}}"
+status: draft
+---
+
+# {{.Topic}} — Goal Envelope
+
+## Goal Condition
+`), 0644)
+	old := templatesDirFlag
+	templatesDirFlag = dir
+	defer func() { templatesDirFlag = old }()
+
+	result, _, err := handleScaffold(context.Background(), nil, scaffoldInput{
+		Type:  "goal",
+		Topic: "test goal",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	text := extractText(t, result)
+	var m map[string]string
+	if err := json.Unmarshal([]byte(text), &m); err != nil {
+		t.Fatalf("invalid JSON: %v\ntext: %s", err, text)
+	}
+	if m["content"] == "" {
+		t.Error("expected non-empty content")
+	}
+}
+
+func TestScanInputSchema_IncludesGoal(t *testing.T) {
+	s := newRPIServer()
+	ctx := context.Background()
+	client := mcp.NewClient(&mcp.Implementation{Name: "test", Version: "v0"}, nil)
+	st, ct := mcp.NewInMemoryTransports()
+	ss, err := s.Connect(ctx, st, nil)
+	if err != nil {
+		t.Fatalf("server connect: %v", err)
+	}
+	defer ss.Close()
+	cs, err := client.Connect(ctx, ct, nil)
+	if err != nil {
+		t.Fatalf("client connect: %v", err)
+	}
+	defer cs.Close()
+
+	res, err := cs.ListTools(ctx, nil)
+	if err != nil {
+		t.Fatalf("ListTools: %v", err)
+	}
+
+	for _, tool := range res.Tools {
+		if tool.Name != "rpi_scaffold" {
+			continue
+		}
+		data, err := json.Marshal(tool.InputSchema)
+		if err != nil {
+			t.Fatalf("marshal schema: %v", err)
+		}
+		if !strings.Contains(string(data), "goal") {
+			t.Errorf("rpi_scaffold input schema missing %q, got: %s", "goal", string(data))
+		}
+		return
+	}
+	t.Fatal("rpi_scaffold tool not found")
+}
+
 func TestHandleScaffold_InvalidType(t *testing.T) {
 	_, _, err := handleScaffold(context.Background(), nil, scaffoldInput{
 		Type:  "invalid",

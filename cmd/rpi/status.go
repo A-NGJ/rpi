@@ -48,12 +48,13 @@ func init() {
 var (
 	// Canonical type display order (alphabetical by singular name).
 	// Specs and reviews are statusless and not shown here.
-	statusTypeOrder = []string{"design", "diagnosis", "plan", "research"}
+	statusTypeOrder = []string{"design", "diagnosis", "goal", "plan", "research"}
 
 	// Plural display names.
 	statusTypePlurals = map[string]string{
 		"design":    "designs",
 		"diagnosis": "diagnoses",
+		"goal":      "goals",
 		"plan":      "plans",
 		"research":  "research",
 	}
