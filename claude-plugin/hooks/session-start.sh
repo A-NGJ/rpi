@@ -19,6 +19,7 @@ workflow with persistent artifacts under `.rpi/`:
   .rpi/plans/      phased implementation plans
   .rpi/diagnoses/  bug post-mortems
   .rpi/reviews/    verification reports
+  .rpi/goals/      goal envelopes (created by /rpi-spec)
   .rpi/archive/    completed/superseded artifacts
 
 ## Pipeline
@@ -39,6 +40,10 @@ Each step has a skill. Each skill suggests the next.
                   (distinct from --ff, which runs the full pipeline fast but
                   still produces a design). Refuses and redirects to
                   /rpi:rpi-propose on tradeoffs or high blast radius.
+  /rpi:rpi-spec       Primary fast path: a task description or research note
+                  straight to a living spec plus a goal envelope in one pass —
+                  no separate design, no phased plan. Hands off a ready-to-run
+                  /goal condition. Refuses only for extreme blast radius.
   /rpi:rpi-implement  Execute an approved plan phase by phase with per-phase
                   verification.
   /rpi:rpi-revise     Amend an existing plan for a new constraint or review
@@ -62,6 +67,7 @@ Each step has a skill. Each skill suggests the next.
 
 ## When to start
 
+  Low-stakes solo work, spec → goal loop: /rpi:rpi-spec
   Features (new behavior, tradeoffs):     /rpi:rpi-propose
   Concrete narrow change or bug fix:      /rpi:rpi-plan
   Low-stakes solo work, research → plan:  /rpi:rpi-blueprint

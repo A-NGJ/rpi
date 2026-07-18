@@ -14,17 +14,23 @@ high-relevance hits (≥ 0.7) to see lineage. If a prior artifact covers the
 same scope, surface it and ask whether to extend rather than open a new one.
 
 ### --ff and --grill flags
-Any `/rpi-propose`, `/rpi-plan`, or `/rpi-implement` invocation accepts:
+Any `/rpi-propose`, `/rpi-plan`, `/rpi-spec`, or `/rpi-implement` invocation
+accepts:
 - `--ff`: skip approval gates and auto-chain through the rest of the
   pipeline. Contract in `.rpi/specs/rpi-fast-forward-mode.md`.
 - `--grill`: invoke the `grill-me` skill at the approval gate. Contract in
   `.rpi/specs/rpi-grill-mode.md`.
 
-The two flags are mutually exclusive.
+The two flags are mutually exclusive. On the `rpi-spec` fast path the
+extreme-blast-radius refusal (redirect to `/rpi-propose`) fires even under
+`--ff`.
 
 ### Pipeline order
 research → propose → plan → implement → verify, with `diagnose` (bug
-post-mortem) and `explain` (diff walkthrough) as optional branches. Each
-skill's name identifies its position; skills suggest the next step on
-completion.
+post-mortem) and `explain` (diff walkthrough) as optional branches.
+`rpi-spec` is the primary fast path: a task description or research note
+straight to a living spec plus a goal envelope in one pass — no separate
+design to review and no phased plan — handing off a ready-to-run `/goal`
+condition; propose and plan remain for high-stakes work. Each skill's name
+identifies its position; skills suggest the next step on completion.
 <!-- rpi:contract:end -->
