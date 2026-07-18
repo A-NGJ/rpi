@@ -12,12 +12,12 @@ import (
 // --- Agent Skills format compliance tests ---
 
 func TestAllSkillsPresent(t *testing.T) {
-	// AS-12: All 14 skills must be present (13 first-party pipeline skills +
+	// AS-12: All 15 skills must be present (14 first-party pipeline skills +
 	// 1 bundled third-party skill: grill-me from mattpocock/skills under MIT).
 	expected := []string{
 		"rpi-research", "rpi-propose", "rpi-plan", "rpi-blueprint", "rpi-implement",
 		"rpi-revise", "rpi-verify", "rpi-diagnose", "rpi-explain", "rpi-commit",
-		"rpi-archive", "rpi-spec-sync", "rpi-handoff",
+		"rpi-archive", "rpi-spec", "rpi-spec-sync", "rpi-handoff",
 		"grill-me",
 	}
 
@@ -139,18 +139,18 @@ func TestInstallSkills(t *testing.T) {
 	if err != nil {
 		t.Fatalf("InstallSkills error: %v", err)
 	}
-	// 13 first-party SKILL.md + grill-me's SKILL.md + grill-me's LICENSE = 15.
-	if count != 15 {
-		t.Errorf("expected 15 files installed, got %d", count)
+	// 14 first-party SKILL.md + grill-me's SKILL.md + grill-me's LICENSE = 16.
+	if count != 16 {
+		t.Errorf("expected 16 files installed, got %d", count)
 	}
 
-	// Verify all 14 skill dirs exist (13 first-party + grill-me).
+	// Verify all 15 skill dirs exist (14 first-party + grill-me).
 	entries, err := os.ReadDir(skillsDir)
 	if err != nil {
 		t.Fatalf("read skills dir: %v", err)
 	}
-	if len(entries) != 14 {
-		t.Errorf("expected 14 skill dirs, got %d", len(entries))
+	if len(entries) != 15 {
+		t.Errorf("expected 15 skill dirs, got %d", len(entries))
 	}
 
 	// Verify deployed files have no tool-specific fields.
@@ -281,7 +281,7 @@ func TestPromptStructure_HasRequiredSections(t *testing.T) {
 	pipelineSkills := []string{
 		"rpi-research", "rpi-propose", "rpi-plan", "rpi-blueprint", "rpi-implement",
 		"rpi-revise", "rpi-verify", "rpi-diagnose", "rpi-explain", "rpi-commit",
-		"rpi-archive", "rpi-spec-sync",
+		"rpi-archive", "rpi-spec", "rpi-spec-sync",
 	}
 
 	for _, skill := range pipelineSkills {
@@ -302,7 +302,7 @@ func TestPromptStructure_LineCount(t *testing.T) {
 	pipelineSkills := []string{
 		"rpi-research", "rpi-propose", "rpi-plan", "rpi-blueprint", "rpi-implement",
 		"rpi-revise", "rpi-verify", "rpi-diagnose", "rpi-explain", "rpi-commit",
-		"rpi-archive", "rpi-spec-sync",
+		"rpi-archive", "rpi-spec", "rpi-spec-sync",
 	}
 
 	for _, skill := range pipelineSkills {

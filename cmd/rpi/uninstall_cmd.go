@@ -29,6 +29,7 @@ var rpiAuthoredSkills = map[string]bool{
 	"rpi-propose":   true,
 	"rpi-research":  true,
 	"rpi-revise":    true,
+	"rpi-spec":      true,
 	"rpi-spec-sync": true,
 	"rpi-verify":    true,
 }

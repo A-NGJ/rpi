@@ -52,7 +52,7 @@ Then `.claude/commands/` is left untouched and `.claude/skills/` is created or u
 - Follow Agent Skills naming: lowercase, hyphens, no consecutive hyphens, ≤64 chars
 - Support all three targets: claude, opencode, agents-only
 - Do not overwrite existing files without `--force`
-- All 10 first-party pipeline skills must be present: rpi-research, rpi-propose, rpi-plan, rpi-implement, rpi-verify, rpi-diagnose, rpi-explain, rpi-commit, rpi-archive, rpi-spec-sync
+- All 14 first-party pipeline skills must be present: rpi-research, rpi-propose, rpi-plan, rpi-blueprint, rpi-implement, rpi-revise, rpi-verify, rpi-diagnose, rpi-explain, rpi-commit, rpi-archive, rpi-spec, rpi-spec-sync, rpi-handoff
 - One bundled third-party skill ships alongside the pipeline skills: `grill-me` (sourced from https://github.com/mattpocock/skills under MIT). Its upstream `LICENSE` is deployed beside its `SKILL.md` so the permission notice travels with each copy.
 - Sibling files in any skill source directory (e.g. `LICENSE`, `NOTICE`) are deployed verbatim alongside `SKILL.md`
 
