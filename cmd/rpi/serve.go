@@ -417,6 +417,7 @@ func handleScaffold(_ context.Context, _ *mcp.CallToolRequest, input scaffoldInp
 	labels := map[string]string{
 		"research": "Research", "plan": "Plan", "design": "Design",
 		"diagnosis": "Diagnosis", "verify-report": "Verification Report", "spec": "Spec",
+		"goal": "Goal",
 	}
 	ctx.TypeLabel = labels[input.Type]
 

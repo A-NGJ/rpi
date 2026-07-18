@@ -209,6 +209,32 @@ func TestScaffoldAllTypes(t *testing.T) {
 	}
 }
 
+func TestScaffoldGoalWritesToGoalsDir(t *testing.T) {
+	binary := buildBinary(t)
+	tmpDir := t.TempDir()
+	rpiDir := filepath.Join(tmpDir, ".rpi")
+
+	stdout, _, exitCode := runRPI(t, binary,
+		"scaffold", "goal",
+		"--topic", "Test goal",
+		"--rpi-dir", rpiDir,
+		"--write",
+	)
+
+	if exitCode != 0 {
+		t.Fatalf("expected exit 0, got %d", exitCode)
+	}
+
+	outPath := strings.TrimSpace(stdout)
+	expectedDir := filepath.Join(rpiDir, "goals")
+	if filepath.Dir(outPath) != expectedDir {
+		t.Errorf("expected output in %s, got %s", expectedDir, outPath)
+	}
+	if _, err := os.Stat(outPath); err != nil {
+		t.Errorf("written file should exist: %v", err)
+	}
+}
+
 func TestScaffoldMissingRequiredFlag(t *testing.T) {
 	binary := buildBinary(t)
 

@@ -77,7 +77,7 @@ func TestInitCreatesAllDirs(t *testing.T) {
 	// Verify .rpi/ subdirs
 	rpiSubdirs := []string{
 		"research", "designs", "diagnoses",
-		"plans", "specs", "reviews", "archive",
+		"plans", "specs", "reviews", "goals", "archive",
 	}
 	for _, d := range rpiSubdirs {
 		path := filepath.Join(dir, ".rpi", d)
