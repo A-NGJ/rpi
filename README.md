@@ -83,6 +83,7 @@ Review the changes, approve, done. See the [full workflow guide](docs/workflow-g
 | `/rpi-propose` | Investigates, analyzes, and designs solutions with trade-offs | `.rpi/designs/YYYY-MM-DD-topic.md` + `.rpi/specs/feature.md` |
 | `/rpi-plan` | Creates phased implementation plan with success criteria | `.rpi/plans/YYYY-MM-DD-topic.md` |
 | `/rpi-blueprint` | Fused shortcut: research note or short problem statement → phased plan in one pass, no separate design | `.rpi/plans/YYYY-MM-DD-topic.md` + `.rpi/specs/feature.md` |
+| `/rpi-spec` | Primary fast path: task description or research note → living spec + goal envelope for a condition-based agent loop, in one pass | `.rpi/specs/feature.md` + `.rpi/goals/YYYY-MM-DD-topic.md` |
 | `/rpi-implement` | Executes a plan phase-by-phase with verification | Code, tests, and commits |
 | `/rpi-revise` | Amends an existing plan for a new constraint or review finding -- preserves completed work, re-audits only changed phases, hands back to implement | Updated `.rpi/plans/YYYY-MM-DD-topic.md` |
 | `/rpi-commit` | Creates focused git commits with smart grouping | Git commits |
@@ -93,7 +94,7 @@ Review the changes, approve, done. See the [full workflow guide](docs/workflow-g
 | `/rpi-archive` | Archives completed artifacts to keep `.rpi/` clean | Moves files to `.rpi/archive/` |
 | `/rpi-handoff` | Captures in-flight session context to a per-project temp file so the next session can resume | `/tmp/claude-handoff-<sha>.md` |
 
-> **Modes.** `/rpi-propose` and `/rpi-plan` accept `--grill` (or "grill me on this") — hands off to the bundled [`grill-me`](https://github.com/mattpocock/skills) skill for adversarial, one-question-at-a-time interrogation of the draft. `/rpi-propose`, `/rpi-plan`, and `/rpi-implement` also accept `--ff` (fast-forward) — suppresses approval gates and auto-chains to `/rpi-verify`, stopping only on safety gates (codebase drift, sensitive content). Mutually exclusive with `--grill`.
+> **Modes.** `/rpi-propose`, `/rpi-plan`, and `/rpi-spec` accept `--grill` (or "grill me on this") — hands off to the bundled [`grill-me`](https://github.com/mattpocock/skills) skill for adversarial, one-question-at-a-time interrogation of the draft. `/rpi-propose`, `/rpi-plan`, `/rpi-spec`, and `/rpi-implement` also accept `--ff` (fast-forward) — suppresses approval gates and auto-chains to `/rpi-verify`, stopping only on safety gates (codebase drift, sensitive content). On the `/rpi-spec` fast path there's no downstream skill to chain into (the agent loop is yours to start), and its extreme-blast-radius refusal fires even under `--ff`. Mutually exclusive with `--grill`.
 
 ## How RPI Is Different
 
@@ -118,7 +119,8 @@ Not every task needs every stage. Match the path to your task's complexity:
 - **Small tasks** (bug fixes, config changes) -- skip straight to **Plan -> Implement**. `/rpi-plan` does lightweight research on the fly.
 - **Medium tasks** (focused features, single-concern changes) -- use **Propose -> Plan -> Implement**. Optionally run `/rpi-research` first if the codebase is unfamiliar.
 - **Large tasks** (multi-concern features, major refactors) -- use **Propose -> Plan -> Implement**, where `/rpi-plan` decomposes the proposal into independently plannable units.
-- **Low-stakes solo work** -- use `/rpi-blueprint` to go from a research note or short problem statement straight to a plan in one pass, skipping the separate design deliverable (it still writes a minimal spec and records its design reasoning in a `## Design Notes` plan block). This is the *fused* shortcut, distinct from `--ff` (runs the full pipeline fast but still produces a design) and from `/rpi-plan` (scoped change to existing behavior, no design reasoning). It refuses and redirects to `/rpi-propose` when the work carries genuine tradeoffs or wide blast radius.
+- **Low-stakes solo work headed to an agent loop** (the primary fast path) -- use `/rpi-spec` to go from a task description or research note straight to a living spec plus a *goal envelope* in one pass: a requirements checklist, scope boundaries, verification commands, and a ready-to-paste `/goal` condition for a condition-based agent loop. No separate design, no phased plan; verification stays the final gate. It escalates to a full design on its own when the work carries genuine tradeoffs, and refuses only for extreme blast radius.
+- **Low-stakes solo work you'll drive yourself** -- use `/rpi-blueprint` to go from a research note or short problem statement straight to a *plan* in one pass, skipping the separate design deliverable (it still writes a minimal spec and records its design reasoning in a `## Design Notes` plan block). This is the *fused* shortcut, distinct from `--ff` (runs the full pipeline fast but still produces a design) and from `/rpi-plan` (scoped change to existing behavior, no design reasoning). Reach for blueprint when you want a phased plan to run through `/rpi-implement`; reach for `/rpi-spec` when you want a goal envelope to hand to `/goal`. It refuses and redirects to `/rpi-propose` when the work carries genuine tradeoffs or wide blast radius.
 
 Not sure where to start? Use `/rpi-research` with any question -- it handles both focused investigation and open-ended research. For complex bugs, use `/rpi-diagnose` to iterate on root-cause analysis.
 

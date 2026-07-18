@@ -39,6 +39,7 @@ Skill folders keep the `rpi-` prefix so the trigger surface is unambiguous in Cl
 | ----------------- | ------------------- |
 | `/rpi-plan`       | `/rpi:rpi-plan`     |
 | `/rpi-blueprint`  | `/rpi:rpi-blueprint`|
+| `/rpi-spec`       | `/rpi:rpi-spec`     |
 | `/rpi-implement`  | `/rpi:rpi-implement`|
 | `/rpi-verify`     | `/rpi:rpi-verify`   |
 | `/rpi-propose`    | `/rpi:rpi-propose`  |

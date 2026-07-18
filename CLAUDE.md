@@ -25,6 +25,7 @@ This project uses a `.rpi/` directory for persistent context:
 ├── specs/         # Living behavioral specs
 ├── reviews/       # Verification reports
 ├── diagnoses/     # Bug diagnosis post-mortems (created by /rpi-diagnose)
+├── goals/         # Goal envelopes (created by /rpi-spec)
 ├── archive/       # Archived completed artifacts
 ```
 
@@ -36,13 +37,14 @@ Workflow: Research → Propose → Plan → Implement → Verify
 - **Propose** (`/rpi-propose`): Analyze trade-offs, write design + spec (behavioral contract). Approval gate. A read-only pre-lock audit checks the drafted Components cohere (coverage, cross-Component mismatch, decision-drift) before the gate. Carries upstream decisions forward (via `rpi chain --sections "Decisions"`) into an `## Inherited Decisions` block, each entry attributed to its source artifact.
 - **Plan** (`/rpi-plan`): Create phased implementation plan from approved spec. A read-only pre-lock audit checks the drafted phases cohere (coverage, forward-references, decision-drift) before the buy-in gate. Inherits upstream decisions (design and, transitively, research) into an `## Inherited Decisions` block with per-source attribution.
 - **Blueprint** (`/rpi-blueprint`): Fused shortcut for low-stakes solo work — research note or short problem statement → phased plan in one pass, omitting the standalone design deliverable but still emitting a minimal spec (the dropped design reasoning is captured in a `## Design Notes` plan block). Distinct from `--ff` (full pipeline fast, still produces a design) and from `/rpi-plan` (scoped change, no design reasoning). Refuses and redirects to `/rpi-propose` on genuine tradeoffs or high blast radius. Optional.
+- **Spec** (`/rpi-spec`): Primary fast path — a task description or research note straight to a living behavioral spec plus a goal envelope (a ready-to-run work order for a condition-based agent loop) in one pass, with no separate design to review and no phased plan. The envelope replaces the phased plan; verification remains the final gate. Escalates to a full design inline on genuine tradeoffs and refuses only for extreme blast radius (even under `--ff`). Distinct from `/rpi-blueprint`, which emits a phased plan instead of a goal envelope. Optional.
 - **Implement** (`/rpi-implement`): Execute plan phase-by-phase with verification.
 - **Revise** (`/rpi-revise`): Amend an existing plan when a new constraint or a review finding lands after it was drafted or partially implemented — edits only the affected phases, preserves the checkbox state of completed work, re-audits only what changed, then hands back to implement. Distinct from `/rpi-plan` (amend an existing plan vs. create a fresh one) and closes the verify → revise → implement loop. Optional.
 - **Verify** (`/rpi-verify`): Validate spec conformance. A read-only grounding pass re-anchors each finding against repo state and demotes blockers it can't confirm.
 - **Diagnose** (`/rpi-diagnose`): Iterative root-cause analysis and fix for complex bugs. Optional.
 - **Explain** (`/rpi-explain`): Diff-scoped walkthrough of an implemented solution. Optional.
 
-Each command suggests the next step. Start with `/rpi-propose` for features, `/rpi-plan` for bug fixes, `/rpi-blueprint` for low-stakes solo work that wants a plan without a separate design, `/rpi-diagnose` for complex bugs, `/rpi-research` when exploring.
+Each command suggests the next step. Start with `/rpi-spec` as the primary fast path for low-stakes solo work headed to an agent loop (task or research note → living spec + goal envelope), `/rpi-propose` for features, `/rpi-plan` for bug fixes, `/rpi-blueprint` for low-stakes solo work that wants a plan without a separate design, `/rpi-diagnose` for complex bugs, `/rpi-research` when exploring.
 
 **Model routing.** Each stage has a recommended model tier (`premium`/`cheap`) and reasoning-effort level — see `docs/model-routing.md`. This is advisory: apply it with `/model` before running a stage. Claude Code has no per-skill model override, and a skill's `SKILL.md` frontmatter is restricted to `name` + `description` only (see `.rpi/specs/agent-skills.md`) — **do not add a `model:` field to a SKILL.md**. Only subagent profiles under `internal/workflow/assets/agents/` may carry `model:` (today `rpi-verify` is pinned to the premium tier).
 

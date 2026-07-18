@@ -10,6 +10,7 @@ All pipeline artifacts live in `.rpi/`, which is **tracked in git by default** (
 ├── plans/               # Implementation plans with checkboxes
 ├── specs/               # Living behavioral specs for modules/domains
 ├── reviews/             # Code review and verification reports
+├── goals/               # Goal envelopes for agent loops (created by /rpi-spec)
 ├── templates/           # Scaffold templates (user-overridable)
 └── archive/             # Completed artifacts (mirrors above structure)
 ```

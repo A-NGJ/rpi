@@ -10,7 +10,7 @@ for the rationale, the tier → concrete-model mapping, and the deferred config 
 
 | Tier + effort | Stages |
 |---------------|--------|
-| premium / high | propose, verify, plan, diagnose, blueprint, revise |
+| premium / high | propose, verify, plan, diagnose, blueprint, revise, spec |
 | premium / medium | research, implement, grill-me |
 | cheap / low | explain, commit, archive, spec-sync, handoff, setup |
 
@@ -84,6 +84,28 @@ Blueprint does *condensed* design reasoning inline (it commits to the obvious ap
 **Refuse-and-redirect (hard gate).** Blueprint is for low-stakes work. It declines and points you at `/rpi-propose` when the work surfaces genuine tradeoffs, more than one approach a reasonable engineer would defend, or high blast radius (using the same complexity *signals* `rpi split-score` encodes -- component count, directory spread, multi-spec -- as one input). This is an integrity gate, not a review pause: it fires **even under `--ff`** and stops the chain rather than silently escalating into `rpi-propose --ff`, leaving you to choose the full design path deliberately.
 
 **Fast-forward / grill (opt-in):** `--ff` skips the plan-outline approval pause, writes the plan + minimal spec, then auto-chains `/rpi-implement --ff <plan-path>` and terminates at `/rpi-verify`. `--grill` runs a single-pass interrogation of the condensed design reasoning + phase outline before the plan is written. Mutually exclusive, per the shared flag contract; the refuse gate still stops a fast-forward run.
+
+## Spec (`/rpi-spec`)
+
+**Purpose:** The primary fast path from a task description or research note to autonomous agent execution -- in a single pass, produce a full living behavioral spec plus an ephemeral *goal envelope*, with no separate design to review and no phased plan.
+
+`/rpi-spec` is the default entry point for low-stakes solo work you intend to hand to a condition-based agent loop. It does condensed design reasoning inline and emits two artifacts together:
+
+- **A full-grade living spec** in `.rpi/specs/` -- 5-8 user-observable Given/When/Then scenarios plus Constraints and Out of Scope, the same grade a `/rpi-propose` spec carries. It's the centerpiece deliverable and stays abstract: scenarios never reference internal structure.
+- **A goal envelope** in `.rpi/goals/` -- an ephemeral work order carrying a `## Requirements` checkbox list the executing agent ticks off as it works, a Scope section with file paths and explicit must-not-change boundaries, verification commands with expected results, and a ready-to-paste `/goal` condition. The envelope replaces the phased plan on this path; all concreteness lives here, not in the spec.
+
+**Gate semantics -- escalate, don't refuse (except at the extreme).** Blast radius is judged before drafting:
+- *Ordinary work* -> condensed `## Design Notes` in the envelope; proceed.
+- *Genuine tradeoffs or multi-component work* -> a full design artifact is produced inline (after a brief tradeoff checkpoint) before the spec and envelope, rather than refusing.
+- *Extreme blast radius* (wide restructuring across many areas) -> declines in a sentence or two and redirects to `/rpi-propose`. This refusal fires **even under `--ff`**.
+
+**Handoff to the agent loop.** The skill never starts the loop itself. It prints the ready-to-paste `/goal` condition (≤4,000 chars, naming one measurable end state, pointing at the envelope's checklist and verification commands, stating the constraints that must hold en route, and carrying a turn-bounding clause) and stops. `/goal` -- the condition-based loop runner that evaluates a done-condition every turn -- is the documented consumer; `/loop` (interval-based recurrence) appears only as a secondary unattended pattern, never the primary mechanism.
+
+**Resumability.** Because the envelope's `## Requirements` checklist is updated as work proceeds, a loop interrupted mid-run -- or resumed in a fresh session after compaction -- picks up from the first unchecked requirement instead of restarting.
+
+**Verification stays the final gate.** After the goal condition is met and the loop stops, `/rpi-verify <spec-path>` is **suggested, not auto-run** -- it validates the implementation against the living spec. Once verification passes, the envelope transitions to complete and becomes archivable, while the spec remains in `.rpi/specs/` unchanged, carrying no task-scoped goal state (no verification commands, turn budgets, or checklists).
+
+**Fast-forward / grill (opt-in):** `--ff` skips the tradeoff checkpoint and approval gate, auto-accepts the spec + envelope, and prints the condition -- there is no downstream skill to auto-chain into, since the loop runner is the user-invoked next step. `--grill` runs a single-pass interrogation of the drafts before the gate. Mutually exclusive, per the shared flag contract; the extreme-blast-radius refusal still fires under `--ff`.
 
 ## Implement (`/rpi-implement`)
 

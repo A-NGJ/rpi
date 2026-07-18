@@ -19,6 +19,7 @@ pays off and a cheap, fast tier on the rest.
 | `rpi-diagnose`  | premium   | high   | Iterative root-cause; needs deep reasoning |
 | `rpi-blueprint` | premium   | high   | Fused research → design → plan reasoning in a single pass |
 | `rpi-revise`    | premium   | high   | Re-plans affected phases; dependency/ordering re-reasoning |
+| `rpi-spec`      | premium   | high   | Spec + goal-envelope authoring — ranks with propose |
 | `rpi-research`  | premium   | medium | Broad investigation; high model but exploration tolerates less peak effort |
 | `rpi-implement` | premium   | medium | Code execution against a fixed plan; correctness matters, search space is bounded |
 | `grill-me`      | premium   | medium | Interactive stress-test; benefits from a strong model, no peak effort |

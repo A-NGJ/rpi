@@ -145,9 +145,45 @@ This refusal is a **hard gate, not a review pause**: it fires even under `--ff` 
 
 **Fused vs fast-forward.** Don't conflate the two "fast" concepts: `--ff` runs the *full* pipeline fast (suppressing review pauses) but still produces a design; `/rpi-blueprint` *omits the design deliverable* entirely, fusing its reasoning into the plan. They compose (`rpi-blueprint --ff`) but they are different axes.
 
+## Goal-Ready Fast Path (research note or task → spec + agent loop)
+
+**Path: Spec -> (agent loop) -> Verify**
+
+This is the primary fast path for low-stakes solo work you intend to hand to a condition-based agent loop. `/rpi-spec` takes a task description or a research note and, in a single pass, produces two artifacts: a full-grade living behavioral spec and an ephemeral *goal envelope*. There is no separate design to review and no phased plan -- the envelope carries the concreteness a plan would (a requirements checklist, scope boundaries with file paths, and verification commands), plus a ready-to-paste `/goal` condition. The spec stays abstract (user-observable scenarios only); every file path, command, and checklist item lives in the envelope.
+
+**Example -- from a research note straight to a goal:**
+```
+You:  /rpi-spec .rpi/research/2026-03-04-cache-warmup.md
+```
+Claude reads the research, drafts a living spec in `.rpi/specs/` and a goal envelope in `.rpi/goals/`, and prints a `/goal` condition.
+
+**Example -- from a short task description:**
+```
+You:  /rpi-spec Add a --quiet flag to the CLI that suppresses progress output
+```
+Small enough to reason about in one pass -- Claude emits the spec + envelope directly.
+
+**Hand off to the loop -- the skill never drives it.** `/rpi-spec` prints a ready-to-paste `/goal` condition (one measurable end state, pointing at the envelope's checklist and verification commands, with a turn-bounding clause) and stops. You start the loop:
+```
+You:  /goal <the condition rpi-spec printed>
+```
+`/goal` evaluates the done-condition every turn and ticks the envelope's requirements checklist as it goes -- so if the session ends mid-run, resuming continues from the first unchecked requirement instead of restarting. `/loop` (interval-based) is at most a secondary unattended pattern; `/goal` is the intended consumer.
+
+**Verify closes it.** After the goal condition is met, run `/rpi-verify <spec-path>` -- it's suggested, not auto-run. It validates the implementation against the living spec; once it passes, the goal envelope becomes archivable while the spec stays in `.rpi/specs/`, clean of any task-scoped state.
+
+### Where the goal-spec path draws the line (escalate, refuse only at the extreme)
+
+Unlike blueprint's hard refuse-and-redirect, `/rpi-spec` prefers to **escalate**: when the work surfaces genuine tradeoffs or spans several components, it produces a full design artifact *inline* (after a brief tradeoff checkpoint) before drafting the spec and envelope, rather than turning you away. It **declines** only when the blast radius is extreme -- wide-reaching restructuring across many areas -- pointing you at `/rpi-propose`. That refusal is a hard gate: it fires even under `--ff`.
+
+**Spec vs blueprint.** Both are one-pass fast paths for low-stakes work, but they differ in output and consumer: `/rpi-blueprint` emits a *phased plan* you implement stage-by-stage through `/rpi-implement`; `/rpi-spec` emits a *goal envelope* a condition-based agent loop executes autonomously via `/goal`. Reach for spec when you want to hand the work to the loop; reach for blueprint when you want a plan you drive yourself.
+
+**Fast-forward / grill (opt-in):** `--ff` skips the tradeoff checkpoint and approval gate, auto-accepts the spec + envelope, and prints the condition -- there's no downstream skill to auto-chain into, since the loop is yours to start. `--grill` runs a single-pass interrogation of the drafts before the gate. Mutually exclusive, per the shared flag contract; the extreme-blast-radius refusal still stops a fast-forward run.
+
 ## Not Sure Where to Start?
 
-Use `/rpi-research` even when you have a vague idea. It handles focused codebase questions ("how does auth work?"), open-ended exploration ("what could we improve about error handling?"), and external surveys ("what agentic frameworks exist for X?", "what's the state of vector databases in 2026?"). It's conversational -- you discuss findings interactively and decide whether to save research or move straight to `/rpi-propose`.
+For most low-stakes solo work you already understand well enough to describe, start with `/rpi-spec` -- it takes a task description or research note straight to a living spec plus a goal envelope you can hand to an agent loop, and escalates to a full design on its own if the work turns out to carry real tradeoffs.
+
+When the idea is still vague, use `/rpi-research`. It handles focused codebase questions ("how does auth work?"), open-ended exploration ("what could we improve about error handling?"), and external surveys ("what agentic frameworks exist for X?", "what's the state of vector databases in 2026?"). It's conversational -- you discuss findings interactively and decide whether to save research or move straight to `/rpi-propose` or `/rpi-spec`.
 
 ```
 You:  /rpi-research What could we improve about error handling?
